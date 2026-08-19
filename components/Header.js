@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { signOut, getCurrentUser } from '../lib/auth';
+import { createClient } from '../lib/supabase/client';
 
 const Header = () => {
   const [user, setUser] = useState(null);
@@ -20,8 +20,9 @@ const Header = () => {
 
   const loadUser = async () => {
     try {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
     } catch (error) {
       console.error('Error loading user:', error);
     } finally {
@@ -47,16 +48,13 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      const result = await signOut();
-      if (result.success) {
-        router.push('/');
-      }
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push('/auth');
     } catch (error) {
       console.error('Logout error:', error);
     }
   };
-
-  const isAuthPage = pathname.includes('(auth)');
 
   return (
     <header className="header-container">
@@ -109,11 +107,9 @@ const Header = () => {
                   </button>
                 </div>
               ) : (
-                !isAuthPage && (
-                  <a href="/" className="button-primary">
-                    Sign In
-                  </a>
-                )
+                <a href="/auth" className="button-primary">
+                  Sign In
+                </a>
               )}
             </div>
           )}

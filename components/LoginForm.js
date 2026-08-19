@@ -2,17 +2,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { signInWithEmail, signUpWithEmail, verifyOtp } from '../lib/auth';
+import { signInWithEmail, verifyOtp } from '../lib/auth';
 import { validateEmail } from '../lib/utils';
 import LoadingSpinner from './LoadingSpinner';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [mode, setMode] = useState('signin'); // 'signin' or 'signup' or 'otp'
   const [otpCode, setOtpCode] = useState('');
   const [showOtp, setShowOtp] = useState(false);
 

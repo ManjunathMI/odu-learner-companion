@@ -21,10 +21,10 @@ const Footer = () => {
               <a href="/">Home</a>
             </li>
             <li>
-              <a href="/tracker">Tracker</a>
+              <a href="/paths">My Paths</a>
             </li>
             <li>
-              <a href="/admin">Admin</a>
+              <a href="/auth">Sign In</a>
             </li>
           </ul>
         </div>
@@ -33,13 +33,10 @@ const Footer = () => {
           <h4>Support</h4>
           <ul>
             <li>
-              <a href="mailto:support@example.com">Contact Us</a>
+              <a href="https://www.linkedin.com/in/manjunath-islampure/" target="_blank" rel="noreferrer">Contact Us</a>
             </li>
             <li>
-              <a href="#">Documentation</a>
-            </li>
-            <li>
-              <a href="#">FAQ</a>
+              <a href="/docs">Documentation</a>
             </li>
           </ul>
         </div>

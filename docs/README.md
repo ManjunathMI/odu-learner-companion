@@ -8,5 +8,7 @@ This directory is the maintained documentation for the multi-tenant ODU Learner 
 - [Architecture](architecture.md): application boundaries, data model, authorization, and mobile compatibility.
 - [Development](development.md): local setup, environment variables, database setup, and verification.
 - [API Reference](api.md): path-scoped HTTP endpoints and response contracts.
+- [Database Operations](database-operations.md): setup, admin, approval, inspection, and rollback SQL commands.
+- [Product Roadmap](roadmap.md): completed foundation, next phases, and pending product decisions.
 
 The canonical database schema is maintained outside the repository in `phase1-schema.sql` during the current design phase. Do not run legacy single-room schemas.

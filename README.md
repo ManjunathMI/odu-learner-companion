@@ -119,6 +119,8 @@ npm run lint
 - [Architecture](docs/architecture.md)
 - [Development guide](docs/development.md)
 - [API reference](docs/api.md)
+- [Database operations](docs/database-operations.md)
+- [Product roadmap](docs/roadmap.md)
 - [Browser documentation](http://localhost:3000/docs) while the app is running
 
 ## Future Mobile Client

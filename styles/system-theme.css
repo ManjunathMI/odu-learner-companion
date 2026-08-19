@@ -1,0 +1,175 @@
+/* System Theme - Respects OS color scheme preference */
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --bg-tertiary: #f3f4f6;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-tertiary: #9ca3af;
+    --border-color: #e5e7eb;
+    --border-light: #f3f4f6;
+    --accent-primary: #3b82f6;
+    --accent-secondary: #10b981;
+    --accent-danger: #ef4444;
+    --accent-warning: #f59e0b;
+    --accent-info: #0ea5e9;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --bg-primary: #1f2937;
+    --bg-secondary: #111827;
+    --bg-tertiary: #0f172a;
+    --text-primary: #f3f4f6;
+    --text-secondary: #d1d5db;
+    --text-tertiary: #9ca3af;
+    --border-color: #374151;
+    --border-light: #1f2937;
+    --accent-primary: #3b82f6;
+    --accent-secondary: #10b981;
+    --accent-danger: #ef4444;
+    --accent-warning: #f59e0b;
+    --accent-info: #0ea5e9;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+  }
+}
+
+[data-theme="system"] {
+  color-scheme: light dark;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="system"] body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="system"] .card,
+[data-theme="system"] .panel {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+[data-theme="system"] .button-primary {
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+[data-theme="system"] .button-primary:hover {
+  opacity: 0.9;
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="system"] .button-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+[data-theme="system"] .button-secondary:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-secondary);
+}
+
+[data-theme="system"] input,
+[data-theme="system"] textarea,
+[data-theme="system"] select {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+[data-theme="system"] input:focus,
+[data-theme="system"] textarea:focus,
+[data-theme="system"] select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="system"] header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+[data-theme="system"] footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+[data-theme="system"] .badge {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-radius: 20px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+[data-theme="system"] .badge-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent-secondary);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+[data-theme="system"] .badge-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--accent-warning);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="system"] .badge-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--accent-danger);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="system"] .progress-bar {
+  background: var(--bg-tertiary);
+  border-radius: 9999px;
+  overflow: hidden;
+  height: 8px;
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="system"] .progress-fill {
+  background: var(--accent-secondary);
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}

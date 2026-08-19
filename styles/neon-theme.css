@@ -1,0 +1,181 @@
+/* Neon Theme */
+:root[data-theme="neon"] {
+  --bg-primary: #0a0e27;
+  --bg-secondary: #050814;
+  --bg-tertiary: #0f1629;
+  --text-primary: #e0f7ff;
+  --text-secondary: #a0d8ff;
+  --text-tertiary: #4a8fa3;
+  --border-color: #1a3a52;
+  --border-light: #0f1629;
+  --accent-primary: #00ff88;
+  --accent-secondary: #ff006e;
+  --accent-danger: #ff0040;
+  --accent-warning: #ffb700;
+  --accent-info: #00d9ff;
+  --shadow-sm: 0 0 10px rgba(0, 255, 136, 0.1);
+  --shadow-md: 0 0 20px rgba(0, 255, 136, 0.15);
+  --shadow-lg: 0 0 40px rgba(255, 0, 110, 0.2);
+  --shadow-xl: 0 0 60px rgba(0, 217, 255, 0.25);
+}
+
+[data-theme="neon"] {
+  color-scheme: dark;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="neon"] body {
+  background: linear-gradient(135deg, #0a0e27 0%, #050814 50%, #0f1629 100%);
+  color: var(--text-primary);
+}
+
+[data-theme="neon"] .card,
+[data-theme="neon"] .panel {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 2px solid;
+  border-image: linear-gradient(135deg, #00ff88, #00d9ff) 1;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.2), inset 0 0 20px rgba(0, 255, 136, 0.05);
+  padding: 1.5rem;
+  position: relative;
+}
+
+[data-theme="neon"] .card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.05), rgba(0, 217, 255, 0.05));
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+[data-theme="neon"] .button-primary {
+  background: var(--accent-primary);
+  color: #000;
+  border: 2px solid var(--accent-primary);
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="neon"] .button-primary:hover {
+  background: transparent;
+  color: var(--accent-primary);
+  box-shadow: 0 0 40px rgba(0, 255, 136, 0.8);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+}
+
+[data-theme="neon"] .button-secondary {
+  background: transparent;
+  color: var(--accent-secondary);
+  border: 2px solid var(--accent-secondary);
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 15px rgba(255, 0, 110, 0.3);
+}
+
+[data-theme="neon"] .button-secondary:hover {
+  background: rgba(255, 0, 110, 0.1);
+  box-shadow: 0 0 30px rgba(255, 0, 110, 0.6);
+  text-shadow: 0 0 10px rgba(255, 0, 110, 0.6);
+}
+
+[data-theme="neon"] input,
+[data-theme="neon"] textarea,
+[data-theme="neon"] select {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+[data-theme="neon"] input:focus,
+[data-theme="neon"] textarea:focus,
+[data-theme="neon"] select:focus {
+  outline: none;
+  border-color: var(--accent-info);
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+  color: var(--text-primary);
+}
+
+[data-theme="neon"] header {
+  background: var(--bg-secondary);
+  border-bottom: 2px solid var(--accent-primary);
+  color: var(--text-primary);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+}
+
+[data-theme="neon"] footer {
+  background: var(--bg-secondary);
+  border-top: 2px solid var(--accent-secondary);
+  color: var(--text-secondary);
+  box-shadow: 0 0 15px rgba(255, 0, 110, 0.1);
+}
+
+[data-theme="neon"] .badge {
+  background: transparent;
+  color: var(--accent-primary);
+  border-radius: 20px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid var(--accent-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+[data-theme="neon"] .badge-success {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+[data-theme="neon"] .badge-warning {
+  color: var(--accent-warning);
+  border-color: var(--accent-warning);
+  box-shadow: 0 0 10px rgba(255, 183, 0, 0.3);
+}
+
+[data-theme="neon"] .badge-danger {
+  color: var(--accent-danger);
+  border-color: var(--accent-danger);
+  box-shadow: 0 0 10px rgba(255, 0, 64, 0.3);
+}
+
+[data-theme="neon"] .progress-bar {
+  background: var(--bg-tertiary);
+  border-radius: 9999px;
+  overflow: hidden;
+  height: 8px;
+  border: 1px solid var(--accent-info);
+  box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
+}
+
+[data-theme="neon"] .progress-fill {
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-info));
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}

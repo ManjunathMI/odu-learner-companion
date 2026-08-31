@@ -40,3 +40,7 @@ export async function isPlatformAdmin(userId: string): Promise<boolean> {
     .maybeSingle();
   return data !== null;
 }
+
+export async function requirePlatformAdmin(userId: string): Promise<boolean> {
+  return isPlatformAdmin(userId);
+}

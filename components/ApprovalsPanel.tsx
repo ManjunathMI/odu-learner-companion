@@ -9,11 +9,15 @@ export default function ApprovalsPanel({ pathId }: { pathId: string }) {
   const [requests, setRequests] = useState<Request[]>([]);
   const [error, setError] = useState('');
 
-  const load = async () => {
-    try { setRequests(await apiFetch<Request[]>(`/paths/${pathId}/approvals`)); }
-    catch (err) { setError(err instanceof Error ? err.message : 'Unable to load approvals'); }
-  };
-  useEffect(() => { load(); }, [pathId]);
+  useEffect(() => {
+    let active = true;
+    void apiFetch<Request[]>(`/paths/${pathId}/approvals`).then((data) => {
+      if (active) setRequests(data);
+    }).catch((err: unknown) => {
+      if (active) setError(err instanceof Error ? err.message : 'Unable to load approvals');
+    });
+    return () => { active = false; };
+  }, [pathId]);
 
   const decide = async (userId: string, decision: 'approved' | 'rejected') => {
     try {

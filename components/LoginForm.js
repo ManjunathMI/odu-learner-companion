@@ -4,7 +4,6 @@
 import React, { useState } from 'react';
 import { signInWithEmail, verifyOtp } from '../lib/auth';
 import { validateEmail } from '../lib/utils';
-import LoadingSpinner from './LoadingSpinner';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -107,7 +106,7 @@ const LoginForm = () => {
 
             <div className="form-footer">
               <p>
-                We'll send you a magic link to sign in securely. No password needed!
+                We&apos;ll send you a magic link to sign in securely. No password needed!
               </p>
             </div>
           </form>

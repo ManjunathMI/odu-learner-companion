@@ -50,20 +50,20 @@ export interface Database {
       };
       progress: {
         Row: { id: string; user_id: string; path_id: string; item_key: string; done: boolean; updated_at: string };
-        Insert: { user_id: string; path_id: string; item_key: string; done?: boolean };
+        Insert: { user_id: string; path_id: string; item_key: string; done?: boolean; updated_at?: string };
         Update: { done?: boolean; updated_at?: string };
         Relationships: [];
       };
       notes: {
         Row: { id: string; path_id: string; item_key: string; user_id: string; note_text: string; created_at: string };
         Insert: { path_id: string; item_key: string; user_id: string; note_text: string };
-        Update: never;
+        Update: Record<string, never>;
         Relationships: [];
       };
       feedback: {
         Row: { id: string; path_id: string | null; user_id: string | null; message: string; created_at: string };
         Insert: { path_id?: string | null; user_id?: string | null; message: string };
-        Update: never;
+        Update: Record<string, never>;
         Relationships: [];
       };
       badge_definitions: {
@@ -75,7 +75,7 @@ export interface Database {
       badge_awards: {
         Row: { id: string; user_id: string; badge_id: string; awarded_by: string | null; awarded_at: string };
         Insert: { user_id: string; badge_id: string; awarded_by?: string | null };
-        Update: never;
+        Update: Record<string, never>;
         Relationships: [];
       };
     };

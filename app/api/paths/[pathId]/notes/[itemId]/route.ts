@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { adminClient } from '@/lib/supabase/server';
-import { requirePathMember, unauthorized, forbidden, notFound } from '@/lib/path-auth';
+import { requirePathMember, unauthorized, forbidden } from '@/lib/path-auth';
 
 type Context = { params: Promise<{ pathId: string; itemId: string }> };
 

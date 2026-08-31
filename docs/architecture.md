@@ -92,8 +92,45 @@ The API has no dependency on browser-only navigation or cookies. A React Native 
 3. Send the access token to the same `/api/paths/...` endpoints.
 4. Render native screens using the same path, membership, plan, progress, notes, and leaderboard contracts.
 
+## User Journey and Role Model
+
+The product should be navigated as a role-based learning workspace. Each persona should see different actions and different access levels, without exposing internal admin operations in the main top navigation.
+
+### Visitor
+
+- Lands on the public wall
+- Browses approved public paths
+- Can view a path overview but not the private learning plan
+- Can sign in to join or participate
+
+### Learner
+
+- Signs in
+- Opens My Paths
+- Joins or enters approved paths
+- Views the plan, tracks progress, and adds notes
+- Sees the leaderboard and personal learning status
+- Accesses profile from the user menu in the top-right
+
+### Path admin
+
+- Creates a new path
+- Manages metadata, membership, and plan content
+- Reviews approvals and membership requests
+- Uses the path settings page for editing structure and content
+- Accesses path actions through the path board and My Paths cards
+
+### Platform admin
+
+- Reviews public path approvals
+- Moderates the wall and platform-wide content decisions
+- Accesses the admin controls through the user menu
+- Has access to all platform-level operations and protected pages
+
+The navigation should therefore keep the public product experience clean: the main nav focuses on browsing and personal workspace, while admin and profile actions live inside the authenticated user menu on the right-most edge of the header.
+
 ## Current Phase Boundary
 
-Implemented now: wall, path creation, path metadata, plan display/editing, membership requests, approvals, progress, leaderboard, and notes.
+Implemented now: wall, path creation, path metadata, plan display/editing, membership requests, approvals, progress, leaderboard, notes, and profile management.
 
-Planned later: richer profile management, platform-admin wall moderation UI, badges, notifications, analytics, and production observability.
+Planned later: richer profile management polish, platform-admin wall moderation UI, badges, notifications, analytics, and production observability.

@@ -64,6 +64,14 @@ Users sign in with Supabase email OTP or magic-link authentication. No applicati
 
 Progress rows always include `path_id`, `user_id`, and the lesson item key. The API verifies that the lesson belongs to the requested path before writing. This prevents a lesson identifier from being reused to write activity into another tenant.
 
+### Curated Learning Paths
+
+Learning paths may use an original curriculum assembled from reputable primary learning resources. For example, the public `AI Learning Foundations` path uses a staged roadmap: AI literacy and responsible use, generative-AI workflows, and a small repeatable practice. It contains original lesson titles and objectives that point learners toward official resources from NIST, Google, OpenAI, IBM, and Hugging Face.
+
+The public `AI-Enabled Software Engineering Sprint` path is a second original curriculum. It progresses from AI-assisted development practice, through reliable model integration and bounded workflow systems, to a tested capstone. Its resources are public materials from GitHub, OpenAI, Microsoft, NIST, OWASP, and engineering-practice sources; the titles, objectives, sequencing, and assessment work are original to this product.
+
+External products can inform interaction patterns such as roadmap discovery, a resource library, personal learning progress, focused next-step actions, and supportive motivation. Do not copy another product's curriculum text, proprietary content, identity, or visual assets into an ODU learning path.
+
 ## Business Rules
 
 - Tenant boundaries are defined by `path_id`.

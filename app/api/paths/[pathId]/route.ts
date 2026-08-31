@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, isPlatformAdmin } from '@/lib/auth';
 import { adminClient } from '@/lib/supabase/server';
 import { getMembership, requirePathAdmin, unauthorized, forbidden, notFound, badRequest } from '@/lib/path-auth';
 
@@ -8,12 +8,13 @@ type Context = { params: Promise<{ pathId: string }> };
 export async function GET(req: NextRequest, { params }: Context) {
   const { pathId } = await params;
   const user = await getSession(req);
+  const platformAdmin = user ? await isPlatformAdmin(user.id) : false;
   const { data: path, error } = await adminClient.from('learning_paths').select('id, title, description, tags, visibility, wall_status, created_by, created_at, updated_at').eq('id', pathId).maybeSingle();
   if (error || !path) return notFound();
 
   if (path.visibility === 'private') {
     const privateMembership = user ? await getMembership(user.id, pathId) : null;
-    if (privateMembership?.status !== 'approved') return notFound();
+    if (!platformAdmin && privateMembership?.status !== 'approved') return notFound();
   }
 
   const membership = user ? await getMembership(user.id, pathId) : null;
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest, { params }: Context) {
     tags: path.tags,
     visibility: path.visibility,
     wallStatus: path.wall_status,
-    myRole: membership?.status === 'approved' ? membership.role : null,
+    myRole: platformAdmin ? 'admin' : membership?.status === 'approved' ? membership.role : null,
   });
 }
 

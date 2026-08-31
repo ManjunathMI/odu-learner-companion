@@ -2,6 +2,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -18,13 +19,13 @@ const Footer = () => {
           <h4>Quick Links</h4>
           <ul>
             <li>
-              <a href="/">Home</a>
+              <Link href="/">Home</Link>
             </li>
             <li>
-              <a href="/paths">My Paths</a>
+              <Link href="/paths">My Paths</Link>
             </li>
             <li>
-              <a href="/auth">Sign In</a>
+              <Link href="/auth">Sign In</Link>
             </li>
           </ul>
         </div>
@@ -36,7 +37,7 @@ const Footer = () => {
               <a href="https://www.linkedin.com/in/manjunath-islampure/" target="_blank" rel="noreferrer">Contact Us</a>
             </li>
             <li>
-              <a href="/docs">Documentation</a>
+              <Link href="/docs">Documentation</Link>
             </li>
           </ul>
         </div>
@@ -48,33 +49,36 @@ const Footer = () => {
 
       <style jsx>{`
         .footer-container {
-          background-color: var(--bg-secondary);
+          background: var(--bg-secondary);
           border-top: 1px solid var(--border-color);
           color: var(--text-secondary);
-          padding: 2rem;
+          padding: 2.75rem 2rem 1.5rem;
           margin-top: auto;
         }
 
         .footer-content {
-          max-width: 1400px;
+          max-width: 1120px;
           margin: 0 auto;
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 2rem;
+          gap: 2.5rem;
           margin-bottom: 2rem;
         }
 
         .footer-section h3 {
           margin: 0 0 1rem 0;
-          font-size: 1.1rem;
+          font-family: var(--font-display);
+          font-size: 1.25rem;
           font-weight: 700;
           color: var(--text-primary);
         }
 
         .footer-section h4 {
           margin: 0 0 0.75rem 0;
-          font-size: 0.95rem;
-          font-weight: 600;
+          font-size: 0.72rem;
+          font-weight: 800;
+          letter-spacing: .08em;
+          text-transform: uppercase;
           color: var(--text-primary);
         }
 
@@ -92,14 +96,14 @@ const Footer = () => {
         }
 
         .footer-section li {
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.65rem;
         }
 
         .footer-section a {
           color: var(--text-secondary);
           text-decoration: none;
           transition: color 0.2s ease;
-          font-size: 0.9rem;
+          font-size: 0.88rem;
         }
 
         .footer-section a:hover {

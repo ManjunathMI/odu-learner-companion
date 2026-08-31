@@ -51,6 +51,19 @@ When planning new work:
 - identify how the change affects routes, auth, database access, and user experience
 - capture verification steps before the work is considered done
 
+## Current implementation focus
+
+Phase 2 now includes profile management, role-based navigation, a visual plan editor, membership controls, a platform workspace, public-path discovery filtering, and the first learner-board progress pass.
+
+Current delivery focus is completing the remaining experience and production-readiness backlog in `docs/roadmap.md`:
+
+- Validate the role journeys with the seeded visitor, learner, moderator, path-admin, and platform-admin accounts.
+- Continue refining Path Settings, approvals, profile, and platform-workspace usability.
+- Add automated API authorization and tenant-isolation tests, followed by operational safeguards such as rate limiting, logging, monitoring, and environment procedures.
+- Keep platform-admin override logic in `lib/path-auth.ts`; it grants the effective path-admin capability to platform admins while ordinary users remain path-scoped.
+- The path board retrieves a member's completed item IDs from `GET /api/paths/:pathId/progress`; do not replace this with client-only progress state.
+- GitHub Actions validates lint and production builds on pull requests and pushes to `main` through `.github/workflows/ci.yml`.
+
 ## Execution expectations
 
 - Prefer minimal, targeted edits over broad rewrites.

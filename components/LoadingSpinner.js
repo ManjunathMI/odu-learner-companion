@@ -1,4 +1,3 @@
-// components/LoadingSpinner.js
 'use client';
 
 import React from 'react';
@@ -38,7 +37,8 @@ const LoadingSpinner = ({ size = 'medium', message = 'Loading...' }) => {
           border: 3px solid var(--bg-tertiary);
           border-top-color: var(--accent-primary);
           border-radius: 50%;
-          animation: spin 0.8s linear infinite;
+          /* Speed increased from 0.8s to 0.5s */
+          animation: spin 0.5s linear infinite;
         }
 
         @keyframes spin {

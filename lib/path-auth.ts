@@ -1,5 +1,6 @@
 import 'server-only';
 import { adminClient } from '@/lib/supabase/server';
+import { isPlatformAdmin } from '@/lib/auth';
 
 export type PathRole = 'admin' | 'moderator' | 'learner';
 
@@ -16,6 +17,9 @@ export async function getMembership(userId: string, pathId: string) {
 }
 
 export async function requirePathMember(userId: string, pathId: string) {
+  if (await isPlatformAdmin(userId)) {
+    return { id: '', user_id: userId, path_id: pathId, role: 'admin' as const, status: 'approved' as const };
+  }
   const membership = await getMembership(userId, pathId);
   return membership?.status === 'approved' ? membership : null;
 }

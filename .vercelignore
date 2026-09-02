@@ -35,7 +35,3 @@ CLAUDE.md
 # Development config
 .env.*.example
 
-# Package lock files (use npm ci)
-package-lock.json
-yarn.lock
-pnpm-lock.yaml

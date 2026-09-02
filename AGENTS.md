@@ -20,6 +20,83 @@ This repository is a Next.js 16 application using the App Router, TypeScript, Re
 - Build and validation commands are defined in `package.json` and should be used for verification before claiming completion.
 - The repo includes design and product docs under `docs/` and `designDocs/`; use them to understand intent before changing behavior.
 
+## Architecture at a glance
+
+This repository is a Next.js App Router application backed by Supabase Auth and PostgreSQL. The product is built around a single shared platform API instead of a separate backend service: the browser, and future mobile clients, interact with the same `/api/...` route handlers and the same path-scoped data model.
+
+```text
+Web browser or mobile client
+              |
+              | HTTPS + Supabase access token
+              v
+Next.js App Router (app/ + app/api/)
+              |
+              | server-side Supabase clients
+              v
+Supabase Auth + PostgreSQL + Row Level Security
+              |
+              | path-scoped authorization checks
+              v
+learning_paths / path_memberships / progress / notes / approvals
+```
+
+### Core architectural layers
+
+- Frontend: Next.js 16, React 19, TypeScript
+- Auth + persistence: Supabase Auth and Postgres
+- API layer: `app/api/*` route handlers
+- Shared logic: `lib/*` helpers and auth utilities
+- Data contracts: `types/database.ts`
+- UI components: `components/*` for reusable screens and panels
+
+### Tenant model
+
+The application treats each learning path as a tenant-like unit. The data model is centered on `learning_paths` and path-scoped membership and activity records:
+
+```text
+learning_paths
+  -> phases
+    -> days
+      -> lesson_items
+
+path_memberships(user_id, path_id, role, status)
+progress(user_id, path_id, item_key)
+notes(user_id, path_id, item_key)
+feedback(user_id, path_id)
+```
+
+The direct `path_id` columns on activity tables keep access checks explicit and easier to audit in PostgreSQL RLS and app-layer authorization.
+
+### Authorization model
+
+The app uses role-aware path checks, not just global user checks:
+
+- `getMembership(userId, pathId)` resolves a user’s membership record
+- `requirePathMember(...)` ensures the user is an approved path member
+- `requirePathModerator(...)` allows moderator/admin actions
+- `requirePathAdmin(...)` restricts management and mutation operations
+- `isPlatformAdmin(...)` allows platform-level override logic while keeping normal users path-scoped
+
+This is implemented in `lib/path-auth.ts` and enforced in route handlers such as `app/api/paths/[pathId]/route.ts`.
+
+### Auth flow
+
+- `lib/supabase/client.ts` creates the browser client for the public app
+- `lib/supabase/server.ts` creates the cookie-aware SSR client and the server-only service-role client
+- `lib/auth.ts` resolves the current user from a bearer token or SSR session
+- `proxy.ts` refreshes sessions and protects app routes
+
+The route handlers still validate authentication and authorization themselves because the API is designed to be reusable by mobile or other non-browser clients.
+
+### User journeys and roles
+
+- Visitor: public wall, approved public path discovery, no private plan access
+- Learner: signs in, joins paths, tracks progress, writes notes, views leaderboard
+- Path admin: creates and manages paths, memberships, plan content, approvals
+- Platform admin: moderated public wall and platform-wide operations
+
+The product experience is intentionally role-based and keeps admin actions within the authenticated user menu rather than exposing internal operations in the primary navigation.
+
 ## Memory retention rule
 
 Any understanding gained while working in this repo must be persisted so future builds and future plans can build on the same context.

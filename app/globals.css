@@ -1,27 +1,34 @@
 /* Global Styles */
 :root {
   --font-sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
-  --font-display: Iowan Old Style, Palatino Linotype, Book Antiqua, Georgia, serif;
+  /* Display font now shares the sans stack — serif read as editorial/blog,
+     not technical product. This is the single biggest personality shift. */
+  --font-display: "Avenir Next", Avenir, "Segoe UI", sans-serif;
   --font-mono: 'Fira Code', 'Courier New', monospace;
 
-  /* Default Light Theme */
-  --bg-primary: #f8fafc;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #eef2f6;
-  --text-primary: #17233b;
-  --text-secondary: #526078;
-  --text-tertiary: #748198;
-  --border-color: #dce3eb;
-  --border-light: #edf1f5;
-  --accent-primary: #1957b8;
-  --accent-secondary: #147a63;
-  --accent-danger: #b3263b;
-  --accent-warning: #a55d08;
-  --accent-info: #176b9e;
-  --shadow-sm: 0 1px 2px rgba(23, 35, 59, 0.05);
-  --shadow-md: 0 7px 18px rgba(23, 35, 59, 0.08);
-  --shadow-lg: 0 18px 38px rgba(23, 35, 59, 0.12);
-  --shadow-xl: 0 28px 58px rgba(23, 35, 59, 0.15);
+  /* Root tokens now mirror the light theme's tighter palette so there is
+     ONE source of truth — data-theme blocks override these, but the
+     defaults themselves are no longer a separate, softer design. */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --border-color: #e5e7eb;
+  --border-light: #f3f4f6;
+  --accent-primary: #3b82f6;
+  --accent-secondary: #10b981;
+  --accent-danger: #ef4444;
+  --accent-warning: #f59e0b;
+  --accent-info: #0ea5e9;
+
+  /* Shadows tightened — thin borders should carry most elevation now;
+     these remain only for true floating elements (modals, dropdowns). */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 6px 0 rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 16px -2px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 16px 28px -4px rgba(0, 0, 0, 0.10);
 
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -31,7 +38,7 @@
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
 
-  /* Border Radius */
+  /* Border Radius — defaults pulled in; xl/full reserved for pills/modals */
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
@@ -68,7 +75,10 @@ body {
   font-size: 1rem;
   line-height: 1.5;
   color: var(--text-primary);
-  background: linear-gradient(135deg, #f8fafc 0%, #f4f7fb 54%, #f7faf9 100%);
+  /* Flat background instead of a diagonal gradient — gradients read as
+     softer, marketing-site styling; flat reads as technical-tool restraint.
+     Per-theme blocks below can still override this if you want texture. */
+  background: var(--bg-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -84,6 +94,8 @@ h6 {
   line-height: 1.12;
   margin-bottom: 1rem;
   color: var(--text-primary);
+  /* Slightly tighter tracking reads more "technical UI" than default */
+  letter-spacing: -0.01em;
 }
 
 h1 {
@@ -123,7 +135,7 @@ a {
 }
 
 a:hover {
-  color: #123f88;
+  color: #2563eb;
 }
 
 a:active {
@@ -156,6 +168,7 @@ pre {
   overflow-x: auto;
   padding: 1rem;
   margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
 }
 
 pre code {
@@ -193,7 +206,7 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(25, 87, 184, 0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 input:disabled,
@@ -215,7 +228,7 @@ button {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-md);
   border: none;
 }
 
@@ -227,32 +240,32 @@ button:disabled {
 .button-primary,
 .button-secondary {
   align-items: center;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-md);
   display: inline-flex;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 600;
   justify-content: center;
   line-height: 1.2;
   min-height: 2.6rem;
   padding: 0.68rem 1rem;
   text-decoration: none;
-  transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+  /* Dropped the transform/lift-on-hover — subtle scale/lift reads as
+     consumer-app polish; flat state changes read as tool-grade restraint */
+  transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
 .button-primary {
   background: var(--accent-primary);
   border: 1px solid var(--accent-primary);
-  box-shadow: 0 2px 4px rgba(25, 87, 184, 0.16);
   color: #ffffff;
+  /* No shadow at rest — borders/color carry it, shadow only appears on hover */
 }
 
 .button-primary:hover:not(:disabled) {
-  background: #123f88;
-  border-color: #123f88;
-  box-shadow: 0 5px 12px rgba(25, 87, 184, 0.22);
+  background: #2563eb;
+  border-color: #2563eb;
   color: #ffffff;
   text-decoration: none;
-  transform: translateY(-1px);
 }
 
 .button-secondary {
@@ -263,7 +276,7 @@ button:disabled {
 
 .button-secondary:hover:not(:disabled) {
   background: var(--bg-tertiary);
-  border-color: #bcc8d6;
+  border-color: var(--text-secondary);
   color: var(--text-primary);
   text-decoration: none;
 }
@@ -273,7 +286,7 @@ a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 3px solid rgba(25, 87, 184, 0.3);
+  outline: 3px solid rgba(59, 130, 246, 0.3);
   outline-offset: 2px;
 }
 
@@ -305,6 +318,55 @@ img {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+/* Shared component classes — theme-agnostic; colors come from tokens so
+   both light and dark themes style these consistently without needing
+   [data-theme="..."] prefixed duplicates for structural rules. */
+.card,
+.panel {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  /* Border-first elevation; shadow only on hover/emphasis states, not at rest */
+  padding: 1.5rem;
+}
+
+.badge {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-radius: var(--radius-full);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.progress-bar {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  height: 8px;
+}
+
+.progress-fill {
+  background: var(--accent-secondary);
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
 }
 
 /* Utility Classes */
@@ -374,6 +436,7 @@ img {
 
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -382,4 +445,3 @@ img {
     transition-duration: 0.01ms !important;
   }
 }
-

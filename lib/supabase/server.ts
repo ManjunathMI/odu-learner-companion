@@ -31,7 +31,23 @@ export async function createClient() {
 }
 
 // Service-role client for admin operations — bypasses RLS, server-side only.
-export const adminClient = createSupabaseClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazily instantiated so importing this module doesn't require Supabase env
+// vars to be present at build time (e.g. during `next build` in CI).
+let cachedAdminClient: ReturnType<typeof createSupabaseClient<Database>> | undefined;
+
+function getAdminClient() {
+  if (!cachedAdminClient) {
+    cachedAdminClient = createSupabaseClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return cachedAdminClient;
+}
+
+export const adminClient = new Proxy({} as ReturnType<typeof createSupabaseClient<Database>>, {
+  get(_target, prop) {
+    const client = getAdminClient();
+    return Reflect.get(client, prop, client);
+  },
+});

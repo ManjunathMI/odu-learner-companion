@@ -1,248 +1,170 @@
 # ODU Learner Companion Project Guide
 
-This repository is a Next.js 16 App Router application for a multi-tenant learning platform. It is not a generic React app and it is not an Express app. The app uses TypeScript, React 19, and Supabase for database and auth.
+This repository is a Next.js 16 App Router application using TypeScript, React 19, and Supabase Auth/PostgreSQL. It is not an Express application and it does not use a `src/` directory.
 
-## Core Product Model
+## Product Direction
 
-The project is designed around learning paths as tenant-like units. Each path owns its own:
+ODU Learner Companion is a collaborative learning companion for students, working professionals, and lifelong learners.
 
-- metadata
-- membership
-- roles
-- approvals
-- progress
-- notes
-- leaderboard
-- nested plan content
+Primary message: **Learn anything. Together.**
 
-Key product concepts:
+Core proposition: **You do not have to learn alone.**
 
-- Visitor: browses approved public paths
-- Learner: studies a path, tracks progress, writes notes, views leaderboard
-- Moderator: reviews join requests for a specific path
-- Path admin: manages one path's metadata, membership, and plan
-- Platform admin: manages platform-wide approvals or wall moderation
+The core journey is:
 
-All path-scoped operations should stay restricted by `path_id` and should use server-side authorization checks.
+```text
+Discover -> Choose a learning goal -> Join/create a Learning Space
+-> Learn -> Collaborate -> Practice -> Track progress -> Reflect -> Grow
+```
+
+A Learning Space is a user-facing concept around an existing `learning_paths` tenant. Do not create a second `learning_spaces` tenant hierarchy unless explicitly requested.
+
+## Canonical Documentation
+
+Use the repository documentation as the source of truth:
+
+1. `README.md` — product overview, setup, and implementation direction
+2. `docs/business-guide.md` — product vision, terminology, roles, workflows, and business rules
+3. `docs/architecture.md` — system architecture, tenant model, information architecture, authorization, and UI architecture
+4. `docs/api.md` — API contracts
+5. `docs/development.md` — local development and database setup
+6. `docs/database-operations.md` — database operations
+7. `docs/roadmap.md` — phased delivery plan
+
+Do not create duplicate product or architecture documents for an existing decision. Update the canonical document instead.
 
 ## Repository Reality
 
-This repo uses the actual App Router structure, not a `src/pages` or `src/app` layout.
+```text
+app/                       Next.js routes and API handlers
+components/                Reusable UI/domain components
+lib/                       Auth, authorization, API, and Supabase helpers
+types/database.ts          Database model types
+docs/                      Canonical documentation
+public/                    Static assets
+styles/                    Existing styling/theme files
+AGENTS.md                  Durable project memory
+```
 
-### Main directories
+Important current routes include:
 
-- `app/` — app routes and route handlers
-  - `app/page.tsx` — public wall/home page
-  - `app/auth/page.tsx` — email OTP / auth page
-  - `app/paths/page.tsx` — user paths dashboard
-  - `app/paths/[pathId]/page.tsx` — path board
-  - `app/paths/[pathId]/settings/page.tsx` — path admin settings
-  - `app/paths/[pathId]/approvals/page.tsx` — join approval queue
-  - `app/api/` — API handlers for path actions and platform actions
-- `components/` — reusable UI components like `PathBoard`, `ApprovalsPanel`, `CreatePathForm`
-- `lib/` — shared application logic
-  - `lib/auth.ts` — session and platform-admin helpers
-  - `lib/path-auth.ts` — path role authorization helpers
-  - `lib/api.ts` — shared fetch wrapper for API clients
-  - `lib/supabase/` — browser and server Supabase clients
-- `types/database.ts` — database type definitions
-- `docs/` — product, architecture, API, and development docs
-- `designDocs/` — design materials and schema references
-- `public/` and `styles/` — static assets and theme files
+- `app/page.tsx` — public homepage/discovery/wall experience
+- `app/auth/page.tsx` — authentication
+- `app/paths/page.tsx` — existing paths dashboard / compatibility surface
+- `app/paths/[pathId]/page.tsx` — Learning Space/path board
+- `app/paths/[pathId]/settings/page.tsx` — creator/path settings
+- `app/paths/[pathId]/approvals/page.tsx` — membership approvals
+- `app/admin/page.tsx` — platform admin workspace
+- `app/api/...` — server API route handlers
 
-## Technology Stack
+Preferred future product routes are `/explore` for discovery and `/journey` for the personal learning dashboard. Keep existing `/paths` functionality working while these experiences are introduced.
 
-- Next.js 16
+## Technology Rules
+
+- Next.js 16 App Router
 - React 19
 - TypeScript
 - Supabase Auth + PostgreSQL
-- `@supabase/ssr` for cookie-based browser sessions
-- CSS custom properties / theme system
-- No Express dependency in the repo
+- `@supabase/ssr` for browser sessions
+- Native `fetch` API patterns already used by the repository
+- Existing Tailwind/PostCSS/CSS custom-property stack
+- Do not introduce another UI framework for ordinary product work.
+
+Before writing code for unfamiliar Next.js 16 behavior, read the relevant installed Next.js documentation under `node_modules/next/dist/docs/` as required by `AGENTS.md`.
 
 ## Architecture Rules
 
-### App Router conventions
+### Tenant model
 
-- Use the `app/` directory for pages and route handlers.
-- Route handlers live under `app/api/.../route.ts`.
-- Use `GET`, `POST`, `PATCH`, and `DELETE` handlers in Next.js route files.
-- Do not assume Express-style request handlers or `req/res` patterns from a Node server.
+`learning_paths` is the tenant root:
 
-### Auth and authorization
+```text
+learning_paths
+  -> phases
+    -> days
+      -> lesson_items
 
-- Authentication is Supabase-based.
-- Path-level permissions must be checked server-side.
-- Do not trust only client-side UI state for authorization.
-- Role checks should use helper logic from `lib/path-auth.ts` and `lib/auth.ts`.
-- Keep tenant scope in `path_id`.
-
-### Data access pattern
-
-- Prefer project utilities in `lib/` and Supabase helpers in `lib/supabase/`.
-- Reuse shared fetch logic when speaking to API endpoints.
-- Keep platform-level and path-level concerns clearly separated.
-
-## Project Setup
-
-### Prerequisites
-
-- Node.js 22+ recommended
-- npm
-- Supabase project
-- Database schema from project design materials, such as the canonical `phase1-schema.sql`
-
-### Install
-
-```bash
-npm install
+path_memberships(user_id, path_id, role, status)
+progress(user_id, path_id, item_key)
+notes(user_id, path_id, item_key)
+feedback(user_id, path_id)
 ```
 
-### Run locally
+Every path-owned operation must remain scoped by `path_id`.
+
+### Authorization
+
+Use the existing path-aware authorization helpers and server-side checks. Do not trust client-side UI state for authorization.
+
+Platform-admin operations and path-scoped operations must remain deliberately separate. A UI term such as Learning Space must never imply permissions beyond the underlying role model.
+
+### Authentication
+
+- Browser Supabase client: `lib/supabase/client.ts`
+- SSR/server clients: `lib/supabase/server.ts`
+- Caller resolution: `lib/auth.ts`
+- Session refresh/protection: `proxy.ts`
+- API handlers must authenticate independently because the APIs are designed for future mobile clients.
+
+## Product UX Rules
+
+- Public experience should be discovery-first, not administration-first.
+- The homepage should clearly communicate “Learn anything. Together.”
+- Make the learner's next useful action obvious.
+- Use Learning Space as the collaborative experience around a Learning Path.
+- Use My Journey for the learner's personal goals, active spaces, progress, next action, and notes.
+- Build reusable components and design primitives rather than page-specific styling.
+- Prefer a calm, modern, structured, motivating, trustworthy visual language.
+- Avoid excessive gradients, glassmorphism, neon/glow effects, stock imagery, and decorative dashboards.
+- Responsive behavior and accessibility are first-class requirements.
+- Do not display future functionality as if it already exists.
+
+## AI Boundary
+
+AI Companion is a planned supporting capability. Candidate actions include explaining topics, quizzes, learning-plan generation, knowledge-gap identification, and next-step suggestions.
+
+Never present an AI capability as implemented until the corresponding backend exists. AI must not silently modify learning plans or learner records.
+
+## Step-by-Step Implementation Protocol
+
+For every requested change:
+
+1. Read the relevant canonical docs and inspect the existing implementation.
+2. State the smallest sensible implementation scope.
+3. Identify affected routes/components and whether APIs are actually required.
+4. Preserve database, RLS, auth, API contracts, and tenant boundaries unless explicitly asked to change them.
+5. Implement only the requested slice.
+6. Reuse existing components, helpers, and APIs where practical.
+7. Check loading, empty, error, success, responsive, and accessibility states when relevant.
+8. Run:
 
 ```bash
-npm run dev
-```
-
-### Validate
-
-```bash
-npm run build
 npm run lint
+npm run build
 ```
 
-## Environment Variables
+9. Summarize changed files, verification results, and any follow-up work.
+10. If the change creates a new durable architectural/product decision, update the appropriate canonical doc.
 
-Create a `.env.local` file in the project root. Use the project README as the canonical reference for required values.
+## Product Roadmap Boundary
 
-Typical values include:
+The immediate priority is the Product Experience phase:
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-SUPABASE_SERVICE_ROLE_KEY=your-server-only-secret-key
-```
+1. Homepage/discovery modernization.
+2. `/explore` discovery experience.
+3. `/journey` learner dashboard.
+4. Learning Space UX refinement.
+5. Reusable responsive/accessibility system.
 
-Important:
-
-- Never expose `SUPABASE_SERVICE_ROLE_KEY` to the client.
-- Do not prefix server secrets with `NEXT_PUBLIC_`.
-- Keep local configuration out of git.
-
-## Coding Conventions
-
-### General
-
-- Prefer minimal, targeted edits over broad rewrites.
-- Keep the app-router and route-handler conventions already used in the repo.
-- Match the existing project structure instead of creating new generic folders that do not exist.
-- Keep features scoped to the correct tenant/path boundary.
-
-### Files and imports
-
-- Use TypeScript files (`.ts`, `.tsx`) in the repo.
-- Use consistent path-aware imports.
-- Do not assume `src/` exists unless it is clearly part of the actual structure.
-
-### Route and API work
-
-- Add or edit route handlers in `app/api/.../route.ts`.
-- Use Next.js route conventions, not Express.
-- Keep authorization and data validation inside the request handler.
-- Return consistent JSON responses and status codes.
-
-## Key Files to Know
-
-- `package.json` — scripts and dependencies
-- `README.md` — canonical project overview and setup instructions
-- `AGENTS.md` — durable project memory and planning context
-- `app/page.tsx` — public landing/wall page
-- `app/auth/page.tsx` — auth experience
-- `app/paths/page.tsx` — user paths dashboard
-- `app/paths/[pathId]/page.tsx` — main path board interface
-- `app/api/paths/.../route.ts` — path-scoped APIs
-- `lib/auth.ts` — platform auth helpers
-- `lib/path-auth.ts` — per-path access checks
-- `lib/api.ts` — app-wide API wrapper
-- `lib/supabase/client.ts` and `lib/supabase/server.ts` — Supabase access
-- `types/database.ts` — DB model shape
-
-## Common Tasks
-
-### Adding a page
-
-Create or update a route inside `app/` using the Next.js App Router pattern. For example:
-
-- `app/paths/[pathId]/page.tsx`
-- `app/paths/[pathId]/settings/page.tsx`
-
-Use server components or client components appropriately, following the repo’s existing patterns.
-
-### Adding or editing API routes
-
-Place new handlers under `app/api/.../route.ts` and follow the project’s route pattern.
-
-Examples:
-
-- `app/api/paths/route.ts`
-- `app/api/paths/[pathId]/route.ts`
-- `app/api/paths/[pathId]/leaderboard/route.ts`
-
-Use `NextResponse` and standard route-handler patterns, not Express middleware patterns.
-
-### Updating path-scoped behavior
-
-When a feature depends on a specific learning path, check the path-scoped authorization logic and keep operations constrained to the relevant `path_id`.
-
-## Troubleshooting
-
-### Common issues
-
-- Route or page not found: confirm the file is under the correct `app/` path
-- Build/type errors: check TypeScript and Next.js conventions
-- Auth errors: verify Supabase env variables and session setup
-- Permission issues: check path-role logic in `lib/path-auth.ts`
-- API failures: inspect the route handler and verify request shape and auth tokens
-
-### Debugging advice
-
-- Read the project docs in `docs/` before changing architecture
-- Inspect route files near the failing feature before broad edits
-- Use the repo’s actual scripts from `package.json` to validate changes
-- Keep changes aligned with the app-router and Supabase architecture, not generic templates
-
-## Documentation to Use
-
-Prefer the repo docs in this order:
-
-1. `README.md`
-2. `docs/architecture.md`
-3. `docs/api.md`
-4. `docs/development.md`
-5. `docs/database-operations.md`
-6. `designDocs/`
-
-These are the source of truth for architecture and behavior.
+Later phases cover creator/community features, AI Companion, engagement, production readiness, and mobile. Do not implement later-phase functionality simply because it is listed in the roadmap.
 
 ## Important Constraints
 
-- This is not a `src`-based project.
-- This is not an Express project.
-- Path-specific data and authorization must remain isolated.
-- Platform-wide admin features and path-scoped features must be treated separately.
-- The local engine should prefer the repo’s actual files and conventions over generic Next.js assumptions.
-
-## Summary for the Local AI Engine
-
-When generating or editing code in this repository, assume the following:
-
-- App Router Next.js app
-- TypeScript + React 19
-- Supabase auth and database
-- Multi-tenant path-first architecture
-- Files live under `app/`, `components/`, `lib/`, `types/`, and `docs/`
-- API routes are in `app/api/.../route.ts`
-- Authorization and tenant scoping are required for all path-sensitive operations
-
-This is the correct operating context for understanding and contributing to the project.
+- No Express patterns.
+- No `src/` directory assumptions.
+- No duplicate documentation for existing decisions.
+- No second tenant hierarchy for Learning Spaces.
+- No unrequested database/schema/RLS changes during UI work.
+- No fake metrics or unimplemented feature claims.
+- No client-only authorization.
+- Keep changes focused and reviewable.

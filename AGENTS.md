@@ -10,19 +10,33 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # ODU Learner Companion Agent Memory
 
-This repository is a Next.js 16 application using the App Router, TypeScript, React 19, and Supabase-based server/client auth and data access. Treat this file as the durable project memory for both implementation and planning.
+This repository is a Next.js 16 application using the App Router, TypeScript, React 19, and Supabase-based server/client auth and data access. Treat this file as durable project memory for implementation and planning.
 
-## Project baseline
+## Product Direction
 
-- App entry points live under `app/` with route handlers in `app/api/` and page-level routes in `app/paths/` and `app/docs/`.
-- Shared API and auth logic lives in `lib/` and the Supabase helpers are under `lib/supabase/`.
-- Database schema and type definitions are tracked in `types/database.ts`.
-- Build and validation commands are defined in `package.json` and should be used for verification before claiming completion.
-- The repo includes design and product docs under `docs/` and `designDocs/`; use them to understand intent before changing behavior.
+ODU Learner Companion is a collaborative learning companion for students, working professionals, and lifelong learners.
 
-## Architecture at a glance
+Primary message: **Learn anything. Together.**
 
-This repository is a Next.js App Router application backed by Supabase Auth and PostgreSQL. The product is built around a single shared platform API instead of a separate backend service: the browser, and future mobile clients, interact with the same `/api/...` route handlers and the same path-scoped data model.
+Core proposition: **You do not have to learn alone.**
+
+The product journey is:
+
+```text
+Discover -> Choose a learning goal -> Join/create a Learning Space
+-> Learn -> Collaborate -> Practice -> Track progress -> Reflect -> Grow
+```
+
+A Learning Space is currently a product/UX concept around the existing `learning_paths` tenant. Do not create a second `learning_spaces` tenant hierarchy unless explicitly requested.
+
+## Architecture Baseline
+
+- App entry points live under `app/` with API route handlers under `app/api/`.
+- Shared auth, authorization, API, and Supabase logic lives under `lib/`.
+- Database types are tracked in `types/database.ts`.
+- Product and engineering documentation lives in `docs/`, which is the canonical documentation source.
+- Build and validation commands are defined in `package.json`.
+- Future UI work should reuse the existing Next.js/React/Tailwind/CSS stack rather than introducing a new UI framework without an explicit decision.
 
 ```text
 Web browser or mobile client
@@ -40,18 +54,9 @@ Supabase Auth + PostgreSQL + Row Level Security
 learning_paths / path_memberships / progress / notes / approvals
 ```
 
-### Core architectural layers
+## Tenant Model
 
-- Frontend: Next.js 16, React 19, TypeScript
-- Auth + persistence: Supabase Auth and Postgres
-- API layer: `app/api/*` route handlers
-- Shared logic: `lib/*` helpers and auth utilities
-- Data contracts: `types/database.ts`
-- UI components: `components/*` for reusable screens and panels
-
-### Tenant model
-
-The application treats each learning path as a tenant-like unit. The data model is centered on `learning_paths` and path-scoped membership and activity records:
+`learning_paths` is the tenant root:
 
 ```text
 learning_paths
@@ -65,92 +70,116 @@ notes(user_id, path_id, item_key)
 feedback(user_id, path_id)
 ```
 
-The direct `path_id` columns on activity tables keep access checks explicit and easier to audit in PostgreSQL RLS and app-layer authorization.
+Every path-owned operation must remain scoped by `path_id`. PostgreSQL RLS and server-side authorization are the security boundaries.
 
-### Authorization model
+## Authorization Model
 
-The app uses role-aware path checks, not just global user checks:
+The application uses path-aware authorization helpers such as:
 
-- `getMembership(userId, pathId)` resolves a user’s membership record
-- `requirePathMember(...)` ensures the user is an approved path member
-- `requirePathModerator(...)` allows moderator/admin actions
-- `requirePathAdmin(...)` restricts management and mutation operations
-- `isPlatformAdmin(...)` allows platform-level override logic while keeping normal users path-scoped
+- `getMembership(userId, pathId)`
+- `requirePathMember(...)`
+- `requirePathModerator(...)`
+- `requirePathAdmin(...)`
+- `isPlatformAdmin(...)`
 
-This is implemented in `lib/path-auth.ts` and enforced in route handlers such as `app/api/paths/[pathId]/route.ts`.
+Platform-admin override behavior must remain explicit. Normal users remain constrained to their path memberships.
 
-### Auth flow
+Never rely only on client-side visibility for authorization.
 
-- `lib/supabase/client.ts` creates the browser client for the public app
-- `lib/supabase/server.ts` creates the cookie-aware SSR client and the server-only service-role client
-- `lib/auth.ts` resolves the current user from a bearer token or SSR session
-- `proxy.ts` refreshes sessions and protects app routes
+## Authentication
 
-The route handlers still validate authentication and authorization themselves because the API is designed to be reusable by mobile or other non-browser clients.
+- `lib/supabase/client.ts` creates the browser Supabase client.
+- `lib/supabase/server.ts` creates the SSR and server-only clients.
+- `lib/auth.ts` resolves callers from Bearer tokens or SSR sessions.
+- `proxy.ts` refreshes web sessions and protects application routes.
+- API handlers must validate authentication independently because APIs are intended for future mobile clients too.
 
-### User journeys and roles
+## Product Information Architecture
 
-- Visitor: public wall, approved public path discovery, no private plan access
-- Learner: signs in, joins paths, tracks progress, writes notes, views leaderboard
-- Path admin: creates and manages paths, memberships, plan content, approvals
-- Platform admin: moderated public wall and platform-wide operations
+Preferred product-facing language:
 
-The product experience is intentionally role-based and keeps admin actions within the authenticated user menu rather than exposing internal operations in the primary navigation.
+- Explore / Learning Wall — public discovery.
+- Learning Path — structured curriculum.
+- Learning Space — collaborative experience around a Learning Path.
+- My Journey — personalized learning dashboard.
+- Personal Notes — learner-owned notes.
+- Community Progress — progress/leaderboard experience.
+- Space Creator / Facilitator — path admin.
+- Platform Admin — platform-level operator.
 
-## Memory retention rule
+Preferred future routes:
 
-Any understanding gained while working in this repo must be persisted so future builds and future plans can build on the same context.
+- `/explore` — discovery.
+- `/journey` — personalized learning dashboard.
 
-When you learn something important, record it in the project memory using one of these methods:
+Existing `/paths` routes should remain usable as compatibility surfaces while the product experience evolves.
 
-1. Update this `AGENTS.md` file with the new fact if it is structural or project-wide.
-2. Add a concise note to the repo memory or session memory when the environment supports it.
-3. Add or update relevant documentation in `docs/` when the learning affects product, architecture, or workflows.
+## Current Foundation
 
-Important context to preserve includes:
+Implemented capabilities include:
 
-- architecture decisions and why they were chosen
-- routes, data flows, and user journeys
-- auth and Supabase patterns
-- build commands, validation results, and known constraints
-- bugs, edge cases, and prior fixes
-- open tasks, blockers, and next-step plans
+- Supabase email OTP authentication.
+- Public wall/discovery data.
+- User-created learning paths.
+- Creator-to-path-admin membership through a database trigger.
+- Path metadata and nested learning plans.
+- Membership requests and approval workflows.
+- Progress tracking and leaderboard data.
+- Personal notes.
+- Profile management.
+- Path-scoped APIs.
+- GitHub Actions lint/build validation.
 
-## Planning standard
+## Current Delivery Focus
 
-Before starting major work, review the project memory first. Do not treat prior understanding as disposable or temporary.
+The immediate priority is the Product Experience phase in `docs/roadmap.md`:
 
-When planning new work:
+1. Modernize the homepage around discovery and “Learn anything. Together.”
+2. Introduce `/explore` for topic and learning-path discovery.
+3. Introduce `/journey` for the learner's goals, active spaces, progress, and next action.
+4. Refine the existing path board into the Learning Space experience.
+5. Establish reusable responsive and accessible UI primitives.
+6. Then expand creator/community features, AI assistance, engagement, production hardening, and mobile.
 
-- summarize the current project state
-- note what is already known and what is still uncertain
-- record the proposed implementation path
-- identify how the change affects routes, auth, database access, and user experience
-- capture verification steps before the work is considered done
+Do not implement later-phase functionality merely because it appears in the roadmap. The UI must reflect actual implemented capabilities.
 
-## Current implementation focus
+## UI/UX Rules
 
-Phase 2 now includes profile management, role-based navigation, a visual plan editor, membership controls, a platform workspace, public-path discovery filtering, and the first learner-board progress pass.
+- Discovery should be more prominent than administration on public surfaces.
+- The next useful learning action should be obvious.
+- The interface should feel calm, modern, structured, motivating, and trustworthy.
+- Prefer restrained visual hierarchy over neon, heavy glow, excessive gradients, glassmorphism, stock imagery, or decorative metrics.
+- Use consistent primary/secondary action treatments.
+- Positive progress can use restrained success styling.
+- Responsive behavior and accessibility are first-class requirements.
+- Build reusable domain components instead of page-specific visual drift.
 
-Current delivery focus is completing the remaining experience and production-readiness backlog in `docs/roadmap.md`:
+## AI Companion Boundary
 
-- Validate the role journeys with the seeded visitor, learner, moderator, path-admin, and platform-admin accounts.
-- Continue refining Path Settings, approvals, profile, and platform-workspace usability.
-- Add automated API authorization and tenant-isolation tests, followed by operational safeguards such as rate limiting, logging, monitoring, and environment procedures.
-- Keep platform-admin override logic in `lib/path-auth.ts`; it grants the effective path-admin capability to platform admins while ordinary users remain path-scoped.
-- The path board retrieves a member's completed item IDs from `GET /api/paths/:pathId/progress`; do not replace this with client-only progress state.
-- GitHub Actions validates lint and production builds on pull requests and pushes to `main` through `.github/workflows/ci.yml`.
+AI is a planned supporting capability. Candidate actions include explaining topics, quizzes, learning-plan generation, knowledge-gap identification, and next-step suggestions.
 
-## Execution expectations
+Never claim or visually present an AI capability as available until its backend implementation exists. AI must not silently modify learning plans or learner records.
 
-- Prefer minimal, targeted edits over broad rewrites.
-- Match the existing app-router and route-handler conventions already used in the repo.
-- Keep instructions and project context aligned with actual code, not assumptions from generic templates.
-- If a fact conflicts with prior memory, update the memory and explain the change clearly.
-- Do not lose project continuity between sessions or future agents.
+## Coding and Change Rules
 
-## Verification habit
+- Prefer minimal, targeted edits.
+- Read `docs/business-guide.md`, `docs/architecture.md`, and `docs/roadmap.md` before major product changes.
+- Preserve existing API contracts and reuse existing APIs where possible.
+- Do not change database schema, RLS, authentication, authorization, API contracts, or tenant boundaries during a UI-only task unless explicitly requested.
+- Do not create duplicate documentation for an existing decision; update the canonical document in `docs/`.
+- Do not introduce a second tenant hierarchy for Learning Spaces.
+- Do not invent product metrics or unimplemented functionality.
+- Keep platform-admin and path-scoped operations separate.
 
-Before claiming success, verify with the repo’s actual commands. For this project, the default validation path is the scripts in `package.json`, including linting and build steps when relevant. Record the result in the relevant memory location so future work knows what has already been tested.
+## Verification Habit
 
-This repo’s project memory should be treated as living documentation: each new understanding strengthens the next build, the next plan, and the next implementation step.
+Before claiming completion:
+
+```bash
+npm run lint
+npm run build
+```
+
+Also manually validate the affected user journey at desktop and mobile widths when the change is UI-related.
+
+Record important architectural or workflow changes in the canonical documentation so future sessions preserve project continuity.

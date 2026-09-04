@@ -1,8 +1,30 @@
 # Product Roadmap
 
-This roadmap records the next product phases after the current Phase 1 multi-tenant foundation.
+This roadmap is the canonical planning document for ODU Learner Companion. It builds on the existing multi-tenant foundation and evolves the product from a learning tracker into a collaborative learning companion for students, working professionals, and lifelong learners.
 
-## Current State: Phase 1 Foundation
+## Product Direction
+
+**Primary message:** Learn anything. Together.
+
+**Core proposition:** You do not have to learn alone.
+
+The product journey is:
+
+```text
+Discover
+   -> Choose a learning goal
+   -> Join or create a Learning Space
+   -> Learn
+   -> Collaborate
+   -> Practice
+   -> Track progress
+   -> Reflect
+   -> Grow
+```
+
+A Learning Space is currently a product/UX concept around the existing `learning_paths` tenant. It does not require a new `learning_spaces` database table at this stage.
+
+## Current State: Foundation
 
 Implemented and available for local testing:
 
@@ -17,16 +39,109 @@ Implemented and available for local testing:
 - Path-scoped progress tracking.
 - Path leaderboard.
 - Path-scoped notes.
+- Profile management.
 - Public documentation and API contracts.
 - Bearer-token-compatible API design for a future React Native client.
+- CI checks for repository lint and production-build validation.
 
-The canonical database schema remains the source of truth for tenant isolation and role behavior.
+The canonical database schema remains the source of truth for tenant isolation and role behavior. Product-layer redesign must not weaken these boundaries.
 
-## Phase 2: Product Usability and Administration
+## Phase 1.5: Product Experience
 
-### Visual Plan Editor
+This is the immediate priority: make the existing foundation feel like a professional learning companion before adding large amounts of functionality.
 
-Replace the JSON plan editor with a guided interface:
+### Brand and Product Language
+
+- Establish ODU as a learning companion rather than only a tracker.
+- Use `Learn anything. Together.` as the primary positioning direction.
+- Keep the multilingual `ಓದು` identity as a brand element rather than relying on it to explain the product.
+- Use consistent terminology across navigation, cards, empty states, CTAs, and documentation.
+
+Preferred product vocabulary:
+
+| Current concept | Product-facing language |
+|---|---|
+| Public wall | Explore / Learning Wall |
+| Learning path | Learning Path |
+| Path membership | Join a Learning Space |
+| My Paths | My Journey |
+| Path board | Learning Space |
+| Notes | Personal Notes |
+| Leaderboard | Community Progress |
+| Path admin | Space Creator / Facilitator |
+| Platform admin | Platform Admin |
+
+### Homepage and Discovery
+
+Move the public homepage from a tracker-first presentation toward discovery:
+
+1. Hero explaining the product in one clear sentence.
+2. Search prompt such as “What do you want to learn?”
+3. Topic/category exploration.
+4. Featured or relevant public learning paths.
+5. Explanation of why learning together is useful.
+6. Preview of the learner journey.
+7. AI Companion preview marked as planned or available only where actually implemented.
+8. Clear sign-in/start-learning CTA.
+
+Introduce `/explore` as the clearer discovery route while retaining existing routes where compatibility is useful.
+
+### My Journey
+
+Introduce `/journey` as the preferred personal learning dashboard, with `/paths` retained as a compatibility route while the experience transitions.
+
+The journey should answer:
+
+- What am I learning?
+- What is active right now?
+- What did I complete?
+- What should I do next?
+- What notes or reflections have I captured?
+- Where am I learning with other people?
+
+### Learning Space UX
+
+Present the existing path board as a collaborative Learning Space without changing the tenant model.
+
+Potential structure:
+
+- Overview
+- Learning Path
+- Members
+- Progress
+- Discussions — only when implemented
+- Resources — only when implemented
+
+Do not show empty tabs merely to imply future functionality.
+
+### Responsive Design System
+
+Establish reusable UI primitives and domain components for:
+
+- Navigation/header.
+- Hero and discovery sections.
+- Search/filter controls.
+- Learning-path cards.
+- Progress indicators.
+- Status badges.
+- Empty/loading/error states.
+- Primary and secondary buttons.
+- Learning Space sections.
+- Journey cards.
+
+Visual direction:
+
+- Calm, modern, structured, motivating, and trustworthy.
+- Restrained ink/cobalt-style primary system with restrained positive-progress treatment.
+- Readable interface typography with a coherent heading/display treatment.
+- Avoid excessive gradients, glassmorphism, neon effects, stock imagery, and decorative dashboards.
+- Prioritize hierarchy and the learner's next useful action over visual novelty.
+
+## Phase 2: Creator and Community
+
+### Guided Plan Editor
+
+Replace the JSON-oriented plan editing experience with a guided interface:
 
 - Add, remove, and reorder phases.
 - Add, remove, and reorder days.
@@ -34,6 +149,30 @@ Replace the JSON plan editor with a guided interface:
 - Validate required fields before saving.
 - Preview the learner experience.
 - Warn before replacing an existing plan.
+- Provide clear save, success, and error states.
+
+### Membership Management
+
+Add creator/facilitator controls for:
+
+- Promoting an approved learner to moderator.
+- Demoting a moderator.
+- Removing a member.
+- Viewing member display names instead of UUIDs.
+- Showing pending, approved, and rejected states clearly.
+
+### Community Layer
+
+Evaluate and incrementally implement:
+
+- Discussions.
+- Learning resources.
+- Questions and answers.
+- Study groups or cohorts.
+- Challenges or practice activities.
+- Useful announcements.
+
+The product should be social around learning, not a generic social-media clone.
 
 ### Platform Admin Console
 
@@ -42,45 +181,54 @@ Add server-backed platform administration:
 - Review paths requesting public listing.
 - Approve, reject, or unlist paths.
 - View platform-level feedback.
-- Manage platform admins through a protected operation.
+- Manage platform admins through protected operations.
 - Keep platform-admin access separate from path-admin access.
+- Establish audit history where product policy requires it.
 
-### Profiles
+## Phase 3: AI Companion
 
-Use the existing `profiles` table to add:
+Introduce AI as a supporting learning capability rather than as the center of the product.
 
-- Display name.
-- Avatar.
-- Short bio.
-- Social links.
-- Repository links.
-- Visibility preferences.
+Candidate capabilities:
 
-### Better Membership Management
+- Explain a topic.
+- Quiz me.
+- Create a learning plan.
+- Identify knowledge gaps.
+- Suggest what to learn next.
+- Summarize or transform learner-provided notes where appropriate.
 
-Add path-admin controls for:
+Implementation principles:
 
-- Promoting an approved learner to moderator.
-- Demoting a moderator.
-- Removing a member.
-- Viewing member display names instead of UUIDs.
-- Showing pending, approved, and rejected states clearly.
+- Never display an AI feature as available until its backend capability exists.
+- Keep AI suggestions grounded in the learner's selected goal/path/context.
+- Let learners accept, reject, edit, or ignore AI-generated suggestions.
+- Avoid allowing AI to silently modify learning plans or learner records.
+- Treat privacy and tenant isolation as first-class requirements.
 
-### Role-Based Navigation and Product Journey Validation
+## Phase 4: Engagement and Recognition
 
-Before broadening the feature list, harden the user experience for each persona:
+The schema already reserves space for badges. Evaluate:
 
-- Keep the public wall focused on discovery and sign-in.
-- Put profile and admin actions in the authenticated user menu, not in the visible top nav.
-- Validate the complete journey for visitor, learner, path admin, and platform admin.
-- Seed test bed accounts and sample path data so the app can be reviewed visually by role.
-- Confirm the product feels coherent across authenticated and unauthenticated states.
+- Automatic completion badges.
+- Manual moderator/admin awards.
+- Path-specific and platform-wide badges.
+- Learner achievement history.
+- Milestones.
+- Streaks.
+- Certificates.
+- Cohort announcements.
+- Completion analytics.
 
-## Phase 3: Production Readiness
+Engagement should reinforce learning behavior rather than turn the product into a points-first gamification system.
+
+## Phase 5: Production Readiness
+
+Harden the platform before broad public adoption:
 
 - Automated tests for API authorization and tenant isolation.
 - Integration tests against a disposable Supabase project.
-- Structured server logging without credentials or personal data.
+- Structured server logging without credentials or unnecessary personal data.
 - Error monitoring and alerting.
 - Rate limiting for authentication, join requests, feedback, and write endpoints.
 - Pagination for wall, members, notes, and leaderboard data.
@@ -89,87 +237,55 @@ Before broadening the feature list, harden the user experience for each persona:
 - Backup and recovery procedure.
 - CI build and lint checks.
 - Secure deployment environment configuration.
+- Accessibility review covering keyboard navigation, focus states, contrast, labels, and screen-reader semantics.
+- Desktop and mobile validation across the main product journeys.
 
-## Phase 4: Mobile Client
+## Phase 6: Mobile Client
 
-Build React Native clients for Android and iOS using the existing APIs:
+Build React Native clients for Android and iOS using the existing server APIs:
 
 - Supabase mobile authentication and secure session storage.
 - Shared path, membership, plan, progress, notes, and leaderboard contracts.
-- Native navigation and offline-friendly read caching.
+- Native navigation.
+- Offline-friendly read caching.
 - Retry handling for progress updates.
 - Push-notification foundation if notifications become part of the product.
 
-The mobile client should not access the database directly. It should use the same server API and authorization rules as the web client.
+The mobile client must not access the database directly. It should use the same server API and authorization rules as the web client.
 
-## UI/UX Review Backlog
+## UX Validation Backlog
 
-### Design Direction Agreed
+Before moving aggressively into new features, validate the core journeys with seeded accounts and realistic sample data.
 
-The product should feel clean, structured, motivating, and trustworthy. The interface should prioritize the learner's next useful action, present role-specific controls only where relevant, and make system status plain without relying on decorative UI.
-
-The visual system uses a restrained ink-and-cobalt palette with sage reserved for positive progress, an editorial display face for headings, and an Avenir-style interface face for controls and body text. Primary actions use a consistent solid treatment; secondary actions remain quiet, bordered controls. This decision applies to all future screens and prevents page-specific visual drift.
-
-Public research note: AIParth's unauthenticated shell was reviewed for interaction patterns only. Its roadmap and library discovery routes, personal learning area, focused path-finding action, and daily-growth prompt reinforce the product direction toward structured discovery and personal progress. ODU Learner Companion will use these as general design signals only, and will not copy AIParth curriculum content, branding, copy, or visual assets.
-
-The public AIParth software-engineer sprint roadmap was also reviewed for its high-level progression pattern: scoped sprint duration, a concrete outcome, ordered competency arcs, and a capstone. ODU Learner Companion now includes its own `AI-Enabled Software Engineering Sprint` path using original content, public resources, and a four-phase sequence for AI-assisted development, integration, bounded workflows, and portfolio delivery.
-
-### Completed in the First UI/UX Pass
-
-- Refreshed the public wall with an explicit discovery hierarchy and scannable path summaries.
-- Refreshed My Paths as a personal workspace with distinct active, pending, and empty states.
-- Kept public navigation focused on Wall and My paths; account, profile, and platform-admin actions remain in the authenticated user menu.
-
-### Completed in the Learner Board and Admin Access Pass
-
-- Restored each approved member's completed lessons when loading a path and added a progress summary with the next lesson.
-- Added explicit note-saving feedback so a learner can distinguish an unsaved edit from a saved note.
-- Made platform-admin access an explicit override in the shared path authorization helpers; a platform admin can open and manage any path while normal users remain constrained by path membership and role.
-- Added public-wall search and topic filtering using the existing public path data, including an explicit no-results state.
-- Added GitHub Actions continuous integration to run the repository lint and production-build checks on pull requests and pushes to `main`.
-
-### Next UI/UX Review Items
-
-1. Path board: add visible progress summary, clearer current/next lesson state, and calmer lesson completion controls.
-2. Path board: make notes feedback explicit and distinguish saved notes from unsaved edits.
-3. Path settings: separate metadata, plan editing, and membership management into clearer working areas; add save-state feedback and destructive-action confirmation.
-4. Admin workspace: improve path-review context, approval decisions, and empty/error states; establish a deliberate audit-history design once the product decision is made.
-5. Account experience: review profile editing, menu behavior, session loading, and mobile navigation for each seeded user role.
-6. Discovery: evaluate search, filtering, tags, and no-result states after the initial visual flow is validated with real path data.
-7. Accessibility: complete keyboard navigation, visible focus states, contrast review, and screen-reader labels for menus, tabs, status badges, and editor actions.
-
-### UI/UX Validation Checklist
-
-- Review visitor, learner, moderator, path-admin, and platform-admin flows using the seeded test accounts.
-- Check desktop and mobile layouts at each main route: Wall, My Paths, Path Board, Path Settings, Profile, and Admin.
-- Confirm that every status has an understandable empty, loading, success, and error state.
-- Confirm roles expose only useful actions, while platform-admin operations remain visibly deliberate.
-
-## Phase 5: Engagement and Recognition
-
-The schema already reserves space for badges:
-
-- Automatic completion badges.
-- Manual moderator/admin awards.
-- Path-specific and platform-wide badges.
-- Learner achievement history.
-
-Potential future additions:
-
-- Milestones.
-- Streaks.
-- Certificates.
-- Cohort announcements.
-- Completion analytics.
+1. Visitor discovers a relevant learning path without signing in.
+2. Visitor understands why joining a Learning Space is useful.
+3. Learner can identify their current learning goal and next action immediately.
+4. Learner can complete a lesson and understand the resulting progress state.
+5. Learner can save a personal note and clearly distinguish saved vs unsaved state.
+6. Creator can understand and manage their Learning Space without exposing platform-admin operations.
+7. Moderator can review relevant member/content actions without unnecessary complexity.
+8. Platform admin can perform protected platform operations deliberately and visibly.
+9. Every main route has understandable loading, empty, success, and error states.
+10. Desktop and mobile layouts remain coherent across the full journey.
 
 ## Product Decisions Still Needed
 
-Before Phase 2 implementation, decide:
+These decisions should be made before implementing the corresponding feature, rather than blocking the current product-experience work:
 
 1. Should new paths remain private and pending review, or should some users be allowed to publish immediately?
 2. Which platform-admin actions require audit history?
 3. Should notes be visible to all approved path members or only to their author?
-4. Should leaderboard display names, avatars, or anonymous rankings?
+4. Should Community Progress display names, avatars, or anonymous rankings?
 5. Should moderators manage approvals only, or also moderate feedback and content?
-6. What is the first React Native workflow: learner tracking, path discovery, or administration?
-7. What license and contribution policy should the public repository use?
+6. What community model should be used first: open discussion, cohorts, or focused study groups?
+7. What is the first React Native workflow: learner tracking, path discovery, or administration?
+8. What license and contribution policy should the public repository use?
+
+## Guardrails for Future Work
+
+- Do not create duplicate documentation for the same architectural/product decision; update the existing canonical files in `docs/`.
+- Do not change database schema, RLS, authentication, API contracts, or tenant boundaries as part of a UI-only task unless explicitly requested.
+- Reuse existing APIs and components wherever practical.
+- Do not invent product metrics or claim functionality that is not implemented.
+- Do not introduce a second tenant hierarchy merely to support Learning Space terminology.
+- Keep the product focused on learning, collaboration, progress, and useful next actions.

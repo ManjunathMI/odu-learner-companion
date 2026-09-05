@@ -12,17 +12,17 @@ const Footer = () => {
       <div className="footer-content">
         <div className="footer-section">
           <h3>ODU Learner Companion</h3>
-          <p>A comprehensive learning tracker for ODU students.</p>
+          <p>A collaborative learning companion for students, professionals, and lifelong learners.</p>
         </div>
 
         <div className="footer-section">
           <h4>Quick Links</h4>
           <ul>
             <li>
-              <Link href="/">Home</Link>
+              <Link href="/explore">Explore</Link>
             </li>
             <li>
-              <Link href="/paths">My Paths</Link>
+              <Link href="/journey">My Journey</Link>
             </li>
             <li>
               <Link href="/auth">Sign In</Link>

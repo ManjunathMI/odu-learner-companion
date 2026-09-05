@@ -357,6 +357,25 @@ img {
   transition: width 0.3s ease;
 }
 
+.state-panel {
+  min-height: 50vh;
+  padding-top: 4rem;
+}
+
+.state-panel p:not(.eyebrow) {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.next-action a {
+  font-weight: 700;
+}
+
+[role="tabpanel"]:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.3);
+  outline-offset: 4px;
+}
+
 header {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
@@ -375,6 +394,23 @@ footer {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
+}
+
+.skip-link {
+  position: fixed;
+  top: .75rem;
+  left: .75rem;
+  z-index: var(--z-tooltip);
+  padding: .65rem .85rem;
+  border-radius: var(--radius-sm);
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  color: var(--bg-primary);
 }
 
 .text-center {

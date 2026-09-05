@@ -137,6 +137,18 @@ Visual direction:
 - Avoid excessive gradients, glassmorphism, neon effects, stock imagery, and decorative dashboards.
 - Prioritize hierarchy and the learner's next useful action over visual novelty.
 
+### Phase 1.5 Implementation Status
+
+The first product-experience slice is implemented without changing the tenant,
+authentication, authorization, or API contracts:
+
+- The homepage and `/explore` share a discovery experience with public path search and tag filtering.
+- `/journey` provides authenticated active-space, progress, and pending-membership summaries while `/paths` remains a compatibility route.
+- Existing path-board functionality is presented as a Learning Space with clearer progress navigation, retry behavior, and accessible tabs.
+- Public navigation, footer language, skip navigation, and responsive discovery layouts use the preferred product vocabulary.
+
+Further Phase 1.5 work remains for broader form-state standardization, deeper member presentation, and full accessibility review.
+
 ## Phase 2: Creator and Community
 
 ### Guided Plan Editor

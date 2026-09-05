@@ -86,8 +86,8 @@ export default function PathBoard({ pathId }: { pathId: string }) {
     } catch (err) { setError(err instanceof Error ? err.message : 'Unable to submit join request'); }
   };
 
-  if (loading) return <MultilingualLoader message="Preparing your learning path" />;
-  if (error || !path) return <p className="state error">{error || 'Path not found'}</p>;
+  if (loading) return <MultilingualLoader message="Preparing your Learning Space" />;
+  if (error || !path) return <main className="board state-panel"><p className="eyebrow">Learning Space</p><h1>We could not open this space.</h1><p>{error || 'Path not found'}</p><button className="button-secondary" type="button" onClick={load}>Try again</button></main>;
 
   const items = phases.flatMap((phase) => phase.days.flatMap((day) => day.items));
   const completedCount = items.filter((item) => done[item.id]).length;
@@ -98,7 +98,7 @@ export default function PathBoard({ pathId }: { pathId: string }) {
     <div className="board">
       <header className="board-header">
         <div>
-          <p className="eyebrow">{path.visibility} path · {path.myRole || 'visitor'}</p>
+          <p className="eyebrow">Learning Space · {path.myRole || 'visitor'}</p>
           <h1>{path.title}</h1>
           {path.description && <p>{path.description}</p>}
         </div>
@@ -112,30 +112,30 @@ export default function PathBoard({ pathId }: { pathId: string }) {
           )}
         </div>
       </header>
-      {!path.myRole && <p className="state">This path is public. Request membership to view its plan and participate.</p>}
+      {!path.myRole && <p className="state">This public Learning Space is open for discovery. Request membership to view its plan and learn with the community.</p>}
       {path.myRole && <>
-        <section className="progress-summary" aria-label="Your progress">
-          <div className="progress-copy"><p className="section-label">Your progress</p><strong>{completedCount} of {items.length} lessons complete</strong>{nextItem ? <span>Next: {nextItem.title}</span> : <span>Every lesson is complete.</span>}</div>
+        <section className="progress-summary" aria-label="Your learning progress">
+          <div className="progress-copy"><p className="section-label">Your learning progress</p><strong>{completedCount} of {items.length} lessons complete</strong>{nextItem ? <span className="next-action">Next up: <a href={`#lesson-${nextItem.id}`}>{nextItem.title}</a></span> : <span>Every lesson is complete.</span>}</div>
           <div className="progress-meter"><span>{progressPercent}%</span><div className="meter-track"><i style={{ width: `${progressPercent}%` }} /></div></div>
         </section>
-        <div className="tabs" role="tablist" aria-label="Path views">
-          <button role="tab" aria-selected={tab === 'plan'} className={tab === 'plan' ? 'active' : ''} onClick={() => setTab('plan')}>Learning plan</button>
-          <button role="tab" aria-selected={tab === 'leaderboard'} className={tab === 'leaderboard' ? 'active' : ''} onClick={() => setTab('leaderboard')}>Community progress</button>
+        <div className="tabs" role="tablist" aria-label="Learning Space views">
+          <button id="plan-tab" role="tab" aria-controls="plan-panel" aria-selected={tab === 'plan'} className={tab === 'plan' ? 'active' : ''} onClick={() => setTab('plan')}>Learning plan</button>
+          <button id="progress-tab" role="tab" aria-controls="progress-panel" aria-selected={tab === 'leaderboard'} className={tab === 'leaderboard' ? 'active' : ''} onClick={() => setTab('leaderboard')}>Community progress</button>
         </div>
       </>}
 
       {path.myRole && tab === 'leaderboard' ? (
-        <ol className="leaderboard">
+        <ol id="progress-panel" className="leaderboard" role="tabpanel" aria-labelledby="progress-tab" tabIndex={0}>
           {leaders.map((leader, index) => <li key={leader.userId}><span>#{index + 1} {leader.displayName}</span><strong>{leader.doneCount}/{leader.total}</strong></li>)}
           {!leaders.length && <p className="state">No approved learners yet.</p>}
         </ol>
       ) : path.myRole ? (
-        <div className="plan">
+        <div id="plan-panel" className="plan" role="tabpanel" aria-labelledby="plan-tab" tabIndex={0}>
           {phases.map((phase, phaseIndex) => <section className="phase" key={phase.id}>
             <div className="phase-heading"><span>{String(phaseIndex + 1).padStart(2, '0')}</span><div><h2>{phase.title}</h2>{phase.goal && <p className="muted">{phase.goal}</p>}</div></div>
             {phase.days.map((day) => <div className="day" key={day.id}>
               <h3>{day.dayLabel}: {day.title} {day.hours && <small>({day.hours} hours)</small>}</h3>
-              {day.items.map((item) => <article className="item" key={item.id}>
+              {day.items.map((item) => <article className="item" id={`lesson-${item.id}`} key={item.id}>
                 <label className={done[item.id] ? 'complete' : ''}><input type="checkbox" checked={!!done[item.id]} onChange={() => toggle(item.id)} /> <span>{item.title}</span></label>
                 <div className="item-actions">{item.tag && <span className="item-tag">{item.tag}</span>}{item.url && <a href={item.url} target="_blank" rel="noreferrer">Open resource</a>}</div>
                 <details><summary>Personal notes</summary><textarea value={notes[item.id] || ''} onChange={(e) => { setNotes((current) => ({ ...current, [item.id]: e.target.value })); setNoteStatus((current) => ({ ...current, [item.id]: 'idle' })); }} placeholder="Capture an idea, question, or useful reference" /><div className="note-actions"><button className="button-secondary" disabled={!notes[item.id]?.trim() || noteStatus[item.id] === 'saving'} onClick={() => saveNote(item.id)}>{noteStatus[item.id] === 'saving' ? 'Saving...' : 'Save note'}</button>{noteStatus[item.id] === 'saved' && <span className="note-status saved">Note saved</span>}{noteStatus[item.id] === 'error' && <span className="note-status error">Could not save note</span>}</div></details>

@@ -58,7 +58,7 @@ export default function MyPathsPage() {
   return (
     <div className="paths-page">
       <div className="paths-header">
-        <div><p className="eyebrow">Your workspace</p><h1>My learning paths</h1><p>Pick up where you left off, or build a path for your community.</p></div>
+        <div><p className="eyebrow">Compatibility view</p><h1>My Learning Spaces</h1><p>Pick up where you left off, or build a path for your community.</p><a className="journey-link" href="/journey">Open My Journey</a></div>
         <button className="button-primary" onClick={() => setShowCreate((v) => !v)}>
           {showCreate ? 'Cancel' : '+ New path'}
         </button>
@@ -74,7 +74,7 @@ export default function MyPathsPage() {
         <div className="empty-state">
           <p className="empty-label">Your learning space is ready</p>
           <h2>Start with a path that matters to you.</h2>
-          <p>Build a private path for your group, or explore a public path from the wall.</p>
+          <p>Build a private path for your group, or explore a public Learning Path.</p>
           <button className="button-primary" onClick={() => setShowCreate(true)}>
             Create your first path
           </button>

@@ -36,7 +36,9 @@ The application remains intentionally simple: Next.js owns the presentation laye
 
 ```text
 app/
-  page.tsx                         Public learning discovery / wall
+  page.tsx                         Public discovery homepage
+  explore/page.tsx                 Full public Explore / Learning Wall
+  journey/page.tsx                 Authenticated My Journey dashboard
   auth/page.tsx                    Email OTP authentication
   paths/page.tsx                  Signed-in user's paths (compatibility route)
   paths/[pathId]/page.tsx         Learning Space / path board
@@ -44,6 +46,8 @@ app/
   paths/[pathId]/approvals/page.tsx Moderator/admin approvals
   api/                            Path-scoped route handlers
 components/
+  discovery/                       Shared homepage and Explore experience
+  journey/                         Shared learner dashboard experience
   PathBoard.tsx
   PathSettings.tsx
   ApprovalsPanel.tsx

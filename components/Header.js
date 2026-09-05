@@ -102,8 +102,8 @@ const Header = () => {
 
         <div className="header-right">
           <nav className="top-nav" aria-label="Main navigation">
-            <Link href="/" className={pathname === '/' ? 'nav-link active' : 'nav-link'}>Wall</Link>
-            {user && <Link href="/paths" className={pathname.startsWith('/paths') ? 'nav-link active' : 'nav-link'}>My paths</Link>}
+            <Link href="/explore" className={pathname === '/' || pathname.startsWith('/explore') ? 'nav-link active' : 'nav-link'}>Explore</Link>
+            {user && <Link href="/journey" className={pathname.startsWith('/journey') || pathname.startsWith('/paths') ? 'nav-link active' : 'nav-link'}>My Journey</Link>}
           </nav>
 
           {/* Theme Switcher */}
@@ -162,7 +162,7 @@ const Header = () => {
                         Profile
                       </button>
                       <button type="button" className="dropdown-item" onClick={() => { router.push('/paths'); setIsProfileMenuOpen(false); }}>
-                        My paths
+                        My Journey
                       </button>
                       {isPlatformAdmin && (
                         <button type="button" className="dropdown-item" onClick={() => { router.push('/admin'); setIsProfileMenuOpen(false); }}>

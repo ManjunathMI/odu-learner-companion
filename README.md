@@ -2,13 +2,11 @@
 
 > **Learn anything. Together.**
 
-ODU Learner Companion is a collaborative learning platform for students, working professionals, and lifelong learners. It helps people discover what they want to learn, join or create a Learning Space around that goal, follow a structured Learning Path, collaborate with other learners, track progress, and eventually use AI assistance to improve the learning experience.
+ODU Learner Companion is a collaborative learning platform for students, working professionals, and lifelong learners. It helps people discover what they want to learn, join or create a Learning Space around that goal, follow a structured Learning Path, collaborate, track progress, and eventually use AI assistance to improve the learning experience.
 
 ODU is designed to be more than a learning tracker and more focused than a course marketplace or generic social network. Structured learning provides direction; learning together provides motivation, context, and shared knowledge.
 
 ## Product Experience
-
-The core journey is:
 
 ```text
 Discover
@@ -24,42 +22,90 @@ Discover
 
 ### Key concepts
 
-- **Explore / Learning Wall** — discover approved public learning paths and learning topics.
+- **Explore / Learning Wall** — discover approved public Learning Paths and learning topics.
 - **Learning Path** — a structured sequence of phases, days, and lesson items.
-- **Learning Space** — the collaborative experience around a Learning Path. This is currently a product/UX concept built on the existing `learning_paths` tenant; it is not a separate database hierarchy.
-- **My Journey** — a personal view of current learning goals, active spaces, progress, next action, notes, and future achievements.
-- **AI Companion** — a planned supporting capability for actions such as explaining topics, generating quizzes, identifying gaps, and suggesting next steps. The UI must not claim an AI capability until it is implemented.
+- **Learning Space** — the collaborative experience around a Learning Path. It is currently a UX/product concept built on the existing `learning_paths` tenant; it is not a separate database hierarchy.
+- **My Journey** — a personal view of current goals, active Learning Spaces, progress, next action, Personal Notes, and future achievements.
+- **AI Companion** — a planned supporting capability. The UI must not claim AI features until they are implemented.
+
+## Roles and Authority
+
+ODU has one platform-level administrative role and three path-scoped operational roles.
+
+| Role | Scope | Core responsibility |
+|---|---|---|
+| Visitor | Platform | Discover approved public Learning Paths |
+| Learner | Per Learning Path | Learn, track progress, keep Personal Notes, participate |
+| Moderator | Per Learning Path | Perform explicitly delegated moderation actions |
+| Path Admin / Space Creator | Per Learning Path | Manage the Learning Path / Learning Space |
+| Platform Admin / Super Admin | Platform | Review public publication and perform protected platform operations |
+
+Any registered user can create a Learning Path and automatically becomes its Path Admin through the existing database trigger. A person may be an Admin on one path, Moderator on another, and Learner on a third at the same time.
+
+**Path Admin and Platform Admin are not the same role.** A Path Admin manages their own path but cannot approve that path for public publication. A Moderator does not automatically inherit all Path Admin permissions.
+
+## Path Visibility and Publication
+
+A Learning Path has two separate concepts:
+
+1. **Visibility** — chosen by the Path Admin: `public` or `private`.
+2. **Platform publication status** — controlled by Platform Admin: `pending_review`, `approved`, `rejected`, or `unlisted`.
+
+A public path appears on the Learning Wall only when both conditions are satisfied:
+
+```text
+visibility = public
+AND
+wall_status = approved
+```
+
+The intended workflow is:
+
+```text
+Registered User
+      |
+      | create path
+      v
+Creator automatically becomes Path Admin
+      |
+      +---- private ------------------> approved members / authorized operators
+      |
+      +---- public --> Platform Admin review --> approved --> Public Learning Wall
+                                      |
+                                      +-----------> rejected
+```
+
+Changing a path to public must never bypass platform review.
+
+## Profiles, Privacy, and Badges
+
+Authentication identity and product profile identity are separate.
+
+- Supabase Auth establishes the authenticated user/session.
+- The `profiles` record supplies display name, avatar, bio, social links, repository links, visibility preferences, and profile presentation data.
+- Profile visibility defaults to **joined-paths-only** unless the user explicitly opts into a public profile.
+- Badges are intended for learning recognition and may be awarded automatically for milestones or manually by authorized path operators.
+- Badge awards should have an audit trail and respect path scope and profile privacy.
 
 ## Current Capabilities
 
 The current foundation includes:
 
 - Supabase email OTP or magic-link authentication.
-- Approved public learning-path discovery through the wall.
-- User-created learning paths.
-- Automatic creator-to-path-admin membership through a database trigger.
+- Approved public Learning Path discovery.
+- User-created Learning Paths.
+- Automatic creator-to-Path-Admin membership through a database trigger.
 - Nested plans: phases → days → lesson items.
 - Path-scoped membership requests and approval workflows.
-- Progress tracking and community leaderboard data.
-- Personal notes attached to lesson items.
+- Progress tracking and Community Progress/leaderboard data.
+- Personal Notes attached to lesson items.
 - Profile management.
 - Row Level Security plus explicit server-side authorization.
 - Path-scoped APIs designed for future web and mobile clients.
 - GitHub Actions CI for lint and production-build validation.
-
-The product roadmap expands this foundation through improved discovery, My Journey, Learning Space UX, creator tools, community features, AI assistance, engagement, production hardening, and eventually mobile clients.
-
-## Roles
-
-| Role | Responsibility |
-|---|---|
-| Visitor | Discover approved public learning paths |
-| Learner | Learn, track progress, keep personal notes, participate in available community features |
-| Moderator | Review join requests within a specific path / Learning Space |
-| Space Creator / Path Admin | Manage a specific path's metadata, plan, and membership |
-| Platform Admin | Handle protected platform-wide operations |
-
-Roles are path-scoped unless explicitly represented as a platform-level role. There is no global path-admin environment flag in the canonical model.
+- `/explore` discovery experience.
+- `/journey` personal learning experience.
+- Shared Learning Path card language across Explore and Journey.
 
 ## Security and Tenant Model
 
@@ -77,9 +123,9 @@ notes(user_id, path_id, item_key)
 feedback(user_id, path_id)
 ```
 
-Every path-owned operation must remain scoped by `path_id`. PostgreSQL RLS and server-side authorization are the final security boundaries. Product terminology must never imply permissions broader than the actual role model.
+Every path-owned operation must remain scoped by `path_id`. PostgreSQL RLS and server-side authorization are the final security boundaries.
 
-Do not introduce a second `learning_spaces` tenant hierarchy just to support the new UX terminology.
+Do not introduce a second `learning_spaces` tenant hierarchy just to support the UX terminology.
 
 ## Technology
 
@@ -94,7 +140,9 @@ Do not introduce a second `learning_spaces` tenant hierarchy just to support the
 
 ```text
 app/
-  page.tsx                         Public discovery / wall experience
+  page.tsx                         Public discovery homepage
+  explore/page.tsx                 Public Explore / Learning Wall
+  journey/page.tsx                 Authenticated My Journey
   auth/page.tsx                    Authentication
   paths/page.tsx                   Existing paths route / compatibility surface
   paths/[pathId]/page.tsx          Learning Space / path board
@@ -110,8 +158,6 @@ docs/                              Canonical product and engineering documentati
 AGENTS.md                          Durable agent/project memory
 proxy.ts                            Next.js session refresh and route protection
 ```
-
-As the UI grows, new reusable components may be organized under domain-oriented areas such as `components/odu`, `components/discovery`, and `components/journey`. Avoid introducing a new UI framework for ordinary product work.
 
 ## Getting Started
 
@@ -147,7 +193,7 @@ Never expose or commit `SUPABASE_SERVICE_ROLE_KEY`. Do not prefix it with `NEXT_
 
 Run the canonical `phase1-schema.sql` from top to bottom in the Supabase SQL Editor. Do not run legacy single-room schemas or create a parallel tenant hierarchy for Learning Spaces.
 
-After the first sign-in, a platform admin can be added manually when required:
+To designate a platform administrator when required:
 
 ```sql
 insert into platform_admins (user_id)
@@ -173,8 +219,8 @@ npm run build
 
 The `docs/` directory is the single source of truth for product and engineering decisions. Update an existing canonical document rather than creating competing versions.
 
-- [Business guide](docs/business-guide.md) — product vision, vocabulary, users, roles, workflows, and business rules.
-- [Architecture](docs/architecture.md) — system shape, tenant model, authorization, information architecture, and UI architecture.
+- [Business guide](docs/business-guide.md) — product vision, vocabulary, roles, workflows, publication, profiles, badges, and business rules.
+- [Architecture](docs/architecture.md) — system shape, tenant model, identity, authorization, information architecture, and UI architecture.
 - [Roadmap](docs/roadmap.md) — phased implementation plan and product decisions.
 - [Development guide](docs/development.md) — local setup, environment variables, database setup, and verification.
 - [API reference](docs/api.md) — HTTP endpoints and response contracts.
@@ -184,16 +230,17 @@ The `docs/` directory is the single source of truth for product and engineering 
 
 ## Building the Product Step by Step
 
-Use the reusable Copilot prompt at `.github/prompts/odu-next-step.prompt.md` for incremental implementation. Work on one bounded task at a time. Before changing code, have Copilot inspect the current implementation and the canonical docs; after changing code, run lint/build and manually validate the affected user journey.
+Use `.github/prompts/odu-next-step.prompt.md` with GitHub Copilot for incremental implementation. Work on one bounded task at a time. Before changing code, inspect the current implementation and canonical docs; after changing code, run lint/build and manually validate the affected user journey.
 
-The immediate product priority is the **Product Experience** phase:
+### Immediate next priorities
 
-1. Modernize the homepage around discovery and the message “Learn anything. Together.”
-2. Introduce `/explore` as the primary discovery experience while retaining compatible existing routes.
-3. Introduce `/journey` as the preferred personalized learning dashboard while retaining `/paths` for compatibility.
-4. Refine the existing path board into the Learning Space experience without changing tenant boundaries.
-5. Establish a reusable responsive design system and accessible UI primitives.
-6. Only then expand creator/community features, AI, engagement, production hardening, and mobile.
+1. **Identity and Authentication Journey** — make Start Learning session-aware, land authenticated users in My Journey, and make Header identity use the profile display name and avatar.
+2. **Role-aware navigation and permissions UX** — ensure Learner, Moderator, Path Admin, and Platform Admin see only the actions relevant to their scope.
+3. **Product Experience consolidation** — finish Explore, My Journey, and Learning Space UX and accessibility refinement.
+4. **Creator and Community** — guided plan editor, membership/moderator management, community features, and platform publication administration.
+5. **AI Companion** — implement only when backend capabilities are ready.
+6. **Engagement and recognition** — badges, milestones, and related recognition workflows.
+7. **Production readiness**, then **mobile**.
 
 ## Future Mobile Client
 
@@ -203,6 +250,9 @@ The APIs are designed to be reused by React Native clients. A mobile client shou
 
 - Make focused, reviewable changes.
 - Keep tenant-owned operations scoped by `path_id`.
+- Keep Platform Admin, Path Admin, Moderator, and Learner permissions distinct.
+- Keep platform publication approval separate from path visibility.
+- Keep product profile identity separate from authentication identity.
 - Do not change database schema, RLS, auth, API contracts, or authorization boundaries during a UI-only task unless explicitly requested.
 - Reuse existing APIs and components where practical.
 - Do not claim or visually imply functionality that is not implemented.

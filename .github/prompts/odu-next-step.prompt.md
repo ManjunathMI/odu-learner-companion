@@ -6,15 +6,16 @@ Use this prompt for incremental implementation in the local editor with GitHub C
 
 Continue building ODU Learner Companion as a professional collaborative learning companion for students, working professionals, and lifelong learners.
 
-Primary product message:
+Primary message: **Learn anything. Together.**
 
-> **Learn anything. Together.**
+Core proposition: **You do not have to learn alone.**
 
-Core proposition:
+The product journey is:
 
-> **You do not have to learn alone.**
-
-The product should evolve from the current learning-tracker foundation into a calm, modern, discovery-first learning experience where people can discover learning goals, join or create Learning Spaces, follow structured Learning Paths, collaborate, practice, track progress, and eventually use AI assistance.
+```text
+Discover -> Choose a learning goal -> Join/create a Learning Space
+-> Learn -> Collaborate -> Practice -> Track progress -> Reflect -> Grow
+```
 
 ## First instruction: inspect before editing
 
@@ -27,40 +28,125 @@ Before making any change:
    - `docs/business-guide.md`
    - `docs/architecture.md`
    - `docs/roadmap.md`
-5. Inspect the existing route/component/API implementation that will be affected.
-6. Do not assume that a feature exists because it is mentioned in the roadmap.
+5. Inspect the actual route/component/API/database-type implementation affected by the task.
+6. Do not assume a feature exists because it appears in documentation.
 
-## Current implementation priority
+## Canonical role and authority model
 
-Work through the product roadmap in small, reviewable slices. The immediate priority is **Phase 1.5 — Product Experience**:
+ODU has two authority levels:
 
-1. Homepage modernization.
-2. `/explore` discovery experience.
-3. `/journey` learner dashboard.
-4. Learning Space UX refinement around the existing path board.
-5. Reusable responsive and accessible UI system.
+### Platform level
 
-Do not jump to community, AI, gamification, mobile, or production-hardening work unless explicitly requested.
+**Platform Admin / Super Admin** is stored in `platform_admins` and handles explicit platform-wide operations such as public Learning Path publication review, platform moderation, and other protected administration.
 
-## Critical architecture guardrails
+### Path level
 
-**Do not change these during a UI/product-experience task unless explicitly requested:**
+`admin`, `moderator`, and `learner` are roles stored in `path_memberships` and are scoped by `path_id`.
 
-- Supabase database schema.
-- PostgreSQL RLS policies.
-- Authentication flow.
-- Authorization model.
-- Existing API contracts.
-- `path_id` tenant boundaries.
-- Existing membership/role semantics.
+A user may simultaneously be:
 
-`learning_paths` remains the tenant root.
+```text
+Path A -> admin
+Path B -> moderator
+Path C -> learner
+```
 
-**Learning Space is a product/UX concept, not a new database tenant.** Do not create a `learning_spaces` table or second tenant hierarchy merely to support the terminology.
+Never treat a user as having one global path role.
 
-Reuse existing APIs and data wherever possible.
+Rules:
 
-Never rely on client-side UI visibility as an authorization mechanism.
+- Any registered user can create a Learning Path.
+- The creator automatically becomes the approved Path Admin for that path through the existing database trigger.
+- Path Admin manages their own Learning Path / Learning Space within that path's permissions.
+- Moderator is a delegated path-scoped role and does not automatically inherit all Path Admin permissions.
+- Platform Admin is separate from Path Admin and cannot be inferred from path membership.
+- Never label a Path Admin as a Super Admin.
+- Never rely on client-side role visibility as authorization.
+
+## Path visibility and publication model
+
+Path visibility and platform publication are separate.
+
+```text
+Path Admin chooses visibility
+        |
+        +-- private --> approved members / authorized operators
+        |
+        +-- public --> Platform Admin review
+                              |
+                       approved / rejected
+                              |
+                         approved public
+                              |
+                       Public Learning Wall
+```
+
+The intended public discovery condition is:
+
+```text
+visibility = public
+AND
+wall_status = approved
+```
+
+A Path Admin cannot self-approve public publication.
+
+Do not change this model or create a second publication hierarchy without explicit instruction.
+
+## Profile and authentication identity model
+
+Authentication identity and product profile identity are separate.
+
+```text
+Supabase Auth
+  -> user id / session / email
+
+profiles
+  -> display_name
+  -> avatar_url
+  -> bio
+  -> social/repository links
+  -> visibility
+  -> badges / achievement presentation
+```
+
+Rules:
+
+- Supabase Auth answers who is authenticated.
+- `profiles` answers how the user is represented in ODU.
+- Product UI should prefer `profiles.display_name` over auth `user_metadata`.
+- Product UI should use `profiles.avatar_url` with a safe initials fallback.
+- Do not copy editable profile fields into auth metadata just to solve UI rendering.
+- Default profile visibility is joined-paths-only unless the user explicitly chooses a public profile.
+- Badge visibility must respect profile privacy and path scope.
+
+## Current product priority
+
+The immediate priority is **Identity and Authentication Journey**, followed by consolidation of the Phase 1.5 product experience.
+
+1. Session-aware Start Learning flow.
+2. Authentication success -> `/journey`.
+3. Header profile name/avatar consistency.
+4. Role-aware navigation and management actions.
+5. Explore/My Journey/Learning Space refinement.
+6. Creator and Community.
+7. AI Companion.
+8. Engagement and recognition.
+9. Production readiness.
+10. Mobile.
+
+Do not jump to later phases unless explicitly requested.
+
+## Authentication task baseline
+
+When implementing authentication-related work:
+
+- An unauthenticated visitor clicking Start Learning should reach `/auth`.
+- An authenticated user clicking Start Learning should reach `/journey`.
+- Prefer a small server-side redirect route such as `/start-learning` when session state determines the destination.
+- Successful OTP/magic-link authentication should normally redirect to `/journey`, unless a safe, deliberate return destination exists.
+- `/paths` remains functional as a compatibility route.
+- Preserve existing Supabase Auth, SSR session, and API authentication behavior.
 
 ## Product vocabulary
 
@@ -75,8 +161,8 @@ Use these consistently in user-facing UI:
 | Path board | Learning Space |
 | Notes | Personal Notes |
 | Leaderboard | Community Progress |
-| Path admin | Space Creator / Facilitator |
-| Platform admin | Platform Admin |
+| Path admin | Space Creator / Facilitator / Path Admin |
+| Platform admin | Platform Admin / Super Admin |
 
 Database names and API paths do not need to change just because product language changes.
 
@@ -84,40 +170,35 @@ Database names and API paths do not need to change just because product language
 
 ### Homepage
 
-The homepage should be discovery-first and should clearly communicate the product in seconds.
+The homepage should be discovery-first and communicate the product quickly:
 
-Preferred hierarchy:
-
-1. Header/navigation.
-2. Hero: “Learn anything. Together.”
-3. Supporting explanation for students, professionals, and lifelong learners.
-4. Search prompt such as “What do you want to learn?”
-5. Topic/category exploration.
-6. Featured/relevant public Learning Paths.
-7. Explanation of why learning together helps.
-8. Preview of the learner Journey.
-9. AI Companion preview only if clearly labelled as planned/coming soon unless actually implemented.
-10. Strong final CTA.
-
-Do not turn the homepage into a generic dashboard or social-media feed.
+1. Hero: “Learn anything. Together.”
+2. Supporting explanation.
+3. Search prompt such as “What do you want to learn?”
+4. Topic/category exploration.
+5. Featured/relevant public Learning Paths.
+6. Why learning together helps.
+7. Journey preview.
+8. AI Companion preview only when clearly marked planned/coming soon unless implemented.
+9. Session-aware Start Learning CTA.
 
 ### Explore
 
-Create `/explore` as the primary discovery experience when implementing that slice.
+`/explore` is the primary public discovery experience.
 
-It should support the capabilities actually available in the backend, such as:
+Use real backend capabilities only:
 
 - Search.
 - Topic/tag filtering.
-- Public Learning Path discovery.
+- Approved public Learning Path discovery.
 - Useful path summaries.
-- Clear empty/no-result states.
+- Clear loading/empty/error states.
 
-Do not invent ranking, recommendation, popularity, or engagement metrics unless real data exists.
+Do not invent popularity, ranking, recommendation, or engagement metrics.
 
 ### My Journey
 
-Create `/journey` as the preferred personal learning dashboard when implementing that slice.
+`/journey` is the preferred authenticated personal learning dashboard.
 
 It should answer:
 
@@ -125,16 +206,16 @@ It should answer:
 - What is active right now?
 - What did I complete?
 - What should I do next?
-- What notes have I captured?
+- What Personal Notes have I captured?
 - Where am I learning with other people?
 
-Keep `/paths` working as a compatibility surface while transitioning the product language.
+Role-aware actions must be based on the relevant path membership and platform-admin status.
 
 ### Learning Space
 
-Refine the existing path board into a Learning Space without changing its tenant model.
+Present the existing path board as the collaborative Learning Space without changing the tenant model.
 
-Potential sections include:
+Potential sections:
 
 - Overview.
 - Learning Path.
@@ -143,49 +224,39 @@ Potential sections include:
 - Discussions only when implemented.
 - Resources only when implemented.
 
-Do not show inactive tabs merely to suggest future features.
+Do not show inactive tabs as if functionality exists.
 
 ## Visual design direction
 
-The interface should feel:
-
-- Calm.
-- Modern.
-- Structured.
-- Motivating.
-- Trustworthy.
-- Professional enough for students and working professionals.
+The interface should feel calm, modern, structured, motivating, trustworthy, and professional.
 
 Prefer:
 
 - Strong information hierarchy.
-- Restrained ink/cobalt-style primary treatment.
-- Restrained positive-progress treatment.
+- Consistent Learning Path cards across Explore and Journey.
+- Restrained primary/positive-progress treatments.
 - Consistent solid primary actions.
 - Quiet bordered secondary actions.
-- Readable interface typography with a coherent heading treatment.
-- Generous but efficient spacing.
+- Readable typography.
 - Responsive layouts.
 - Accessible focus, contrast, labels, and semantics.
 
 Avoid:
 
-- Neon visual treatment.
+- Neon visual treatment as the normal product language.
 - Excessive glow.
 - Heavy gradients.
-- Glassmorphism as the default surface language.
+- Glassmorphism as default surfaces.
 - Stock-photo-heavy layouts.
-- Decorative metrics with no product value.
+- Decorative metrics without product value.
 - Excessive gamification.
-- Social-media-style engagement mechanics.
-
-The existing theme implementation may be reused or simplified, but do not create unnecessary styling infrastructure.
+- Social-media-style mechanics.
 
 ## Component strategy
 
 Prefer reusable components over large page-specific JSX blocks.
 
-As the UI grows, domain-oriented organization may use:
+Use domain-oriented organization where it improves reuse:
 
 ```text
 components/
@@ -194,82 +265,96 @@ components/
   journey/
 ```
 
-Only introduce these directories when they make reuse clearer; do not reorganize the entire repository just for aesthetics.
+Reuse established components before creating new ones. Do not reorganize the entire repository for aesthetics alone.
 
-Potential reusable primitives include:
+## Critical architecture guardrails
 
-- Header/navigation.
-- Hero.
-- Search field.
-- Topic chips.
-- Learning Path card.
-- Progress indicator.
-- Status badge.
-- Empty state.
-- Loading state.
-- Error state.
-- Primary/secondary button treatments.
-- Learning Space section.
-- Journey card.
+**Do not change these during ordinary UI/product work unless explicitly requested:**
+
+- Supabase database schema.
+- PostgreSQL RLS policies.
+- Authentication architecture.
+- Authorization semantics.
+- Existing API contracts.
+- `path_id` tenant boundaries.
+- `path_memberships` role/status semantics.
+- Public visibility/publication semantics.
+
+`learning_paths` remains the tenant root.
+
+**Learning Space is a product/UX concept, not a new database tenant.** Do not create a `learning_spaces` table or second tenant hierarchy merely to support terminology.
+
+Reuse existing APIs and data wherever possible.
 
 ## Implementation protocol
 
-For the requested task, follow this exact process.
+For every requested task:
 
 ### Step 1 — State the scope
 
 Briefly state:
 
-- What user problem this change solves.
-- Which route(s) are affected.
-- Which existing components/APIs will be reused.
-- Whether a backend/API change is genuinely required.
+- User problem being solved.
+- Routes affected.
+- Components/APIs being reused.
+- Whether backend/API work is genuinely required.
 
-If the task is UI-only, explicitly say that database, auth, RLS, and API contracts will remain unchanged.
+If UI-only, explicitly state that database, RLS, auth, authorization, and API contracts remain unchanged.
 
 ### Step 2 — Inspect current code
 
-Read the actual files before editing. Do not rewrite based on assumptions.
+Read the actual files before editing. Check existing:
 
-Look for:
-
-- Existing components that can be reused.
-- Existing CSS variables/theme rules.
-- Existing API calls.
-- Existing loading/error states.
-- Existing authorization checks.
-- Existing route conventions.
+- Components.
+- CSS variables/theme rules.
+- API calls.
+- Session/auth helpers.
+- Authorization checks.
+- Loading/error states.
+- Responsive/accessibility patterns.
 
 ### Step 3 — Implement the smallest coherent slice
 
-Make only the changes required for the requested slice.
+Make only the requested change.
 
 Do not:
 
 - Refactor unrelated files.
-- Change database schema.
-- Replace the authentication system.
+- Replace Supabase Auth.
+- Change schema/RLS unnecessarily.
 - Rename APIs unnecessarily.
-- Add placeholder functionality that looks real.
-- Introduce a new framework without explicit approval.
+- Add fake functionality.
+- Add a new framework without explicit approval.
 
-### Step 4 — UX quality check
+### Step 4 — Security and role check
 
-For UI changes, verify:
+For any role/auth/path-related change verify:
 
-- Desktop layout.
-- Mobile layout.
-- Loading state.
-- Empty state.
-- Error state.
-- Success state where applicable.
+- Is the role derived from the correct `path_id` membership?
+- Is Platform Admin kept separate?
+- Can a Path Admin accidentally gain platform authority?
+- Can a Moderator accidentally gain all admin permissions?
+- Is private path information protected?
+- Is client-side visibility being incorrectly treated as authorization?
+- Does public discovery still require platform approval?
+
+### Step 5 — UX quality check
+
+For UI changes verify:
+
+- Desktop.
+- Mobile.
+- Loading.
+- Empty.
+- Error.
+- Success where applicable.
 - Keyboard navigation.
-- Visible focus states.
+- Visible focus.
 - Semantic labels.
 - Contrast.
 - Clear next action.
 
-### Step 5 — Functional verification
+### Step 6 — Functional verification
 
 Run:
 
@@ -280,30 +365,40 @@ npm run build
 
 If a command fails, fix the issue before claiming completion unless the failure is clearly unrelated and explicitly reported.
 
-### Step 6 — Manual validation
+### Step 7 — Manual journey validation
 
-Run the app locally and inspect the affected route at desktop and mobile widths.
+For authentication/profile/role work, validate real journeys rather than only rendering pages.
 
-For user journeys, validate the actual flow rather than only checking that the page renders.
+At minimum consider:
 
-### Step 7 — Report
+```text
+Visitor -> Start Learning -> Auth
+Authenticated -> Start Learning -> Journey
+Authenticated -> Profile update -> Header reflects profile
+Learner -> path -> learner actions only
+Moderator -> path -> moderator actions only
+Path Admin -> own path -> admin actions
+Platform Admin -> admin -> platform operations
+```
 
-At the end, report:
+### Step 8 — Report
+
+Report:
 
 - Files changed.
 - What was implemented.
-- Existing APIs reused.
-- Any architectural decisions made.
+- Existing APIs/helpers reused.
+- Role/security implications.
 - Verification results.
 - Remaining follow-up work.
 
-If a durable product or architecture decision was made, update the appropriate existing document in `docs/` rather than creating a new document.
+If a durable product or architecture decision changes, update the appropriate existing document in `docs/` rather than creating a new one.
 
 ## AI Companion boundary
 
 AI is a planned supporting capability.
 
-Possible future actions:
+Candidate actions:
 
 - Explain a topic.
 - Quiz me.
@@ -314,36 +409,47 @@ Possible future actions:
 
 Until the backend exists, label these as planned/coming soon. Never make a static mock look like a working AI feature.
 
-When AI is eventually implemented:
+When implemented:
 
-- Ground suggestions in the learner's selected goal/path/context.
-- Let the learner accept, reject, edit, or ignore suggestions.
+- Ground suggestions in learner goal/path/context.
+- Let learners accept, reject, edit, or ignore suggestions.
 - Never silently modify learning plans or learner records.
 - Preserve tenant isolation and privacy.
 
+## Badges and recognition boundary
+
+Badges are planned/expanding recognition functionality, not points-first gamification.
+
+They may be:
+
+- Automatically awarded for defined learning milestones.
+- Manually awarded by authorized Path Admins/Moderators within permitted path scope.
+
+Badge awards should eventually retain an audit trail. Badge presentation must respect profile visibility and path scope.
+
+Do not present future badge functionality as implemented.
+
 ## Route compatibility
 
-Current routes remain valuable during the transition:
+Current routes remain valuable:
 
-- `/` — current homepage/wall surface; evolve it into the discovery-first homepage.
-- `/paths` — existing learner paths; keep functional while `/journey` becomes preferred.
-- `/paths/[pathId]` — existing path board; evolve into Learning Space UX.
+- `/` — homepage/discovery.
+- `/auth` — authentication.
+- `/paths` — compatibility dashboard.
+- `/paths/[pathId]` — Learning Space/path board.
 - `/paths/[pathId]/settings` — creator/path settings.
 - `/paths/[pathId]/approvals` — membership approvals.
 - `/admin` — platform administration.
+- `/explore` — preferred discovery route.
+- `/journey` — preferred personal learning route.
 
-Preferred future routes:
-
-- `/explore`.
-- `/journey`.
-
-Do not break existing working routes merely to introduce new terminology.
+Do not break working compatibility routes merely to introduce product terminology.
 
 ## Documentation rule
 
 There is one canonical documentation set under `docs/`.
 
-Update existing files:
+Update existing files when decisions change:
 
 - `docs/business-guide.md`
 - `docs/architecture.md`
@@ -353,7 +459,7 @@ Update existing files:
 - `docs/database-operations.md`
 - `docs/README.md`
 
-Do not create files such as:
+Do not create duplicate files such as:
 
 - `architecture-v2.md`
 - `new-roadmap.md`
@@ -364,13 +470,17 @@ unless explicitly requested.
 
 ## Final guardrails
 
-Before making changes, ask yourself:
+Before making changes, ask:
 
 1. Is this aligned with “Learn anything. Together.”?
-2. Does it improve discovery, learning, collaboration, progress, or the learner's next useful action?
-3. Am I changing a backend/security boundary unnecessarily?
-4. Am I presenting a planned feature as implemented?
-5. Can I reuse an existing component/API instead of adding another abstraction?
-6. Is this the smallest coherent change that moves the product forward?
+2. Does it improve discovery, learning, collaboration, progress, identity, or the learner's next useful action?
+3. Am I preserving the distinction between Platform Admin, Path Admin, Moderator, and Learner?
+4. Am I preserving path-scoped roles?
+5. Am I preserving the distinction between path visibility and platform publication approval?
+6. Am I keeping profile identity separate from authentication identity?
+7. Am I changing a backend/security boundary unnecessarily?
+8. Am I presenting a planned feature as implemented?
+9. Can I reuse an existing component/API/helper?
+10. Is this the smallest coherent change that moves the product forward?
 
-If the answer to the third or fourth question is yes, stop and reconsider the implementation.
+If the answer to questions 7 or 8 is yes, stop and reconsider the implementation.

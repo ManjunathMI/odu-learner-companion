@@ -21,16 +21,20 @@ Web browser or React Native client
               |
               | HTTPS + Supabase access token
               v
-Next.js route handlers under app/api
+Next.js App Router + Route Handlers
               |
-              | server-side Supabase client
+              | server-side Supabase clients
               v
 Supabase Auth + PostgreSQL + Row Level Security
+              |
+              +--> platform_admins
+              +--> learning_paths
+              +--> path_memberships
+              +--> profiles
+              +--> progress / notes / badges / other path data
 ```
 
-The web and future mobile clients use the same HTTP API. The web browser stores its Supabase session through `@supabase/ssr`; React Native can attach the access token using `Authorization: Bearer <token>`.
-
-The application remains intentionally simple: Next.js owns the presentation layer and server API, while Supabase owns authentication, persistence, and database-level authorization.
+Supabase Auth establishes authentication identity. The `profiles` record supplies the product-facing learner identity such as display name, avatar, bio, links, and visibility preferences.
 
 ## Repository Structure
 
@@ -40,11 +44,12 @@ app/
   explore/page.tsx                 Full public Explore / Learning Wall
   journey/page.tsx                 Authenticated My Journey dashboard
   auth/page.tsx                    Email OTP authentication
-  paths/page.tsx                  Signed-in user's paths (compatibility route)
-  paths/[pathId]/page.tsx         Learning Space / path board
+  paths/page.tsx                   Signed-in user's paths (compatibility route)
+  paths/[pathId]/page.tsx          Learning Space / path board
   paths/[pathId]/settings/page.tsx Path settings and creator controls
   paths/[pathId]/approvals/page.tsx Moderator/admin approvals
-  api/                            Path-scoped route handlers
+  admin/page.tsx                   Platform admin workspace
+  api/                             Server API route handlers
 components/
   discovery/                       Shared homepage and Explore experience
   journey/                         Shared learner dashboard experience
@@ -53,8 +58,6 @@ components/
   ApprovalsPanel.tsx
   CreatePathForm.tsx
   Header.js, Footer.js, LoadingSpinner.js
-  (future UI families may be grouped under components/odu, components/discovery,
-   and components/journey as the product surface expands)
 lib/
   supabase/client.ts              Browser Supabase client
   supabase/server.ts              SSR and service-role clients
@@ -62,64 +65,44 @@ lib/
   path-auth.ts                     Path membership authorization helpers
   api.ts                           Cross-client API fetch wrapper
   utils.js                         Shared formatting helpers
-types/database.ts                  Temporary hand-written Supabase types
+types/database.ts                  Database type definitions
 docs/                              Maintained project documentation
-proxy.ts                            Next.js 16 session refresh and route protection
+proxy.ts                            Next.js session refresh and route protection
 ```
 
 New UI work should reuse the current Next.js/React/Tailwind/CSS stack rather than introduce a separate UI framework unless there is an explicit architectural decision to do so.
 
 ## Product Information Architecture
 
-The product experience is organized around a small set of user-facing concepts:
-
 ```text
 ODU
  |
  +-- Explore / Learning Wall
- |      |
  |      +-- Topics
  |      +-- Search
- |      +-- Public Learning Paths
- |
- +-- Learning Spaces
- |      |
- |      +-- Overview
- |      +-- Learning Path
- |      +-- Members / Progress / future community areas
+ |      +-- Approved public Learning Paths
  |
  +-- My Journey
- |      |
  |      +-- Current goals
- |      +-- Active learning spaces
+ |      +-- Active Learning Spaces
  |      +-- Progress
  |      +-- Next action
- |      +-- Personal notes
+ |      +-- Personal Notes
+ |      +-- Future achievements
+ |
+ +-- Learning Space
+ |      +-- Overview
+ |      +-- Learning Path
+ |      +-- Members
+ |      +-- Progress
+ |      +-- Future Discussions / Resources / Challenges
  |
  +-- AI Companion (planned/supporting capability)
+ |
+ +-- Platform Admin (protected)
 ```
 
-This information architecture is a UX model, not a request to create matching database tables. Existing routes can remain in place for compatibility while clearer product-facing routes such as `/explore` and `/journey` are introduced.
-
-### Learning Wall
-
-The Learning Wall is a learning-focused discovery surface, not a generic social-media feed. It should help a visitor or learner find relevant learning paths, topics, and opportunities to learn with others.
-
-### Learning Path
-
-A Learning Path is the structured curriculum or sequence inside a Learning Space. Its current database representation remains the path tenant plus nested `phases -> days -> lesson_items`.
-
-### Learning Space
-
-A Learning Space is the collaborative experience built around a Learning Path. It communicates that people learn together without creating a new `learning_spaces` database hierarchy at this stage.
-
-### My Journey
-
-My Journey is the personalized learner view of goals, active spaces, current progress, next action, notes, and future achievements. The current `/paths` route may remain as a compatibility route while this experience is improved.
-
-### AI Companion
-
-The AI Companion is planned as a supporting layer for activities such as explaining topics, creating learning plans, generating quizzes, identifying knowledge gaps, and suggesting next steps. These are product directions, not claims about current implementation.
+This information architecture is a UX model, not a request to create matching database tables.
 
 ## Tenant Model
 
@@ -141,9 +124,25 @@ The direct `path_id` columns on activity tables make tenant filtering explicit a
 
 Do not introduce a second tenant relationship through `learning_spaces` unless a future product decision explicitly requires a separate persistence model.
 
-## Authorization
+## Authorization Model
 
-The database schema defines these `SECURITY DEFINER` helper functions:
+ODU has two authority levels:
+
+1. **Platform Admin / Super Admin** — platform-wide authority represented by `platform_admins`.
+2. **Path-scoped roles** — `admin`, `moderator`, and `learner` stored in `path_memberships` for a specific `path_id`.
+
+The same person can hold different path roles simultaneously:
+
+```text
+User A
+  Path A -> admin
+  Path B -> moderator
+  Path C -> learner
+```
+
+A Path Admin is not a Platform Admin. A Moderator is not a Path Admin. These distinctions must be preserved in both server authorization and UI.
+
+The database schema defines helper functions such as:
 
 - `get_role(path_id)`
 - `is_approved_member(path_id)`
@@ -152,125 +151,158 @@ The database schema defines these `SECURITY DEFINER` helper functions:
 - `is_platform_admin()`
 - `path_is_public(path_id)`
 
-The API also performs explicit checks so clients receive meaningful `401` and `403` responses. API code uses the server service-role client for controlled operations, so those checks are important; PostgreSQL RLS remains the intended database-level boundary for direct authenticated access.
-
 Authorization expectations:
 
-- Public discovery may expose only approved public paths and the fields intentionally designed for public viewing.
-- Private path content remains restricted to approved members and authorized administrators.
+- Public discovery may expose only approved public paths and fields intentionally designed for public viewing.
+- Private path content remains restricted to approved members and authorized operators.
 - Normal path roles remain constrained to their own `path_id` tenant.
-- Platform-admin access is an explicit elevated override where the current operation supports it; it does not change the ordinary user permission model.
-- A UI label such as “Learning Space” must never imply cross-path access or elevated privileges.
+- A Moderator has only delegated permissions explicitly granted to moderators; moderator status must not imply all Path Admin permissions.
+- A Path Admin can manage their own path according to the current authorization model but cannot approve their own path for platform publication.
+- Platform Admin authority is separate from path membership and may operate across paths only for explicitly supported platform operations.
+- Client-side visibility is never an authorization boundary.
 
-## Authentication
+## Authentication and Identity
 
-- `lib/supabase/client.ts` creates the browser client with the publishable/anon key.
-- `lib/supabase/server.ts` creates the cookie-aware SSR client and the server-only service-role client.
-- `lib/auth.ts` resolves a caller from a Bearer token first and then from the SSR cookie session.
-- `proxy.ts` refreshes web sessions and protects application routes. API handlers still validate authentication themselves, which is required for mobile clients.
-
-## Role Model
-
-The current role model remains:
+Authentication and product profile identity are intentionally separate:
 
 ```text
-Visitor
-  -> Learner
-  -> Moderator
-  -> Path Admin
-  -> Platform Admin
+Supabase Auth
+   |
+   +--> user id / session / email
+             |
+             v
+        profiles table
+             |
+       +-----+------------------+
+       |                        |
+ display_name               avatar_url
+       |                        |
+       +-----------+------------+
+                   v
+       Header / Journey / Community / Profile
 ```
 
-The product language should be friendlier without changing these privileges:
+Rules:
 
-| Internal role | Product-facing framing |
-|---|---|
-| Visitor | Discoverer / Visitor |
-| Learner | Learner |
-| Moderator | Community Moderator |
-| Path Admin | Space Creator / Facilitator |
-| Platform Admin | Platform Admin |
+- Supabase Auth answers **who is authenticated**.
+- `profiles` answers **how that person is represented in ODU**.
+- Product-facing display names should prefer `profiles.display_name` over auth `user_metadata`.
+- Product-facing avatars should use `profiles.avatar_url`, with initials/fallback when absent or invalid.
+- Profile visibility defaults to joined-paths-only unless the user explicitly opts into a public profile.
+- Do not duplicate editable profile identity into auth metadata merely to make UI rendering easier.
 
-Role-specific controls should remain contextual. The public header should emphasize discovery and learning; profile and administrative operations belong in the authenticated user menu rather than the primary public navigation.
+Authentication flows should use the canonical authenticated destination `/journey` for a normal signed-in learner unless a future deep-link/return-to destination explicitly overrides it.
+
+## Path Creation and Publication
+
+Any registered user can create a Learning Path. The creator automatically becomes the path's `admin` membership through the existing database trigger.
+
+Visibility and platform publication are separate:
+
+```text
+User creates path
+      |
+      v
+Creator = Path Admin
+      |
+      +---- private ------------------> approved members / authorized operators
+      |
+      +---- public --> Platform Admin review
+                              |
+                       +------+------+
+                       |             |
+                    approved      rejected
+                       |
+                       v
+                Public Learning Wall
+```
+
+The effective public-discovery condition is:
+
+```text
+learning_paths.visibility = 'public'
+AND
+learning_paths.wall_status = 'approved'
+```
+
+A Path Admin cannot self-approve public publication. Platform Admin is the authority for platform publication review.
 
 ## Core User Journeys
 
 ### Visitor
 
 1. Lands on the discovery-focused home experience.
-2. Searches or browses learning topics.
-3. Reviews approved public learning paths.
-4. Signs in to join or participate.
+2. Searches or browses approved public Learning Paths.
+3. Reviews a path overview.
+4. Chooses Start Learning / Join.
+5. Is sent to authentication if unauthenticated.
 
 ### Learner
 
-1. Signs in.
-2. Opens My Journey and active Learning Spaces.
-3. Requests or enters approved paths.
-4. Follows the structured learning plan.
-5. Marks lessons complete, records personal notes, and reviews progress.
-6. Uses community progress signals where available.
+1. Signs in and lands in My Journey.
+2. Requests to join a Learning Space when necessary.
+3. Enters approved paths.
+4. Follows the structured Learning Path.
+5. Tracks personal progress and Personal Notes.
+6. Sees permitted Community Progress and future achievements.
 
-### Space Creator / Facilitator
+### Path Creator / Admin
 
-1. Creates a learning path.
-2. Becomes the path admin through the existing database behavior.
-3. Manages metadata, plan content, and membership.
-4. Reviews membership requests and moderation actions.
-5. Uses settings and path-specific controls without exposing platform-admin operations.
+1. Creates a Learning Path.
+2. Automatically receives approved `admin` membership for that path.
+3. Manages path metadata, learning plan, visibility, and permitted membership operations.
+4. Can add/delegate Moderators according to the supported product permissions.
+5. Cannot perform Platform Admin publication approval merely by owning the path.
+
+### Moderator
+
+1. Has a moderator membership on a specific path.
+2. Uses path-specific moderation controls available to that role.
+3. Can review membership requests where permitted.
+4. Cannot inherit unrestricted Path Admin or Platform Admin capabilities.
 
 ### Platform Admin
 
-1. Uses the protected admin workspace.
-2. Reviews platform-level decisions such as public path approval.
-3. Can access supported cross-path administrative operations through explicit authorization.
-4. Remains separate from the normal learner navigation model.
+1. Uses the protected platform admin workspace.
+2. Reviews newly created public-path publication requests.
+3. Approves, rejects, or unlists paths through supported platform operations.
+4. Performs other explicit platform-level moderation/administration.
+5. Remains separate from ordinary path membership and learner navigation.
+
+## Profiles, Badges, and Recognition
+
+Profiles can contain display name, avatar, bio, social links, repository links, badges, and visibility preferences. Badge presentation must obey profile visibility and path membership rules.
+
+Badges are intended to support recognition rather than points-first gamification. They may be awarded automatically for learning milestones or manually by authorized path operators. Badge awards should retain an audit trail containing the recipient, badge, source, actor where applicable, path context where applicable, timestamp, and reason/milestone context where supported by the schema.
 
 ## API and Mobile Compatibility
 
-The API should remain resource-oriented and path-scoped. The existing `/api/paths/...` family is the compatibility contract for future clients.
+The API remains resource-oriented and path-scoped. The existing `/api/paths/...` family is the compatibility contract for future clients.
 
-A React Native client can:
+A React Native client can authenticate with Supabase, securely store its session, send the access token to the server APIs, and render native experiences using the same path, membership, plan, progress, notes, and leaderboard contracts. It must not access PostgreSQL directly.
 
-1. Use the Supabase React Native client for OTP/magic-link authentication.
-2. Store the returned session using a mobile storage adapter.
-3. Send the access token to the same `/api/paths/...` endpoints.
-4. Render native screens using the same path, membership, plan, progress, notes, and leaderboard contracts.
-
-The mobile client should not access PostgreSQL directly. It should use the same server API and authorization rules as the web client.
+Future aggregated endpoints such as `/api/journey` may be introduced where a personalized screen otherwise requires excessive client-side requests; such changes should be deliberate API design work, not a UI-only assumption.
 
 ## UI Architecture Direction
 
-The product UI should evolve toward a calm, modern, structured interface rather than a neon or highly decorative dashboard.
+The product UI should feel calm, modern, structured, motivating, and trustworthy.
 
 Design rules:
 
-- Discovery comes before administration on the public surface.
+- Discovery comes before administration on public surfaces.
 - The next useful learning action should be easy to identify.
 - Primary actions use a consistent solid treatment; secondary actions stay quieter.
-- Positive progress may use a restrained success treatment rather than heavy gamification.
+- Positive progress may use restrained success treatment rather than heavy gamification.
 - Avoid excessive gradients, glassmorphism, glow, stock photography, and decorative metrics.
-- Use one coherent display treatment for headings and a readable interface font family for body and controls; exact font implementation should follow repository constraints.
-- Build reusable UI primitives and domain components so the same patterns work across Explore, My Journey, Learning Spaces, settings, and admin.
-- Responsive behavior is part of the architecture, not a final styling pass.
+- Use reusable UI primitives and domain components across Explore, My Journey, Learning Spaces, profiles, settings, and admin.
+- Responsive behavior and accessibility are part of the architecture.
+- Do not expose platform-admin actions in normal learner navigation.
+- Do not visually imply permissions a role does not have.
 
 ## Current Implementation Boundary
 
-Implemented foundation:
+Implemented foundation includes authentication, public discovery, user-created paths, creator-to-admin behavior, path metadata and plans, membership requests/approvals, progress, leaderboard data, notes, profile management, and path-scoped APIs. The current product-experience layer includes `/explore`, `/journey`, Learning Space-oriented path-board UX, shared path cards, and responsive/accessibility improvements.
 
-- Authentication.
-- Public wall/discovery data.
-- User-created learning paths.
-- Creator-to-path-admin membership behavior.
-- Path metadata.
-- Nested learning plans.
-- Membership requests and approval flows.
-- Progress tracking.
-- Leaderboard.
-- Personal notes.
-- Profile management.
-- Bearer-token-compatible server API.
-
-Next product-layer work should primarily improve the experience around this foundation: discovery, Learning Spaces, My Journey, guided plan editing, membership management, community features, and eventually AI assistance.
+The next work should improve identity/authentication consistency, role-aware journeys, creator/moderator management, platform publication administration, and then community/AI/engagement capabilities in roadmap order.
 
 Security, tenant isolation, and database behavior must not be weakened as the UX evolves.

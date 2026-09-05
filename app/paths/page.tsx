@@ -161,21 +161,24 @@ export default function MyPathsPage() {
         }
         .empty-state h2 { color: var(--text-primary); font-size: 1.5rem; margin: 0; }.empty-state p { margin: 0; max-width: 530px; }.empty-label { color: var(--accent-primary); font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
         .path-section { margin-bottom: 2.75rem; }.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }.section-heading h2 { font-size: 1.25rem; margin: 0; }.section-heading > span { color: var(--text-secondary); font-size: .85rem; white-space: nowrap; }
-        .paths-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+        .paths-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
         .path-card {
+          display: flex;
+          flex-direction: column;
+          min-height: 210px;
           background: var(--bg-secondary);
           border: 1px solid var(--border-color);
           border-radius: var(--radius-md);
           padding: 1.3rem 1.4rem;
           cursor: pointer;
-          transition: box-shadow 0.15s ease, border-color 0.15s ease;
+          transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
         }
         .path-card:hover { box-shadow: var(--shadow-md); border-color: var(--accent-primary); transform: translateY(-1px); }
         .path-card.pending { cursor: default; opacity: 0.7; }
         .path-card.pending:hover { box-shadow: none; border-color: var(--border-color); }
         .path-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }.path-card-header > div { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; }
         .path-title { font-weight: 700; font-size: 1.08rem; color: var(--text-primary); }
-        .path-desc { margin: 0.5rem 0 0.75rem; font-size: 0.9rem; color: var(--text-secondary); }
+        .path-desc { flex: 1; margin: 1rem 0; font-size: 0.92rem; color: var(--text-secondary); }
         .path-card-footer {
           display: flex;
           align-items: center;

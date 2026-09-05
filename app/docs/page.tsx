@@ -3,8 +3,10 @@
 import Link from 'next/link';
 
 const sections = [
-  { href: '/docs/business-guide', title: 'Business guide', description: 'Product behavior, user roles, and common workflows.' },
-  { href: '/docs/architecture', title: 'Architecture', description: 'Tenant boundaries, authentication, authorization, and mobile compatibility.' },
+  { href: '/docs/business-guide', title: 'Business guide', description: 'Product vision, user roles, vocabulary, and learning workflows.' },
+  { href: '/docs/architecture', title: 'Architecture', description: 'Product information architecture, tenant boundaries, authorization, and mobile compatibility.' },
+  { href: '/docs/roadmap', title: 'Product roadmap', description: 'Phase 1.5 status and the planned path from learning tracker to companion.' },
+  { href: '/docs/database-operations', title: 'Database operations', description: 'Canonical schema guidance, role testing, and safe local verification queries.' },
   { href: '/docs/development', title: 'Development guide', description: 'Local setup, environment variables, database setup, and contribution workflow.' },
   { href: '/docs/api', title: 'API reference', description: 'Path-scoped endpoints and request and response contracts.' },
 ];

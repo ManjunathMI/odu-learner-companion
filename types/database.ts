@@ -30,6 +30,18 @@ export interface Database {
         Update: { display_name?: string; avatar_url?: string | null; bio?: string | null; social_links?: Json; repo_links?: Json; profile_visibility?: 'joined_paths_only' | 'public'; updated_at?: string };
         Relationships: [];
       };
+      user_entitlements: {
+        Row: { user_id: string; max_created_paths: number; updated_at: string; updated_by: string | null };
+        Insert: { user_id: string; max_created_paths?: number; updated_at?: string; updated_by?: string | null };
+        Update: { max_created_paths?: number; updated_at?: string; updated_by?: string | null };
+        Relationships: [];
+      };
+      quota_requests: {
+        Row: { id: string; user_id: string; current_limit: number; requested_limit: number; reason: string | null; status: 'pending' | 'approved' | 'rejected' | 'cancelled'; reviewed_by: string | null; reviewed_at: string | null; created_at: string; updated_at: string };
+        Insert: { user_id: string; current_limit: number; requested_limit: number; reason?: string | null; status?: 'pending' | 'approved' | 'rejected' | 'cancelled'; reviewed_by?: string | null; reviewed_at?: string | null; updated_at?: string };
+        Update: { status?: 'pending' | 'approved' | 'rejected' | 'cancelled'; reviewed_by?: string | null; reviewed_at?: string | null; updated_at?: string };
+        Relationships: [];
+      };
       phases: {
         Row: { id: string; path_id: string; title: string; goal: string | null; sort_order: number };
         Insert: { path_id: string; title: string; goal?: string | null; sort_order?: number };
@@ -87,6 +99,8 @@ export interface Database {
       is_approved_member: { Args: { p_path_id: string }; Returns: boolean };
       is_platform_admin: { Args: Record<never, never>; Returns: boolean };
       path_is_public: { Args: { p_path_id: string }; Returns: boolean };
+      create_learning_path_with_entitlement: { Args: { p_title: string; p_description: string | null; p_tags: string[]; p_created_by: string }; Returns: { id: string; title: string; visibility: string; wall_status: string }[] };
+      review_quota_request: { Args: { p_request_id: string; p_decision: string; p_reviewer: string }; Returns: { id: string; user_id: string; current_limit: number; requested_limit: number; reason: string | null; status: string; reviewed_by: string | null; reviewed_at: string | null; created_at: string; updated_at: string } };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

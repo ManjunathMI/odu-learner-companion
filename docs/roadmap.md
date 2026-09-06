@@ -128,7 +128,22 @@ The UI must therefore determine management actions from the relevant path member
 - Platform Admin / Super Admin: protected platform-wide operations.
 - Never present Path Admin as equivalent to Platform Admin.
 
-## Phase 1.5c: Product Experience Consolidation
+### Phase 1.5b Implementation Status
+
+The identity and account slice is implemented:
+
+- `/start-learning` routes unauthenticated visitors to `/auth` and authenticated users to `/journey`.
+- OTP authentication lands normal users in `/journey`.
+- Header identity uses the `profiles` display name and avatar with initials fallback.
+- The account menu exposes Profile, My Journey, Manage Account, conditional Platform Admin, and Logout.
+- `/account` shows identity, path-scoped roles and permissions, paths led, paths joined, creator capacity, and quota-request state.
+- Path Admins can explicitly delete their own paths through the authorized DELETE endpoint.
+- Creator capacity is derived from current owned paths and enforced transactionally through the database function.
+- Platform Admins can review quota increase requests; approvals update the entitlement and preserve an audit trail.
+
+Existing databases must apply the additive schema statements documented in `docs/database-operations.md`. The canonical creation schema is `docs/DB-schema.sql`.
+
+## Phase 1.5c: Product Experience Consolidation — COMPLETE
 
 Once identity is stable, finish the current product-experience foundation before moving into large new capabilities.
 
@@ -151,6 +166,10 @@ Once identity is stable, finish the current product-experience foundation before
 - In an empty Journey, offer both **Explore Learning Paths** and **Create a Learning Path**.
 - Show role-appropriate actions for learner, moderator, and Path Admin contexts.
 - Consider a deliberate `/api/journey` aggregate endpoint if client-side data loading becomes unnecessarily chatty; do not introduce this merely for cosmetic reasons.
+
+### Phase 1.5c Implementation Status
+
+Complete for the current product-experience scope. The homepage and Explore provide discovery, search, topic filtering, loading/empty/error states, and clear creation entry points. My Journey is the canonical personal dashboard with active spaces, progress, pending memberships, role-aware actions, and both Explore and Create actions in the empty state. Learning Path cards share a reusable visual language, and the existing Learning Space exposes only implemented areas. Remaining accessibility and responsive validation work belongs to the production-readiness review rather than blocking this product-experience milestone.
 
 ### Learning Space
 
@@ -175,7 +194,7 @@ Do not expose inactive tabs as if functionality exists.
 - Screen-reader labels and semantic controls.
 - Desktop/mobile validation across primary journeys.
 
-## Phase 2: Creator and Community
+## Phase 2: Creator and Community — IN PROGRESS
 
 ### Creator Entitlement Enforcement
 
@@ -199,6 +218,12 @@ Replace JSON-oriented plan editing with a guided interface:
 - Preview learner experience.
 - Warn before replacing existing plans.
 - Clear save/success/error states.
+
+Current implementation provides the editable phase/day/item structure, reordering, membership management, and save feedback. Before Phase 2 can be marked complete, it still needs:
+
+- Explicit server-side validation for required curriculum fields.
+- Learner-facing curriculum preview.
+- Confirmation before replacing an existing plan.
 
 ### Membership and Moderation Management
 
@@ -236,6 +261,8 @@ Implement:
 - Prevent Path Admins from self-approving platform publication.
 - Keep platform-admin operations separate from path-admin operations.
 - Add audit history where product policy requires it.
+
+The publication workflow is implemented. Broader Phase 2 completion remains blocked by the guided-editor items above and the community-layer decisions below. Discussions, resources, Q&A, cohorts, challenges, and announcements remain intentionally deferred until their product scope is defined; they are not being counted as implemented.
 
 ### Community Layer
 
@@ -298,6 +325,8 @@ Badge awards should preserve, where supported by the schema:
 Also evaluate milestones, streaks, certificates, cohort announcements, and completion analytics.
 
 ## Phase 5: Production Readiness
+
+This phase is not complete and must remain open before claiming that all pre-Phase-3 work is finished.
 
 - Automated tests for API authorization and tenant isolation.
 - Integration tests against a disposable Supabase project.

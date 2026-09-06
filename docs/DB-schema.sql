@@ -46,6 +46,31 @@ create table profiles (
   updated_at timestamptz not null default now()
 );
 
+create table user_entitlements (
+  user_id uuid primary key references auth.users(id),
+  max_created_paths integer not null default 3 check (max_created_paths >= 0),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references auth.users(id)
+);
+
+create table quota_requests (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid not null references auth.users(id),
+  current_limit integer not null,
+  requested_limit integer not null,
+  reason text,
+  status text not null default 'pending' check (status in ('pending','approved','rejected','cancelled')),
+  reviewed_by uuid references auth.users(id),
+  reviewed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (requested_limit > current_limit)
+);
+
+create unique index quota_requests_one_pending_per_user
+  on quota_requests (user_id)
+  where status = 'pending';
+
 -- ─── Path content (replaces v1's static JSON) ───
 
 create table phases (
@@ -219,6 +244,121 @@ as $$
   select visibility = 'public' from learning_paths where id = p_path_id;
 $$;
 
+create or replace function create_learning_path_with_entitlement(
+  p_title text,
+  p_description text,
+  p_tags text[],
+  p_created_by uuid
+)
+returns table (id uuid, title text, visibility text, wall_status text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_limit integer;
+  v_usage integer;
+  v_path learning_paths%rowtype;
+begin
+  if p_created_by is null or (
+    auth.uid() is distinct from p_created_by
+    and coalesce(auth.role(), '') <> 'service_role'
+  ) then
+    raise exception 'creator identity does not match authenticated user' using errcode = '42501';
+  end if;
+
+  if nullif(btrim(coalesce(p_title, '')), '') is null then
+    raise exception 'title is required' using errcode = '22023';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(p_created_by::text, 0));
+
+  insert into user_entitlements (user_id)
+  values (p_created_by)
+  on conflict (user_id) do nothing;
+
+  select max_created_paths into v_limit
+  from user_entitlements
+  where user_id = p_created_by
+  for update;
+
+  select count(*)::integer into v_usage
+  from learning_paths
+  where created_by = p_created_by;
+
+  if v_usage >= v_limit then
+    raise exception 'creator quota exceeded' using errcode = 'check_violation';
+  end if;
+
+  insert into learning_paths (title, description, tags, created_by)
+  values (btrim(p_title), nullif(btrim(p_description), ''), coalesce(p_tags, '{}'::text[]), p_created_by)
+  returning * into v_path;
+
+  return query select v_path.id, v_path.title, v_path.visibility, v_path.wall_status;
+end;
+$$;
+
+create or replace function review_quota_request(
+  p_request_id uuid,
+  p_decision text,
+  p_reviewer uuid
+)
+returns quota_requests
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_request quota_requests%rowtype;
+begin
+  if p_reviewer is null or (
+    auth.uid() is distinct from p_reviewer
+    and coalesce(auth.role(), '') <> 'service_role'
+  ) then
+    raise exception 'reviewer identity does not match authenticated user' using errcode = '42501';
+  end if;
+
+  if not exists (select 1 from platform_admins where user_id = p_reviewer) then
+    raise exception 'platform admin access required' using errcode = '42501';
+  end if;
+
+  if p_decision not in ('approved', 'rejected') then
+    raise exception 'invalid quota request decision' using errcode = '22023';
+  end if;
+
+  select * into v_request
+  from quota_requests
+  where id = p_request_id
+  for update;
+
+  if not found then
+    raise exception 'quota request not found' using errcode = 'P0002';
+  end if;
+  if v_request.status <> 'pending' then
+    raise exception 'quota request has already been reviewed' using errcode = 'check_violation';
+  end if;
+
+  if p_decision = 'approved' then
+    insert into user_entitlements (user_id, max_created_paths, updated_by)
+    values (v_request.user_id, v_request.requested_limit, p_reviewer)
+    on conflict (user_id) do update
+      set max_created_paths = greatest(user_entitlements.max_created_paths, excluded.max_created_paths),
+          updated_by = excluded.updated_by,
+          updated_at = now();
+  end if;
+
+  update quota_requests
+  set status = p_decision,
+      reviewed_by = p_reviewer,
+      reviewed_at = now(),
+      updated_at = now()
+  where id = p_request_id
+  returning * into v_request;
+
+  return v_request;
+end;
+$$;
+
 -- ═══════════════════════════════════════════════════════════════
 -- ROW LEVEL SECURITY
 -- ═══════════════════════════════════════════════════════════════
@@ -227,6 +367,8 @@ alter table learning_paths enable row level security;
 alter table path_memberships enable row level security;
 alter table platform_admins enable row level security;
 alter table profiles enable row level security;
+alter table user_entitlements enable row level security;
+alter table quota_requests enable row level security;
 alter table phases enable row level security;
 alter table days enable row level security;
 alter table lesson_items enable row level security;
@@ -250,6 +392,9 @@ create policy "any signed-in user can create a path" on learning_paths
 
 create policy "path admin can update their path" on learning_paths
   for update using (is_path_admin(id));
+
+create policy "path admin can delete their path" on learning_paths
+  for delete using (is_path_admin(id));
 
 -- ── path_memberships ──
 -- Members can see the membership list of paths they belong to.
@@ -292,6 +437,32 @@ create policy "profile visible per visibility rule" on profiles
 
 create policy "user manages own profile" on profiles
   for all using (user_id = auth.uid());
+
+-- ── user_entitlements ──
+create policy "users read their own entitlement" on user_entitlements
+  for select using (user_id = auth.uid() or is_platform_admin());
+
+create policy "platform admins manage entitlements" on user_entitlements
+  for all using (is_platform_admin()) with check (is_platform_admin());
+
+-- ── quota_requests ──
+create policy "users read their own quota requests" on quota_requests
+  for select using (user_id = auth.uid() or is_platform_admin());
+
+create policy "users create their own quota requests" on quota_requests
+  for insert with check (
+    user_id = auth.uid()
+    and status = 'pending'
+    and requested_limit > current_limit
+    and exists (
+      select 1 from user_entitlements ue
+      where ue.user_id = auth.uid()
+        and ue.max_created_paths = current_limit
+    )
+  );
+
+create policy "platform admins manage quota requests" on quota_requests
+  for update using (is_platform_admin()) with check (is_platform_admin());
 
 -- ── phases / days / lesson_items ──
 -- Readable under the same rule as their parent path.
@@ -414,8 +585,11 @@ create trigger on_path_created
 -- ═══════════════════════════════════════════════════════════════
 
 grant select, insert, update on learning_paths to authenticated;
+grant delete on learning_paths to authenticated;
 grant select, insert, update on path_memberships to authenticated;
 grant select, insert, update, delete on profiles to authenticated;
+grant select on user_entitlements to authenticated;
+grant select, insert, update on quota_requests to authenticated;
 grant select, insert, update, delete on phases to authenticated;
 grant select, insert, update, delete on days to authenticated;
 grant select, insert, update, delete on lesson_items to authenticated;
@@ -432,6 +606,8 @@ grant execute on function is_path_admin(uuid) to authenticated;
 grant execute on function is_approved_member(uuid) to authenticated;
 grant execute on function is_platform_admin() to authenticated;
 grant execute on function path_is_public(uuid) to authenticated;
+grant execute on function create_learning_path_with_entitlement(text, text, text[], uuid) to authenticated;
+grant execute on function review_quota_request(uuid, text, uuid) to authenticated;
 
 -- ═══════════════════════════════════════════════════════════════
 -- ONE-TIME SETUP: make yourself the first platform admin

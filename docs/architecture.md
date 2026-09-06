@@ -222,6 +222,13 @@ The limit must be enforced at a trusted server/database boundary, not only in th
 
 The implementation should avoid scattering the literal `3` through components. Treat `maxCreatedPaths` as a configurable entitlement so future subscription tiers can increase the allowance without changing the tenant model or role hierarchy. Subscription/payment infrastructure is not part of the current architecture.
 
+The persistence model uses:
+
+- `user_entitlements(user_id, max_created_paths, updated_at, updated_by)` for the current creator allowance.
+- `quota_requests(...)` for one-user-at-a-time pending requests and the Platform Admin review audit trail.
+
+Usage is derived with `count(*) from learning_paths where created_by = user_id`; there is no mutable created-path counter. Deleting an owned path therefore restores one available slot automatically.
+
 Recommended creation decision flow:
 
 ```text
@@ -239,6 +246,12 @@ Read trusted creator entitlement + current usage
 ```
 
 The creation endpoint remains responsible for authorization and entitlement enforcement. PostgreSQL RLS and trusted server-side checks remain the final security boundary.
+
+The trusted creation path is the `create_learning_path_with_entitlement` security-definer function. It takes a per-user advisory transaction lock, reads or creates the entitlement, counts current owned paths, and inserts only when capacity remains. The existing `on_path_created` trigger still creates the approved admin membership.
+
+Quota review uses the `review_quota_request` security-definer function. It verifies Platform Admin identity, locks the pending request, updates the entitlement on approval, and records reviewer/status timestamps in one transaction.
+
+The authenticated `/account` surface is an identity and capacity view, not an authorization boundary. All path deletion, creation, and quota-review permissions are enforced by server-side checks and database policies/functions.
 
 ## Path Creation and Publication
 

@@ -27,6 +27,7 @@ Discover
 - **Learning Space** — the collaborative experience around a Learning Path. It is currently a UX/product concept built on the existing `learning_paths` tenant; it is not a separate database hierarchy.
 - **My Journey** — a personal view of current goals, active Learning Spaces, progress, next action, Personal Notes, and future achievements.
 - **AI Companion** — a planned supporting capability. The UI must not claim AI features until they are implemented.
+- **Manage Account** — an authenticated workspace for profile identity, path-scoped roles, creator capacity, and quota requests.
 
 ## Roles and Authority
 
@@ -131,6 +132,7 @@ The current foundation includes:
 - Progress tracking and Community Progress/leaderboard data.
 - Personal Notes attached to lesson items.
 - Profile management.
+- Manage Account with role visibility, derived creator usage, path deletion, and quota-request workflows.
 - Row Level Security plus explicit server-side authorization.
 - Path-scoped APIs designed for future web and mobile clients.
 - GitHub Actions CI for lint and production-build validation.
@@ -197,7 +199,7 @@ proxy.ts                            Next.js session refresh and route protection
 - Node.js 22 or later recommended.
 - npm.
 - A Supabase project.
-- The canonical `phase1-schema.sql` supplied with the project design materials.
+- The canonical `docs/DB-schema.sql` in this repository, or the additive migration statements from `docs/database-operations.md` for an existing database.
 
 ### Install
 

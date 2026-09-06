@@ -62,3 +62,21 @@ export async function PUT(req: NextRequest, { params }: Context) {
   if (error) return Response.json({ error: 'Failed to update path' }, { status: 500 });
   return Response.json({ ...data, wallStatus: data.wall_status });
 }
+
+export async function DELETE(req: NextRequest, { params }: Context) {
+  const { pathId } = await params;
+  const user = await getSession(req);
+  if (!user) return unauthorized();
+  if (!(await requirePathAdmin(user.id, pathId))) return forbidden('Admin access required');
+
+  const { data, error } = await adminClient
+    .from('learning_paths')
+    .delete()
+    .eq('id', pathId)
+    .select('id')
+    .maybeSingle();
+
+  if (error) return Response.json({ error: 'Failed to delete path' }, { status: 500 });
+  if (!data) return notFound();
+  return Response.json({ success: true });
+}

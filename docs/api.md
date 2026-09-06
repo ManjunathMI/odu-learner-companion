@@ -24,7 +24,26 @@ Authenticated users create a path:
 {"title":"AWS Certification","description":"...","tags":["aws","cloud"]}
 ```
 
-The database trigger creates the creator's approved admin membership.
+The database transaction enforces the user's `user_entitlements.max_created_paths` against the current count of paths where `created_by` is the authenticated user. Concurrent create requests are serialized per user. The database trigger creates the creator's approved admin membership. Joining an existing path does not consume creator quota.
+
+### `DELETE /api/paths/:pathId`
+
+An authenticated approved Path Admin can delete their own path. The server checks the approved `admin` membership through the existing path authorization helper; `created_by` alone is not sufficient. Cascading foreign keys remove dependent path data according to the existing schema.
+
+## Account and Creator Capacity
+
+- `GET /api/account` returns profile identity, approved path memberships grouped by role, Platform Admin status, and derived creator usage/entitlement.
+- `GET /api/quota-requests` returns the authenticated user's quota-request history.
+- `POST /api/quota-requests` creates a request for a higher limit. `requested_limit` must be greater than the current entitlement, and only one pending request is allowed per user.
+
+Quota requests do not add payment or subscription behavior. Entitlements remain separate from path roles.
+
+## Platform Admin Quota Review
+
+- `GET /api/admin/quota-requests` — Platform Admin only; lists requests with requester profile data.
+- `POST /api/admin/quota-requests/:requestId` with `{ "decision": "approved" }` or `{ "decision": "rejected" }` — Platform Admin only.
+
+Approval and request audit updates are performed by the transactional `review_quota_request` database function. Normal users cannot modify their own entitlement.
 
 ## Path Content
 

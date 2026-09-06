@@ -18,29 +18,30 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'title is required' }, { status: 400 });
   }
 
-  const { data, error } = await adminClient
-    .from('learning_paths')
-    .insert({
-      title: title.trim(),
-      description: description?.trim() || null,
-      tags: Array.isArray(tags) ? tags.map((t) => t.trim()).filter(Boolean) : [],
-      created_by: user.id,
-      // visibility defaults to 'private', wall_status to 'pending_review' per schema
-    })
-    .select('id, title, visibility, wall_status')
-    .single();
+  const { data, error } = await adminClient.rpc('create_learning_path_with_entitlement', {
+    p_title: title.trim(),
+    p_description: description?.trim() || null,
+    p_tags: Array.isArray(tags) ? tags.map((t) => t.trim()).filter(Boolean) : [],
+    p_created_by: user.id,
+  });
 
   if (error) {
+    if (error.code === '23514' && error.message.includes('creator quota exceeded')) {
+      return Response.json({ error: 'Creator quota reached. Request a higher limit to create another Learning Path.' }, { status: 409 });
+    }
     console.error('Create path error:', error);
     return Response.json({ error: 'Failed to create path' }, { status: 500 });
   }
 
+  const created = Array.isArray(data) ? data[0] : data;
+  if (!created) return Response.json({ error: 'Failed to create path' }, { status: 500 });
+
   return Response.json(
     {
-      id: data.id,
-      title: data.title,
-      visibility: data.visibility,
-      wallStatus: data.wall_status,
+      id: created.id,
+      title: created.title,
+      visibility: created.visibility,
+      wallStatus: created.wall_status,
     },
     { status: 201 }
   );

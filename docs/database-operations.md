@@ -4,7 +4,7 @@ This file records the SQL operations used during local setup and testing. It int
 
 ## Canonical Schema
 
-Run the canonical `phase1-schema.sql` from the private design materials in Supabase SQL Editor, from top to bottom. Do not run the deleted legacy single-room schema.
+For a new database, run the canonical `DB-schema.sql` in this repository from top to bottom. Do not run the deleted legacy single-room schema.
 
 The canonical schema creates:
 
@@ -20,7 +20,68 @@ The canonical schema creates:
 - `feedback`
 - `badge_definitions`
 - `badge_awards`
+- `user_entitlements`
+- `quota_requests`
 - RLS policies, helper functions, grants, and the creator-admin trigger
+
+For an existing database with data, do not rerun the full schema. Apply the additive statements for `user_entitlements`, `quota_requests`, the path-admin delete policy, and the `create_learning_path_with_entitlement` and `review_quota_request` functions. The application depends on those objects for account capacity, path deletion, and quota review.
+
+## Creator Entitlements and Quota Requests
+
+Creator usage is derived from current ownership rather than a mutable counter:
+
+```sql
+select count(*) as created_paths
+from learning_paths
+where created_by = 'YOUR-USER-ID';
+```
+
+The current limit is stored in `user_entitlements.max_created_paths`. Joining another user's path does not consume creator capacity. The creation RPC locks per user, checks the entitlement and current path count, inserts the path, and leaves the existing creator-admin trigger responsible for the approved admin membership.
+
+Backfill or inspect entitlement rows:
+
+```sql
+insert into user_entitlements (user_id)
+select id from auth.users
+on conflict (user_id) do nothing;
+
+select user_id, max_created_paths, updated_at, updated_by
+from user_entitlements
+order by updated_at desc;
+```
+
+Inspect quota requests:
+
+```sql
+select
+  qr.id,
+  qr.user_id,
+  p.display_name,
+  qr.current_limit,
+  qr.requested_limit,
+  qr.reason,
+  qr.status,
+  qr.created_at,
+  qr.reviewed_at,
+  qr.reviewed_by
+from quota_requests qr
+left join profiles p on p.user_id = qr.user_id
+order by qr.created_at desc;
+```
+
+Only one pending request per user is allowed. Platform Admin approval uses `review_quota_request`, which updates the entitlement and records the reviewer and timestamp in the request audit trail.
+
+## Existing Database Migration Checklist
+
+When the application code is deployed against an existing Supabase project, verify these objects have been applied before testing `/account`:
+
+1. `user_entitlements` table, RLS policies, and authenticated select grant.
+2. `quota_requests` table, pending-request unique index, RLS policies, and authenticated grants.
+3. `learning_paths` delete policy and authenticated delete grant.
+4. `create_learning_path_with_entitlement` function and authenticated execute grant.
+5. `review_quota_request` function and authenticated execute grant.
+
+The application does not store `created_path_count`; deleting an owned path automatically restores capacity because usage is recalculated from `learning_paths`.
 
 ## Add Platform Admin
 

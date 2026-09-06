@@ -16,17 +16,29 @@ interface PendingPath {
   wall_status: 'pending_review' | 'approved' | 'rejected' | 'unlisted';
 }
 
+interface QuotaRequest {
+  id: string;
+  user_id: string;
+  current_limit: number;
+  requested_limit: number;
+  reason: string | null;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  created_at: string;
+  requester: { display_name: string; avatar_url: string | null } | null;
+}
+
 export default function AdminPage() {
   const [paths, setPaths] = useState<PendingPath[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [quotaRequests, setQuotaRequests] = useState<QuotaRequest[]>([]);
   const reviewPaths = paths.filter((path) => path.visibility === 'public' && path.wall_status === 'pending_review');
 
   useEffect(() => {
     let active = true;
-    void apiFetch<PendingPath[]>('/admin/paths').then((data) => {
-      if (active) { setPaths(data); setError(''); }
+    void Promise.all([apiFetch<PendingPath[]>('/admin/paths'), apiFetch<QuotaRequest[]>('/admin/quota-requests')]).then(([pathData, quotaData]) => {
+      if (active) { setPaths(pathData); setQuotaRequests(quotaData); setError(''); }
     }).catch((err: unknown) => {
       if (active) setError(err instanceof Error ? err.message : 'Unable to load admin queue');
     }).finally(() => {
@@ -47,6 +59,18 @@ export default function AdminPage() {
     }
   };
 
+  const decideQuota = async (requestId: string, decision: 'approved' | 'rejected') => {
+    setProcessingId(requestId);
+    try {
+      await apiFetch(`/admin/quota-requests/${requestId}`, { method: 'POST', body: { decision } });
+      setQuotaRequests((current) => current.map((request) => request.id === requestId ? { ...request, status: decision } : request));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to review quota request');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   if (loading) return <MultilingualLoader message="Preparing the platform workspace" />;
 
   return (
@@ -60,6 +84,10 @@ export default function AdminPage() {
       </header>
 
       {error && <p className="error">{error}</p>}
+
+      {quotaRequests.some((request) => request.status === 'pending') && <section className="workspace-section" aria-labelledby="quota-heading"><div className="section-heading"><div><p className="section-kicker">Creator capacity</p><h2 id="quota-heading">Pending quota requests</h2></div><span>{quotaRequests.filter((request) => request.status === 'pending').length} waiting</span></div><div className="path-list">
+        {quotaRequests.filter((request) => request.status === 'pending').map((request) => <article key={request.id} className="path-card"><div className="path-title-row"><div><h2>{request.requester?.display_name || request.user_id}</h2><p className="meta">Requested {new Date(request.created_at).toLocaleDateString()} · {request.current_limit} to {request.requested_limit} paths</p></div><span className="status-badge">pending</span></div>{request.reason && <p className="description">{request.reason}</p>}<div className="actions"><button className="button-primary" type="button" disabled={processingId === request.id} onClick={() => decideQuota(request.id, 'approved')}>{processingId === request.id ? 'Processing…' : 'Approve'}</button><button className="button-secondary" type="button" disabled={processingId === request.id} onClick={() => decideQuota(request.id, 'rejected')}>Reject</button></div></article>)}
+      </div></section>}
 
       {!paths.length && !error && (
         <div className="empty-state">

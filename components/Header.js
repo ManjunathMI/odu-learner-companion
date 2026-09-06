@@ -192,6 +192,9 @@ const Header = () => {
                       <button type="button" className="dropdown-item" onClick={() => { router.push('/journey'); setIsProfileMenuOpen(false); }}>
                         My Journey
                       </button>
+                      <button type="button" className="dropdown-item" onClick={() => { router.push('/account'); setIsProfileMenuOpen(false); }}>
+                        Manage Account
+                      </button>
                       {isPlatformAdmin && (
                         <button type="button" className="dropdown-item" onClick={() => { router.push('/admin'); setIsProfileMenuOpen(false); }}>
                           Admin

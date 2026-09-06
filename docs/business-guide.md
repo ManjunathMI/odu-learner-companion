@@ -94,7 +94,7 @@ The Learning Wall is a learning-focused discovery surface, not a generic social-
 
 ## Users and Roles
 
-ODU has two levels of authority: a platform-level administrator and path-scoped roles. Path roles are stored per `path_id`, so the same user can hold different roles on different Learning Paths simultaneously.
+ODU has one platform-level authority and three path-scoped roles. Role scope is evaluated per `path_id`, so the same user can hold different roles on different Learning Paths at the same time.
 
 ### Visitor
 
@@ -127,7 +127,7 @@ A moderator does **not** have all permissions of the Path Admin. In particular, 
 
 ### Space Creator / Path Admin
 
-Any registered user can create a Learning Path and automatically becomes its path admin through the database trigger.
+Any registered user can create a Learning Path and automatically becomes its Path Admin through the database trigger.
 
 A Path Admin is scoped to one path and can, subject to the current authorization model:
 
@@ -151,6 +151,44 @@ Platform Admin responsibilities include platform-wide operations such as:
 - Managing platform-level feedback and other protected operations.
 
 A Platform Admin may have no membership in a given path and may still perform supported platform-level operations. Platform-admin privileges must be implemented through explicit server-side checks and must not be implied by ordinary path membership.
+
+## Creator Entitlement and Product Usage Limits
+
+Creating a Learning Path is a first-class product capability, not a Platform Admin function. Any registered user can become a Space Creator by creating a path, after which the database trigger grants that user an approved path-scoped `admin` membership.
+
+### Current creator entitlement
+
+The default product allowance is:
+
+> **Each registered user may create up to 3 Learning Paths.**
+
+This allowance counts paths created/owned by the user, regardless of whether those paths are public or private. Joining somebody else's Learning Path does not consume creator allowance.
+
+The entitlement is a product rule, not a UI convention. The authoritative count and limit must be enforced server-side. UI may display usage such as `2 of 3 Learning Paths used`, but client-side checks alone are not sufficient.
+
+The current allowance should be represented through a configurable entitlement value such as `maxCreatedPaths`, rather than scattering the literal `3` throughout the application. Future subscription or paid tiers may increase this entitlement without changing the underlying role or tenant model.
+
+### Usage behavior
+
+```text
+Registered user
+      |
+      +--> Join existing Learning Paths (does not consume creator allowance)
+      |
+      +--> Create Learning Path
+              |
+              +--> usage < maxCreatedPaths -> allowed
+              |
+              +--> usage >= maxCreatedPaths -> rejected
+```
+
+The creation check must be safe under concurrent requests so simultaneous create attempts cannot bypass the allowance. Enforcement belongs at the trusted server/database boundary.
+
+The product should make creation visible in normal learner UX through clear actions such as **Create a Learning Path**. Creation should communicate that the user is starting a Learning Space and becomes its Path Admin; it should not imply that the user becomes a platform administrator.
+
+### Future subscription tiers
+
+Subscription and payment infrastructure is not part of the current implementation. The product model should nevertheless keep creator allowance entitlement-driven so a future tier can change `maxCreatedPaths` without redesigning roles, path tenancy, or publication authority.
 
 ## Path Visibility and Publication Model
 
@@ -189,7 +227,7 @@ A private path remains outside public discovery even if it has an approved publi
 ```text
 Registered User
       |
-      | create Learning Path
+      | create Learning Path (within creator entitlement)
       v
 Creator automatically becomes Path Admin
       |
@@ -225,11 +263,13 @@ Changing a path from private to public should not silently bypass the platform p
 
 ### Create a Learning Path / Learning Space
 
-1. An authenticated user submits a title, description, and optional tags.
-2. The API inserts a `learning_paths` row with the authenticated user's ID.
-3. The `on_path_created` database trigger creates an approved `admin` membership for that creator.
-4. The creator manages the plan, visibility, and membership according to the path-admin permissions.
-5. If the creator chooses public visibility, the path follows the Platform Admin publication-review workflow before appearing on the public wall.
+1. An authenticated user chooses **Create a Learning Path**.
+2. The server checks the user's current creator entitlement before creating the path.
+3. If the entitlement allows creation, the API inserts a `learning_paths` row with the authenticated user's ID.
+4. The `on_path_created` database trigger creates an approved `admin` membership for that creator.
+5. The creator manages the plan, visibility, and membership according to the path-admin permissions.
+6. If the creator chooses public visibility, the path follows the Platform Admin publication-review workflow before appearing on the public wall.
+7. Creating or owning a path does not consume or change any platform-admin privilege.
 
 ### Join a Learning Space
 
@@ -252,6 +292,8 @@ For an authenticated learner, My Journey should prioritize:
 3. The next useful learning action.
 4. Pending memberships.
 5. Personal Notes and later achievements.
+
+The Journey should distinguish paths the user created/manages from paths they joined so the user can both **join a Learning Journey** and **lead a Learning Journey**.
 
 ### AI Companion
 
@@ -316,6 +358,9 @@ Badge administration and audit history must respect path scope and platform-leve
 - Tenant boundaries are defined by `path_id`.
 - A user may have different path roles on different Learning Paths simultaneously.
 - Any registered user may create a Learning Path and automatically becomes its Path Admin for that path.
+- Each registered user has a default creator allowance of up to 3 Learning Paths; joining another user's path does not consume this allowance.
+- Creator allowance must be enforced at the trusted server/database boundary and should be represented by configurable entitlement such as `maxCreatedPaths`.
+- Path ownership/creation allowance is distinct from Platform Admin authority.
 - Path Admin and Platform Admin are distinct authorities.
 - Moderator is a delegated path-scoped role and does not inherit all Path Admin permissions.
 - A path's `public`/`private` visibility is distinct from platform publication approval.
@@ -340,3 +385,4 @@ Badge administration and audit history must respect path scope and platform-leve
 5. **Public discovery should be useful before sign-in.**
 6. **Privacy and tenant isolation are product features.**
 7. **The interface should feel calm, intelligent, modern, and trustworthy.**
+8. **Creating a Learning Path should feel like an invitation to lead learning, not an administrative privilege.**

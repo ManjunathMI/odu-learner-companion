@@ -15,6 +15,8 @@ const getInitialTheme = () => {
 const Header = () => {
   const [user, setUser] = useState(null);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
+  const [profile, setProfile] = useState({ display_name: '', avatar_url: null });
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [theme, setTheme] = useState(getInitialTheme);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -24,10 +26,7 @@ const Header = () => {
   const getPreferredName = (currentUser) => {
     if (!currentUser) return 'Learner';
 
-    const fullName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name;
-    if (typeof fullName === 'string' && fullName.trim()) {
-      return fullName.trim();
-    }
+    if (typeof profile.display_name === 'string' && profile.display_name.trim()) return profile.display_name.trim();
 
     const email = currentUser.email || '';
     if (email) {
@@ -54,26 +53,53 @@ const Header = () => {
 
   useEffect(() => {
     const supabase = createClient();
-    void supabase.auth.getUser().then(async ({ data: { user: currentUser } }) => {
+    const loadIdentity = async (currentUser) => {
       if (!currentUser) {
         setUser(null);
         setIsPlatformAdmin(false);
+        setProfile({ display_name: '', avatar_url: null });
+        setAvatarFailed(false);
         return;
       }
       const sessionData = await apiFetch('/session');
+      const profileData = await apiFetch('/profile');
       setUser({
         ...currentUser,
         email: sessionData.user?.email ?? currentUser.email,
         id: sessionData.user?.id ?? currentUser.id,
       });
+      setProfile({
+        display_name: profileData.display_name ?? '',
+        avatar_url: profileData.avatar_url ?? null,
+      });
+      setAvatarFailed(false);
       setIsPlatformAdmin(Boolean(sessionData.isPlatformAdmin));
-    }).catch((error) => {
+    };
+
+    const loadCurrentUser = () => supabase.auth.getUser().then(({ data: { user: currentUser } }) => loadIdentity(currentUser));
+    void loadCurrentUser().catch((error) => {
       console.error('Error loading user:', error);
       setUser(null);
       setIsPlatformAdmin(false);
-    }).finally(() => {
-      setIsLoading(false);
+    }).finally(() => setIsLoading(false));
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+      void loadCurrentUser().catch((error) => console.error('Error refreshing user:', error));
     });
+    const handleProfileUpdate = (event) => {
+      const updatedProfile = event.detail;
+      setProfile({
+        display_name: updatedProfile.display_name ?? '',
+        avatar_url: updatedProfile.avatar_url ?? null,
+      });
+      setAvatarFailed(false);
+    };
+    window.addEventListener('odu-profile-updated', handleProfileUpdate);
+
+    return () => {
+      authListener.subscription.unsubscribe();
+      window.removeEventListener('odu-profile-updated', handleProfileUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -149,7 +175,9 @@ const Header = () => {
                     onClick={() => setIsProfileMenuOpen((current) => !current)}
                     aria-expanded={isProfileMenuOpen}
                   >
-                    <span className="profile-avatar">{getInitials(getPreferredName(user))}</span>
+                    <span className="profile-avatar">
+                      {profile.avatar_url && !avatarFailed ? <img src={profile.avatar_url} alt="" onError={() => setAvatarFailed(true)} /> : getInitials(getPreferredName(user))}
+                    </span>
                     <span className="profile-meta">
                       <strong>{getPreferredName(user)}</strong>
                       <small>{user.email}</small>
@@ -161,7 +189,7 @@ const Header = () => {
                       <button type="button" className="dropdown-item" onClick={() => { router.push('/profile'); setIsProfileMenuOpen(false); }}>
                         Profile
                       </button>
-                      <button type="button" className="dropdown-item" onClick={() => { router.push('/paths'); setIsProfileMenuOpen(false); }}>
+                      <button type="button" className="dropdown-item" onClick={() => { router.push('/journey'); setIsProfileMenuOpen(false); }}>
                         My Journey
                       </button>
                       {isPlatformAdmin && (
@@ -299,6 +327,13 @@ const Header = () => {
           justify-content: center;
           font-weight: 700;
           font-size: 0.8rem;
+          overflow: hidden;
+        }
+
+        .profile-avatar img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
 
         .profile-meta {

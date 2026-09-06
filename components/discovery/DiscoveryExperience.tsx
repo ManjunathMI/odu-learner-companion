@@ -50,7 +50,7 @@ export default function DiscoveryExperience({ homepage = false }: { homepage?: b
           <p className="hero-intro">Find a clear path, learn with people who share your goal, and keep your next useful step in view.</p>
           <div className="hero-actions">
             <a className="button-primary" href="#learning-paths">Explore learning paths</a>
-            <Link className="button-secondary" href="/auth">Start learning</Link>
+            <Link className="button-secondary" href="/start-learning">Start learning</Link>
           </div>
         </div>
         <div className="hero-note">

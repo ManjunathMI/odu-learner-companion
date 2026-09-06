@@ -58,7 +58,8 @@ export default function ProfilePage() {
         profile_visibility: profile.profile_visibility,
       };
 
-      await apiFetch('/profile', { method: 'PUT', body: payload });
+      const savedProfile = await apiFetch<ProfileData>('/profile', { method: 'PUT', body: payload });
+      window.dispatchEvent(new CustomEvent('odu-profile-updated', { detail: savedProfile }));
       setMessage('Profile saved successfully.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to save profile');

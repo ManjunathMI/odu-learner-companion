@@ -54,7 +54,7 @@ export default function AuthPage() {
     if (error) {
       setError(error.message);
     } else {
-      router.replace('/paths');
+      router.replace('/journey');
     }
   };
 

@@ -44,6 +44,37 @@ Any registered user can create a Learning Path and automatically becomes its Pat
 
 **Path Admin and Platform Admin are not the same role.** A Path Admin manages their own path but cannot approve that path for public publication. A Moderator does not automatically inherit all Path Admin permissions.
 
+## Creator Entitlement and Usage Limits
+
+Creating a Learning Path is a normal registered-user capability, not an administrator-only action.
+
+The current default creator allowance is:
+
+```text
+maxCreatedPaths = 3
+```
+
+Each registered user can create/own up to 3 Learning Paths under the default allowance. This count applies regardless of whether the paths are public or private. Joining an existing Learning Path does **not** consume creator allowance.
+
+The allowance is an entitlement separate from authorization roles:
+
+```text
+Creator entitlement -> may I create another path?
+Path role          -> what may I do inside this path?
+Platform Admin     -> what protected platform-wide operations may I perform?
+```
+
+The limit must be enforced server-side at the trusted server/database boundary. UI counters such as `2 of 3 Learning Paths used` are for user guidance and are not security controls. Creation checks should also handle concurrent requests so the allowance cannot be bypassed by simultaneous submissions.
+
+The implementation should treat `maxCreatedPaths` as configurable rather than scattering the literal `3` through the UI. Future subscription tiers may increase the allowance. Subscription and payment infrastructure are not part of the current implementation.
+
+ODU should make both modes visible:
+
+- **Join a Learning Journey** — discover and join an existing Learning Space.
+- **Lead a Learning Journey** — create a Learning Path, become its Path Admin, and build the Learning Space for a group or community.
+
+Creation should be promoted in normal product surfaces such as the homepage, Explore, and My Journey rather than being hidden inside platform administration.
+
 ## Path Visibility and Publication
 
 A Learning Path has two separate concepts:
@@ -64,7 +95,7 @@ The intended workflow is:
 ```text
 Registered User
       |
-      | create path
+      | create path (within creator entitlement)
       v
 Creator automatically becomes Path Admin
       |
@@ -219,9 +250,9 @@ npm run build
 
 The `docs/` directory is the single source of truth for product and engineering decisions. Update an existing canonical document rather than creating competing versions.
 
-- [Business guide](docs/business-guide.md) — product vision, vocabulary, roles, workflows, publication, profiles, badges, and business rules.
-- [Architecture](docs/architecture.md) — system shape, tenant model, identity, authorization, information architecture, and UI architecture.
-- [Roadmap](docs/roadmap.md) — phased implementation plan and product decisions.
+- [Business guide](docs/business-guide.md) — product vision, vocabulary, roles, workflows, publication, profiles, badges, business rules, and creator entitlement.
+- [Architecture](docs/architecture.md) — system shape, tenant model, identity, authorization, creator entitlement, information architecture, and UI architecture.
+- [Roadmap](docs/roadmap.md) — phased implementation plan, creator experience, entitlement enforcement, and product decisions.
 - [Development guide](docs/development.md) — local setup, environment variables, database setup, and verification.
 - [API reference](docs/api.md) — HTTP endpoints and response contracts.
 - [Database operations](docs/database-operations.md) — database setup and operational SQL.
@@ -236,11 +267,12 @@ Use `.github/prompts/odu-next-step.prompt.md` with GitHub Copilot for incrementa
 
 1. **Identity and Authentication Journey** — make Start Learning session-aware, land authenticated users in My Journey, and make Header identity use the profile display name and avatar.
 2. **Role-aware navigation and permissions UX** — ensure Learner, Moderator, Path Admin, and Platform Admin see only the actions relevant to their scope.
-3. **Product Experience consolidation** — finish Explore, My Journey, and Learning Space UX and accessibility refinement.
-4. **Creator and Community** — guided plan editor, membership/moderator management, community features, and platform publication administration.
-5. **AI Companion** — implement only when backend capabilities are ready.
-6. **Engagement and recognition** — badges, milestones, and related recognition workflows.
-7. **Production readiness**, then **mobile**.
+3. **Creator entitlement and creation UX** — enforce the default creator allowance server-side and make Create a Learning Path visible across the product.
+4. **Product Experience consolidation** — finish Explore, My Journey, and Learning Space UX and accessibility refinement.
+5. **Creator and Community** — guided plan editor, membership/moderator management, community features, and platform publication administration.
+6. **AI Companion** — implement only when backend capabilities are ready.
+7. **Engagement and recognition** — badges, milestones, and related recognition workflows.
+8. **Production readiness**, then **mobile**.
 
 ## Future Mobile Client
 
@@ -253,6 +285,7 @@ The APIs are designed to be reused by React Native clients. A mobile client shou
 - Keep Platform Admin, Path Admin, Moderator, and Learner permissions distinct.
 - Keep platform publication approval separate from path visibility.
 - Keep product profile identity separate from authentication identity.
+- Treat creator allowance as a configurable entitlement enforced at the trusted server/database boundary.
 - Do not change database schema, RLS, auth, API contracts, or authorization boundaries during a UI-only task unless explicitly requested.
 - Reuse existing APIs and components where practical.
 - Do not claim or visually imply functionality that is not implemented.

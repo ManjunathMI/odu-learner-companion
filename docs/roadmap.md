@@ -46,6 +46,43 @@ Implemented:
 
 The database and authorization model remain the source of truth. Product UX changes must not weaken tenant isolation or role boundaries.
 
+## Creator Model and Product Usage Limits
+
+Creating a Learning Path is a normal registered-user capability, not a Platform Admin capability.
+
+- Any registered user can create a Learning Path.
+- The creator automatically becomes the Path Admin for that path through the database trigger.
+- Path Admin authority is scoped to the created path.
+- The same user can simultaneously be Admin on one path, Moderator on another, and Learner on another.
+- Joining an existing Learning Path does not consume creator allowance.
+
+### Default creator entitlement
+
+The current default allowance is:
+
+```text
+maxCreatedPaths = 3
+```
+
+Each user may create/own up to 3 Learning Paths under the default entitlement, regardless of whether those paths are public or private. The limit must be enforced server-side; a UI-only counter is not sufficient.
+
+UI may communicate usage in a human-readable form such as `2 of 3 Learning Paths used`. The implementation should use a configurable entitlement value such as `maxCreatedPaths` rather than scattering the literal `3`, because future subscription tiers may increase the allowance.
+
+Subscription/payment infrastructure is explicitly out of scope for the current roadmap. The entitlement model should be designed so future plans can change the allowance without changing the tenant hierarchy or role semantics.
+
+Creation UX should clearly communicate two product modes:
+
+```text
+Join a Learning Journey
+        OR
+Lead a Learning Journey
+        -> Create a Learning Path
+        -> Become its Path Admin
+        -> Build the Learning Space for the group/community
+```
+
+Creator actions should be visible in normal product surfaces such as the homepage, Explore, and My Journey rather than hidden exclusively inside administration screens.
+
 ## Phase 1.5b: Identity and Authentication Journey — NEXT
 
 Before adding major community or AI functionality, make identity and authentication consistent across the product.
@@ -99,6 +136,8 @@ Once identity is stable, finish the current product-experience foundation before
 
 - Refine the discovery-first homepage.
 - Keep `/explore` as the primary discovery route.
+- Make **Create a Learning Path** a clear secondary product action alongside discovery.
+- Explain that registered users can create a path and lead learning for their own group/community.
 - Improve search, topic filtering, empty/loading/error states, and responsive behavior.
 - Keep Learning Path cards visually consistent with My Journey.
 - Avoid fake popularity/ranking metrics.
@@ -107,6 +146,9 @@ Once identity is stable, finish the current product-experience foundation before
 
 - Make `/journey` the canonical personal dashboard.
 - Prioritize current goals, active Learning Spaces, progress, pending memberships, and next action.
+- Distinguish spaces the user created/manages from spaces they joined.
+- Provide a visible **Create a Learning Path** action.
+- In an empty Journey, offer both **Explore Learning Paths** and **Create a Learning Path**.
 - Show role-appropriate actions for learner, moderator, and Path Admin contexts.
 - Consider a deliberate `/api/journey` aggregate endpoint if client-side data loading becomes unnecessarily chatty; do not introduce this merely for cosmetic reasons.
 
@@ -134,6 +176,17 @@ Do not expose inactive tabs as if functionality exists.
 - Desktop/mobile validation across primary journeys.
 
 ## Phase 2: Creator and Community
+
+### Creator Entitlement Enforcement
+
+Before expanding creator functionality, enforce the current allowance at the trusted server/database boundary.
+
+- Check current created/owned path usage before creation.
+- Reject creation when usage reaches `maxCreatedPaths`.
+- Make the check safe against concurrent create requests.
+- Keep entitlement separate from path role authorization.
+- Keep the default entitlement configurable for future subscription tiers.
+- Do not add payment/subscription infrastructure as part of this work.
 
 ### Guided Plan Editor
 
@@ -284,13 +337,14 @@ Validate the actual journeys with seeded accounts and realistic data:
 6. A user with different roles on different paths sees only the relevant management actions.
 7. Learner identifies their current goal and next action immediately.
 8. Creator can manage their Learning Space without platform-admin controls.
-9. Moderator can perform only delegated path-scoped actions.
-10. Platform Admin can deliberately perform platform publication operations.
-11. Public path appears on the Learning Wall only after platform approval.
-12. Private path content remains inaccessible to unauthorized users.
-13. Badge visibility respects profile privacy and path scope.
-14. Every major route has understandable loading, empty, success, and error states.
-15. Desktop and mobile layouts remain coherent.
+9. Creator sees accurate path usage and cannot exceed the server-enforced creator entitlement.
+10. Moderator can perform only delegated path-scoped actions.
+11. Platform Admin can deliberately perform platform publication operations.
+12. Public path appears on the Learning Wall only after platform approval.
+13. Private path content remains inaccessible to unauthorized users.
+14. Badge visibility respects profile privacy and path scope.
+15. Every major route has understandable loading, empty, success, and error states.
+16. Desktop and mobile layouts remain coherent.
 
 ## Product Decisions Still Needed
 
@@ -302,8 +356,10 @@ Validate the actual journeys with seeded accounts and realistic data:
 6. Exact profile visibility rules for badges and social/repository links.
 7. Whether badge awards can be revoked and who may revoke them.
 8. First community model: open discussion, cohorts, or focused study groups.
-9. First React Native workflow.
-10. Public repository license and contribution policy.
+9. Exact future subscription tiers and the creator allowance attached to each tier.
+10. Whether unused creator capacity can ever be restored after path deletion/archival.
+11. First React Native workflow.
+12. Public repository license and contribution policy.
 
 ## Guardrails for Future Work
 
@@ -317,3 +373,4 @@ Validate the actual journeys with seeded accounts and realistic data:
 - Keep platform publication approval separate from path visibility.
 - Treat profile identity separately from authentication identity.
 - Keep badges auditable and privacy-aware.
+- Treat creator allowance as a configurable entitlement enforced at the trusted server/database boundary.

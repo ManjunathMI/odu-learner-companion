@@ -193,6 +193,53 @@ Rules:
 
 Authentication flows should use the canonical authenticated destination `/journey` for a normal signed-in learner unless a future deep-link/return-to destination explicitly overrides it.
 
+## Creator Entitlements and Usage Limits
+
+Creating a Learning Path is a product capability available to every registered user; it is not restricted to Platform Admins. The creator automatically becomes the path's `admin` membership through the existing database trigger.
+
+The current default creator entitlement is:
+
+```text
+maxCreatedPaths = 3
+```
+
+This means each registered user may create/own up to three Learning Paths. Joining another user's path does not consume creator allowance. The allowance counts created/owned paths regardless of whether they are public or private.
+
+The entitlement is distinct from authorization roles:
+
+```text
+Creator entitlement
+  -> determines whether another path may be created
+
+Path membership role
+  -> determines what the user may do inside a specific path
+
+Platform Admin
+  -> determines platform-wide protected operations
+```
+
+The limit must be enforced at a trusted server/database boundary, not only in the browser. UI may display usage such as `2 of 3 Learning Paths used`, but UI checks are advisory. Server-side enforcement must account for concurrent create requests so simultaneous requests cannot bypass the allowance.
+
+The implementation should avoid scattering the literal `3` through components. Treat `maxCreatedPaths` as a configurable entitlement so future subscription tiers can increase the allowance without changing the tenant model or role hierarchy. Subscription/payment infrastructure is not part of the current architecture.
+
+Recommended creation decision flow:
+
+```text
+Authenticated user
+       |
+       v
+Read trusted creator entitlement + current usage
+       |
+       +---- usage < maxCreatedPaths ----> create path
+       |                                      |
+       |                                      v
+       |                              creator -> admin membership
+       |
+       +---- usage >= maxCreatedPaths ----> reject creation
+```
+
+The creation endpoint remains responsible for authorization and entitlement enforcement. PostgreSQL RLS and trusted server-side checks remain the final security boundary.
+
 ## Path Creation and Publication
 
 Any registered user can create a Learning Path. The creator automatically becomes the path's `admin` membership through the existing database trigger.
@@ -200,7 +247,7 @@ Any registered user can create a Learning Path. The creator automatically become
 Visibility and platform publication are separate:
 
 ```text
-User creates path
+User creates path (within creator entitlement)
       |
       v
 Creator = Path Admin
@@ -248,11 +295,13 @@ A Path Admin cannot self-approve public publication. Platform Admin is the autho
 
 ### Path Creator / Admin
 
-1. Creates a Learning Path.
-2. Automatically receives approved `admin` membership for that path.
-3. Manages path metadata, learning plan, visibility, and permitted membership operations.
-4. Can add/delegate Moderators according to the supported product permissions.
-5. Cannot perform Platform Admin publication approval merely by owning the path.
+1. Authenticates as a normal registered user.
+2. Checks available creator entitlement.
+3. Creates a Learning Path when within the allowance.
+4. Automatically receives approved `admin` membership for that path.
+5. Manages path metadata, learning plan, visibility, and permitted membership operations.
+6. Can add/delegate Moderators according to the supported product permissions.
+7. Cannot perform Platform Admin publication approval merely by owning the path.
 
 ### Moderator
 
@@ -290,6 +339,8 @@ The product UI should feel calm, modern, structured, motivating, and trustworthy
 Design rules:
 
 - Discovery comes before administration on public surfaces.
+- Creation should be visible as a normal product action: users can both join a Learning Journey and lead one by creating a Learning Path.
+- Creator usage can be surfaced in creation/Journey UX without exposing internal authorization details.
 - The next useful learning action should be easy to identify.
 - Primary actions use a consistent solid treatment; secondary actions stay quieter.
 - Positive progress may use restrained success treatment rather than heavy gamification.
@@ -303,6 +354,6 @@ Design rules:
 
 Implemented foundation includes authentication, public discovery, user-created paths, creator-to-admin behavior, path metadata and plans, membership requests/approvals, progress, leaderboard data, notes, profile management, and path-scoped APIs. The current product-experience layer includes `/explore`, `/journey`, Learning Space-oriented path-board UX, shared path cards, and responsive/accessibility improvements.
 
-The next work should improve identity/authentication consistency, role-aware journeys, creator/moderator management, platform publication administration, and then community/AI/engagement capabilities in roadmap order.
+The next work should improve identity/authentication consistency, role-aware journeys, creator entitlement enforcement and creator UX, moderator management, platform publication administration, and then community/AI/engagement capabilities in roadmap order.
 
-Security, tenant isolation, and database behavior must not be weakened as the UX evolves.
+Security, tenant isolation, entitlement enforcement, and database behavior must not be weakened as the UX evolves.

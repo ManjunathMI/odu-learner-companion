@@ -31,7 +31,7 @@ Before making any change:
 5. Inspect the actual route/component/API/database-type implementation affected by the task.
 6. Do not assume a feature exists because it appears in documentation.
 
-## Canonical role and authority model
+## Canonical role, authority, and creator entitlement model
 
 ODU has two authority levels:
 
@@ -53,15 +53,28 @@ Path C -> learner
 
 Never treat a user as having one global path role.
 
-Rules:
+### Creator entitlement
+
+Creating a Learning Path is a normal registered-user capability.
 
 - Any registered user can create a Learning Path.
 - The creator automatically becomes the approved Path Admin for that path through the existing database trigger.
+- Default creator entitlement: `maxCreatedPaths = 3`.
+- The allowance counts created/owned paths regardless of public/private visibility.
+- Joining another user's path does not consume creator allowance.
+- Creator allowance is separate from path authorization roles and Platform Admin authority.
+- Future subscription tiers may increase `maxCreatedPaths`; payment/subscription infrastructure is not currently implemented.
+
+Rules:
+
 - Path Admin manages their own Learning Path / Learning Space within that path's permissions.
 - Moderator is a delegated path-scoped role and does not automatically inherit all Path Admin permissions.
 - Platform Admin is separate from Path Admin and cannot be inferred from path membership.
 - Never label a Path Admin as a Super Admin.
-- Never rely on client-side role visibility as authorization.
+- Never rely on client-side role or entitlement visibility as authorization.
+- Creator entitlement must be enforced at the trusted server/database boundary.
+- Creation checks must be safe against concurrent requests so the allowance cannot be bypassed.
+- Avoid scattering the literal `3`; prefer a configurable entitlement such as `maxCreatedPaths`.
 
 ## Path visibility and publication model
 
@@ -122,18 +135,19 @@ Rules:
 
 ## Current product priority
 
-The immediate priority is **Identity and Authentication Journey**, followed by consolidation of the Phase 1.5 product experience.
+The immediate priority is **Identity and Authentication Journey**, followed by consolidation of the Phase 1.5 product experience and creator experience.
 
 1. Session-aware Start Learning flow.
 2. Authentication success -> `/journey`.
 3. Header profile name/avatar consistency.
 4. Role-aware navigation and management actions.
-5. Explore/My Journey/Learning Space refinement.
-6. Creator and Community.
-7. AI Companion.
-8. Engagement and recognition.
-9. Production readiness.
-10. Mobile.
+5. Creator entitlement enforcement and creation UX.
+6. Explore/My Journey/Learning Space refinement.
+7. Creator and Community.
+8. AI Companion.
+9. Engagement and recognition.
+10. Production readiness.
+11. Mobile.
 
 Do not jump to later phases unless explicitly requested.
 
@@ -177,10 +191,12 @@ The homepage should be discovery-first and communicate the product quickly:
 3. Search prompt such as “What do you want to learn?”
 4. Topic/category exploration.
 5. Featured/relevant public Learning Paths.
-6. Why learning together helps.
-7. Journey preview.
-8. AI Companion preview only when clearly marked planned/coming soon unless implemented.
-9. Session-aware Start Learning CTA.
+6. Clear secondary action: **Create a Learning Path**.
+7. Explain that registered users can lead learning for their own group/community.
+8. Why learning together helps.
+9. Journey preview.
+10. AI Companion preview only when clearly marked planned/coming soon unless implemented.
+11. Session-aware Start Learning CTA.
 
 ### Explore
 
@@ -193,6 +209,7 @@ Use real backend capabilities only:
 - Approved public Learning Path discovery.
 - Useful path summaries.
 - Clear loading/empty/error states.
+- Visible **Create a Learning Path** action for authenticated users.
 
 Do not invent popularity, ranking, recommendation, or engagement metrics.
 
@@ -208,8 +225,16 @@ It should answer:
 - What should I do next?
 - What Personal Notes have I captured?
 - Where am I learning with other people?
+- Which Learning Spaces do I lead?
 
 Role-aware actions must be based on the relevant path membership and platform-admin status.
+
+Creation UX should make it clear that the user can lead a Learning Journey by creating a Learning Path. Show creator usage when useful, for example `2 of 3 Learning Paths used`, using the configured entitlement rather than a scattered numeric literal.
+
+An empty Journey should offer both:
+
+- **Explore Learning Paths** — join a Learning Journey.
+- **Create a Learning Path** — lead a Learning Journey.
 
 ### Learning Space
 
@@ -284,6 +309,8 @@ Reuse established components before creating new ones. Do not reorganize the ent
 
 **Learning Space is a product/UX concept, not a new database tenant.** Do not create a `learning_spaces` table or second tenant hierarchy merely to support terminology.
 
+For creator entitlement work, server-side enforcement may require backend/API changes, but must preserve the existing tenant and authorization model. Do not add subscription/payment infrastructure unless explicitly requested.
+
 Reuse existing APIs and data wherever possible.
 
 ## Implementation protocol
@@ -326,9 +353,9 @@ Do not:
 - Add fake functionality.
 - Add a new framework without explicit approval.
 
-### Step 4 — Security and role check
+### Step 4 — Security, role, and entitlement check
 
-For any role/auth/path-related change verify:
+For any role/auth/path/creation-related change verify:
 
 - Is the role derived from the correct `path_id` membership?
 - Is Platform Admin kept separate?
@@ -337,6 +364,9 @@ For any role/auth/path-related change verify:
 - Is private path information protected?
 - Is client-side visibility being incorrectly treated as authorization?
 - Does public discovery still require platform approval?
+- Is creator entitlement enforced server-side?
+- Can concurrent creation requests bypass `maxCreatedPaths`?
+- Is the entitlement check separate from path role authorization?
 
 ### Step 5 — UX quality check
 
@@ -367,7 +397,7 @@ If a command fails, fix the issue before claiming completion unless the failure 
 
 ### Step 7 — Manual journey validation
 
-For authentication/profile/role work, validate real journeys rather than only rendering pages.
+For authentication/profile/role/creator work, validate real journeys rather than only rendering pages.
 
 At minimum consider:
 
@@ -379,6 +409,10 @@ Learner -> path -> learner actions only
 Moderator -> path -> moderator actions only
 Path Admin -> own path -> admin actions
 Platform Admin -> admin -> platform operations
+Creator usage below limit -> create path -> Path Admin membership
+Creator usage at limit -> creation rejected server-side
+Join existing path -> creator allowance unchanged
+Public path -> platform approval required
 ```
 
 ### Step 8 — Report
@@ -388,7 +422,7 @@ Report:
 - Files changed.
 - What was implemented.
 - Existing APIs/helpers reused.
-- Role/security implications.
+- Role/security/entitlement implications.
 - Verification results.
 - Remaining follow-up work.
 
@@ -478,9 +512,10 @@ Before making changes, ask:
 4. Am I preserving path-scoped roles?
 5. Am I preserving the distinction between path visibility and platform publication approval?
 6. Am I keeping profile identity separate from authentication identity?
-7. Am I changing a backend/security boundary unnecessarily?
-8. Am I presenting a planned feature as implemented?
-9. Can I reuse an existing component/API/helper?
-10. Is this the smallest coherent change that moves the product forward?
+7. Am I treating creator allowance as a configurable entitlement rather than a UI-only rule?
+8. Am I changing a backend/security boundary unnecessarily?
+9. Am I presenting a planned feature as implemented?
+10. Can I reuse an existing component/API/helper?
+11. Is this the smallest coherent change that moves the product forward?
 
-If the answer to questions 7 or 8 is yes, stop and reconsider the implementation.
+If the answer to questions 8 or 9 is yes, stop and reconsider the implementation.

@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Routes that do NOT require authentication.
-const PUBLIC_ROUTES = ['/', '/explore', '/auth', '/start-learning', '/docs/', '/api/wall', '/api/paths/'];
+const PUBLIC_ROUTES = ['/', '/explore', '/auth', '/start-learning', '/docs', '/api/wall', '/api/paths/'];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

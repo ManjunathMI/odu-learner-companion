@@ -183,6 +183,8 @@ app/
   paths/[pathId]/approvals/page.tsx Approval queue
   admin/page.tsx                   Platform admin workspace
   api/                             Server API route handlers
+  robots.ts                        Robots metadata generator (/robots.txt)
+  sitemap.ts                       Dynamic sitemap generator (/sitemap.xml)
 components/                        Reusable domain and UI components
 lib/                               Auth, authorization, API, and Supabase helpers
 types/database.ts                  Database type definitions

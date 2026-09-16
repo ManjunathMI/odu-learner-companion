@@ -2,17 +2,33 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Routes that do NOT require authentication.
-const PUBLIC_ROUTES = ['/', '/explore', '/auth', '/start-learning', '/docs', '/api/wall', '/api/paths/'];
+const PUBLIC_ROUTES = [
+  '/',
+  '/explore',
+  '/auth',
+  '/start-learning',
+  '/docs',
+  '/paths',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/api/wall',
+  '/api/paths/',
+];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Let public routes and Next.js internals pass through.
-  if (
-    PUBLIC_ROUTES.some((r) => r.endsWith('/') ? pathname.startsWith(r) : pathname === r || pathname.startsWith(r + '/')) ||
+  const isPublic =
+    PUBLIC_ROUTES.some((r) => {
+      if (r === '/') return pathname === '/';
+      if (r.endsWith('/')) return pathname.startsWith(r);
+      return pathname === r || pathname.startsWith(r + '/');
+    }) ||
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon')
-  ) {
+    pathname.startsWith('/favicon');
+
+  if (isPublic) {
     return NextResponse.next();
   }
 

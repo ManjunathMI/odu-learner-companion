@@ -50,6 +50,8 @@ app/
   paths/[pathId]/approvals/page.tsx Moderator/admin approvals
   admin/page.tsx                   Platform admin workspace
   api/                             Server API route handlers
+  robots.ts                        Robots metadata generator (/robots.txt)
+  sitemap.ts                       Dynamic sitemap generator (/sitemap.xml)
 components/
   discovery/                       Shared homepage and Explore experience
   journey/                         Shared learner dashboard experience
@@ -248,6 +250,39 @@ Read trusted creator entitlement + current usage
 The creation endpoint remains responsible for authorization and entitlement enforcement. PostgreSQL RLS and trusted server-side checks remain the final security boundary.
 
 The trusted creation path is the `create_learning_path_with_entitlement` security-definer function. It takes a per-user advisory transaction lock, reads or creates the entitlement, counts current owned paths, and inserts only when capacity remains. The existing `on_path_created` trigger still creates the approved admin membership.
+
+## SEO and Crawling Infrastructure
+
+The platform provides dynamic search engine discovery via Next.js App Router metadata conventions:
+
+### Sitemap (`/sitemap.xml` via `app/sitemap.ts`)
+- Dynamically generated from the database at request time (`dynamic = 'force-dynamic'`).
+- Base URL resolved canonically from `NEXT_PUBLIC_BASE_URL` (defaults to `http://localhost:3000`).
+- Static public pages included:
+  - `/` (Homepage / discovery)
+  - `/explore` (Public learning paths directory)
+  - `/docs` (Documentation index)
+  - `/docs/business-guide`, `/docs/architecture`, `/docs/roadmap`, `/docs/database-operations`, `/docs/development`, `/docs/api`
+- Dynamic paths included:
+  - `/paths/[pathId]` exclusively for learning paths that meet BOTH criteria:
+    1. `visibility = 'public'`
+    2. `wall_status = 'approved'`
+  - Uses `updated_at` as the `lastModified` timestamp.
+- Excluded routes:
+  - Authenticated and private pages (`/journey`, `/account`, `/profile`, `/admin`).
+  - Private, `pending_review`, `rejected`, or `unlisted` paths.
+  - API routes (`/api/*`).
+  - `/paths` collection route (which redirects to `/journey`).
+
+### Robots (`/robots.txt` via `app/robots.ts`)
+- Allows public crawling of all content pages (`User-agent: *`, `Allow: /`).
+- Disallows crawling of API routes (`Disallow: /api/`).
+- Specifies the sitemap URL pointing to `${NEXT_PUBLIC_BASE_URL}/sitemap.xml`.
+
+### Metadata and Privacy
+- Root layout (`app/layout.tsx`) sets standard `metadataBase`, Open Graph, and Twitter tags without unsupported claims.
+- Individual Learning Path pages (`app/paths/[pathId]/page.tsx`) implement `generateMetadata` for public approved paths, but return a generic title and `robots: { index: false, follow: false }` for private, unapproved, or non-existent paths to prevent leakage of private path titles and descriptions.
+
 
 Quota review uses the `review_quota_request` security-definer function. It verifies Platform Admin identity, locks the pending request, updates the entitlement on approval, and records reviewer/status timestamps in one transaction.
 

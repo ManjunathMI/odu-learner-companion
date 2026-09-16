@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 const documents: Record<string, { title: string; sections: { heading: string; text: string }[] }> = {
@@ -62,6 +63,29 @@ const documents: Record<string, { title: string; sections: { heading: string; te
 
 export function generateStaticParams() {
   return Object.keys(documents).map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const document = documents[slug];
+  if (!document) {
+    return {
+      title: 'Documentation',
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const description = document.sections[0]?.text.slice(0, 160) || 'ODU Learner Companion Documentation';
+
+  return {
+    title: document.title,
+    description,
+    openGraph: {
+      title: `${document.title} | ODU Learner Companion`,
+      description,
+      type: 'article',
+    },
+  };
 }
 
 export default async function DocumentPage({ params }: { params: Promise<{ slug: string }> }) {

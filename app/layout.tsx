@@ -17,17 +17,64 @@ export const metadata: Metadata = {
   },
   description:
     'A collaborative learning companion for students, working professionals, and lifelong learners. Discover structured Learning Paths, track personal progress, and learn together.',
-  keywords: [
-    'ODU Learner Companion',
-    'collaborative learning',
-    'learning paths',
-    'study tracker',
-    'students',
-    'working professionals',
-    'lifelong learning',
+  applicationName: 'ODU Learner Companion',
+
+  authors: [
+    {
+      name: 'Manjunath Islampure',
+    },
   ],
-  authors: [{ name: 'ODU Learner Companion' }],
-  creator: 'ODU Learner Companion',
+
+  creator: 'Manjunath Islampure',
+
+  publisher: 'ODU Learner Companion',
+
+  keywords: [
+    'free learning paths',
+    'free online courses',
+    'free certification preparation',
+    'certification study plans',
+    'certification roadmap',
+    'learning roadmap',
+    'technology learning paths',
+    'free tutorials',
+    'AI learning paths',
+    'AI learning roadmap',
+    'cloud learning paths',
+    'cloud certification preparation',
+    'AWS learning',
+    'AWS certification preparation',
+    'Azure learning',
+    'Azure certification preparation',
+    'Google Cloud learning',
+    'programming learning paths',
+    'Java learning path',
+    'Python learning path',
+    'Kubernetes learning path',
+    'DevOps learning path',
+    'software development learning',
+    'career learning paths',
+    'study plans',
+    'ODU Learner Companion',
+    'Manjunath Islampure',
+  ],
+
+  alternates: {
+    canonical: baseUrl,
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -44,6 +91,9 @@ export const metadata: Metadata = {
       'A collaborative learning companion for students, working professionals, and lifelong learners. Discover structured Learning Paths, track personal progress, and learn together.',
   },
   icons: { icon: '/favicon.ico' },
+  verification: {
+    google: "1hqdet7Qsz9wqTF9tqkR7Zo1JxgNXpSAWjoi_ZjQ--U",
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

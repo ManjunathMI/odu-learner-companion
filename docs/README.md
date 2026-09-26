@@ -4,6 +4,7 @@ This directory is the maintained documentation for the multi-tenant ODU Learner 
 
 ## Documents
 
+- [How to Use ODU Learner Companion](how-to-use.md): end-user guide for what the product does and how visitors, learners, creators, moderators, and platform admins use it.
 - [Business Guide](business-guide.md): product behavior, users, roles, and workflows.
 - [Architecture](architecture.md): application boundaries, data model, authorization, and mobile compatibility.
 - [Development](development.md): local setup, environment variables, database setup, and verification.

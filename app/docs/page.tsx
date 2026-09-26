@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 const sections = [
+  { href: '/docs/how-to-use', title: 'How to use', description: 'A practical walkthrough of roles, core concepts, and typical user journeys.' },
   { href: '/docs/business-guide', title: 'Business guide', description: 'Product vision, user roles, vocabulary, and learning workflows.' },
   { href: '/docs/architecture', title: 'Architecture', description: 'Product information architecture, tenant boundaries, authorization, and mobile compatibility.' },
   { href: '/docs/roadmap', title: 'Product roadmap', description: 'Phase 1.5 status and the planned path from learning tracker to companion.' },

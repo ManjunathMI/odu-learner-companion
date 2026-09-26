@@ -59,6 +59,17 @@ const documents: Record<string, { title: string; sections: { heading: string; te
       { heading: 'Learning activity', text: 'POST /progress, GET /leaderboard, and GET/POST /notes are approved-member endpoints. Activity writes always include path_id and validate lesson ownership.' },
     ],
   },
+  'how-to-use': {
+    title: 'How to Use ODU Learner Companion',
+    sections: [
+      { heading: 'What the app can do today', text: 'Public discovery of approved Learning Paths, Supabase email OTP sign-in, a personal My Journey dashboard, user-created Learning Paths, structured plans of phases/days/lesson items, Learning Space membership requests and approvals, path-scoped progress tracking, Personal Notes, path settings for admins, platform-admin review for public-path publication and creator quota requests, and profile management. AI assistance, discussions, cohorts, badges, and mobile apps are planned, not yet available.' },
+      { heading: 'Core concepts', text: 'Explore / Learning Wall is the public discovery surface. A Learning Path is the structured curriculum (Phase -> Day -> Lesson item). A Learning Space is the collaborative experience around a Learning Path. My Journey is the signed-in learner dashboard showing active paths, progress, pending requests, and the next useful action.' },
+      { heading: 'Who uses the app', text: 'Visitors browse public paths and start sign-in. Learners join Learning Spaces, track progress, add Personal Notes, and view Community Progress. Moderators review membership requests for paths they moderate. Path Admins / Space Creators create and manage paths, curriculum, and members. Platform Admins review public-path publication and creator quota requests, separate from Path Admin.' },
+      { heading: 'Typical user journeys', text: 'Discover a path on the homepage or /explore, sign in via /auth with an emailed one-time code, request to join a Learning Space and wait for approval, learn by working through phases/days/lesson items while tracking progress and notes, create a Learning Path from My Journey, manage a path through its settings screen, and review membership requests as a moderator or admin.' },
+      { heading: 'Routes to know', text: '/ homepage, /explore public Learning Wall, /auth sign-in, /journey My Journey, /account account and creator capacity, /profile profile editor, /paths/[pathId] Learning Space, /paths/[pathId]/settings path settings, /paths/[pathId]/approvals membership approvals, /admin protected platform admin workspace.' },
+      { heading: 'Current limitations', text: 'AI Companion features are planned, not live. Badges and advanced recognition are not yet a complete end-user workflow. Discussions, cohorts, and announcements are future work. Private Learning Spaces require approval and membership, and public discovery is limited to paths that are both public and platform-approved.' },
+    ],
+  },
 };
 
 export function generateStaticParams() {

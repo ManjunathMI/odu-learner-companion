@@ -255,6 +255,7 @@ npm run build
 The `docs/` directory is the single source of truth for product and engineering decisions. Update an existing canonical document rather than creating competing versions.
 
 - [Business guide](docs/business-guide.md) — product vision, vocabulary, roles, workflows, publication, profiles, badges, business rules, and creator entitlement.
+- [How to use ODU Learner Companion](docs/how-to-use.md) — end-user guide for what the app does and how to use Explore, My Journey, Learning Spaces, path creation, approvals, account, and profile features.
 - [Architecture](docs/architecture.md) — system shape, tenant model, identity, authorization, creator entitlement, information architecture, and UI architecture.
 - [Roadmap](docs/roadmap.md) — phased implementation plan, creator experience, entitlement enforcement, and product decisions.
 - [Development guide](docs/development.md) — local setup, environment variables, database setup, and verification.

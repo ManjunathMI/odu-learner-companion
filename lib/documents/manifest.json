@@ -53,7 +53,7 @@
     "title": "API Reference",
     "description": "All API responses are JSON. Errors use `{ \"error\": \"message\" }`. Protected endpoints authenticate in their own handlers and accept either the SSR cookie session or `Authorization: ",
     "section": "technical",
-    "hash": "ad62bba584bd9eee173783935799d3967975972e63c5fdc486c007e67a38dd2b"
+    "hash": "f8f31c61fad96cb09b5c9056549208af3fe3456cab2ffda609c207b72855c0ff"
   },
   {
     "source_path": "docs/decisions/content-publishing.md",
@@ -69,7 +69,7 @@
     "title": "Architecture",
     "description": "ODU Learner Companion is a collaborative learning product for students, working professionals, and lifelong learners. The architecture should support a polished discovery-first exp",
     "section": "technical",
-    "hash": "ba67d64e46b768f2533a2dd71d0a27376950ea658a1d762ac8642068b706c104"
+    "hash": "b24d6c3b159197b7674ad23c11e029833f77a3685ed7d2104a1315d1d38c6fe1"
   },
   {
     "source_path": "docs/engineering/development.md",
@@ -77,7 +77,7 @@
     "title": "Development Guide",
     "description": "npm install",
     "section": "technical",
-    "hash": "f893fbfa8fecc09bbc22e8805b1e28ff004894a9cce8e9ba8584b66cc67a5a57"
+    "hash": "289adb05302d94f47b467b1ea2e7379254a5c3fecb34e1758e1ebbcc78cf0d52"
   },
   {
     "source_path": "docs/operations/database.md",
@@ -85,7 +85,7 @@
     "title": "Database Operations",
     "description": "This file records the SQL operations used during local setup and testing. It intentionally contains no credentials or service-role keys.",
     "section": "technical",
-    "hash": "d145d0ac1c512ef3401e18d74af46d0d253802218b37d66f47225fdc6fd1d3a7"
+    "hash": "3a9cb311bf8c4d4943fc7ada2b2ae40861061faaf1a76927a84fac9b4553cd72"
   },
   {
     "source_path": "docs/operations/deployment.md",
@@ -133,6 +133,6 @@
     "title": "Product Roadmap",
     "description": "This roadmap is the canonical planning document for ODU Learner Companion. It evolves the existing learning-tracker foundation into a collaborative learning companion for students,",
     "section": "technical",
-    "hash": "d197a0bbdc0aaa54becbf14f766ed403b3a40e80994b34843825b1927ceba594"
+    "hash": "db737b93b7e428dc4bbb18183ad097c5e6c89abb0ba0d9b87c2197ec3b40e6d8"
   }
 ]

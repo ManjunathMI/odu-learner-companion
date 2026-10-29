@@ -31,6 +31,9 @@ for (const mode of ['fresh installation','upgrade from baseline']) test(`${mode}
     await db.exec(migration); // Existing-database safety migration is idempotent.
     await db.exec(conflictMigration);
     await db.exec(await readFile(new URL('../supabase/migrations/20261029121526_document_catalog.sql',import.meta.url),'utf8'));
+    const material = await readFile(new URL('../supabase/migrations/20261029182558_learning_material.sql',import.meta.url),'utf8');
+    await db.exec(material);
+    await db.exec(material);
   }
   const [admin, learner, other, moderator, outsider, platform] = Array.from({length:6}, (_, i) => `00000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`);
   for (const id of [admin,learner,other,moderator,outsider,platform]) await db.query('insert into auth.users values ($1)',[id]);
@@ -109,4 +112,171 @@ for (const mode of ['fresh installation','upgrade from baseline']) test(`${mode}
   await t.test('learners and unrelated path admins cannot invoke privileged saves through the service wrapper', async () => {
     for (const actor of [learner,other,moderator,outsider]) await assert.rejects(save(plan.phases,plan.revision,false,actor), /Admin access required/);
   });
+});
+
+// Curated-course regression coverage is retained in the existing suite.
+{
+const {ai101Plan,ai101ImportSql}=await import('../lib/curricula/ai101-import.mjs');
+const course=JSON.parse(await readFile(new URL('../curricula/ai-101-beginners/course.json',import.meta.url),'utf8'));
+const owner='00000000-0000-4000-8000-000000000001',learner='00000000-0000-4000-8000-000000000002';
+const schema=(await readFile(new URL('../docs/DB-schema.sql',import.meta.url),'utf8')).replace('create extension if not exists "uuid-ossp";',()=> 'create function uuid_generate_v4() returns uuid language sql as $$ select gen_random_uuid() $$;');
+async function setup(){
+ const db=new PGlite();
+ await db.exec("create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create table auth.users(id uuid primary key); create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$; create function auth.role() returns text language sql stable as $$ select current_setting('request.jwt.claim.role',true) $$; alter default privileges in schema public grant all on tables to service_role;");
+ await db.exec(schema);await db.query('insert into auth.users values($1),($2)',[owner,learner]);
+ return db;
+}
+
+test('AI 101 includes seven complete, ordered modules and optional non-scoring references',()=>{
+ assert.equal(course.modules.length,7);assert.deepEqual(course.modules.map(module=>module.number),[1,2,3,4,5,6,7]);
+ assert.equal(course.totalMinutes,470);assert.equal(course.modules.reduce((sum,module)=>sum+module.minutes,0),470);
+ for(const lesson of course.modules){for(const field of ['objective','teaching','practice','outcome'])assert.ok(lesson[field].length>40,`${lesson.key} ${field}`);}
+ assert.match(course.modules[1].practice,/Written alternative/);
+ assert.match(course.modules[6].teaching,/Ask the learner to answer before revealing/);
+ assert.match(course.modules[6].teaching,/external AI assistant/);
+ assert.equal(ai101Plan(course).flatMap(phase=>phase.days.flatMap(day=>day.items)).length,7);
+ assert.equal(course.references.length,6);assert.ok(course.references.every(resource=>resource.optional));
+ const resources=[...course.modules.flatMap(module=>module.resources),...course.references];
+ assert.equal(new Set(resources.map(resource=>resource.url)).size,20);
+ assert.throws(()=>ai101ImportSql(course,"not-a-uuid'; drop table progress;"),/UUID/);
+});
+
+test('development seed is transactional, repeatable and preserves enrollment, activity and other paths',async()=>{
+ const db=await setup();
+ try{
+  const existing=(await db.query("insert into learning_paths(title,created_by) values('Existing path',$1) returning id",[owner])).rows[0].id;
+  const oldPlan=(await db.query('select save_learning_plan($1,$2,$3,null,false) as plan',[existing,owner,JSON.stringify([{title:'Existing phase',days:[{dayLabel:'Day 1',title:'Existing lesson',items:[{title:'Existing resource',url:'https://example.com/original',tag:'hands'}]}]}])])).rows[0].plan;
+  const oldItem=oldPlan.phases[0].days[0].items[0].id;
+  await db.query('insert into progress(user_id,path_id,item_key,done) values($1,$2,$3,true)',[owner,existing,oldItem]);
+  await db.query("insert into notes(user_id,path_id,item_key,note_text) values($1,$2,$3,'Original private note')",[owner,existing,oldItem]);
+  const sql=ai101ImportSql(course,owner,{publish:true});
+  await assert.rejects(db.exec(sql),/explicit.*confirmation/);await db.exec('rollback');
+  assert.equal((await db.query('select count(*)::int as n from learning_paths')).rows[0].n,1);
+  await db.exec("set odu.allow_development_seed='ai101-local-only'");
+  await assert.rejects(db.exec(sql),/platform administrator/);await db.exec('rollback');
+  await db.query('insert into platform_admins(user_id) values($1)',[owner]);
+  await db.query('insert into user_entitlements(user_id,max_created_paths) values($1,1)',[owner]);
+  await assert.rejects(db.exec(sql),/creator quota exceeded/);await db.exec('rollback');
+  assert.equal((await db.query('select count(*)::int as n from learning_paths')).rows[0].n,1);
+  await db.query('update user_entitlements set max_created_paths=3 where user_id=$1',[owner]);
+  await db.exec(sql);
+  const snapshot=async()=>(await db.query('select read_learning_plan($1) as plan',[course.id])).rows[0].plan;
+  const initial=await snapshot();assert.deepEqual(initial.phases,ai101Plan(course));
+  assert.equal((await db.query('select visibility,wall_status from learning_paths where id=$1',[course.id])).rows[0].wall_status,'approved');
+  assert.equal((await db.query('select count(*)::int as n from learning_paths')).rows[0].n,2);
+  await db.query("insert into path_memberships(user_id,path_id,role,status) values($1,$2,'learner','pending')",[learner,course.id]);
+  await assert.rejects(db.query("insert into path_memberships(user_id,path_id) values($1,$2)",[learner,course.id]),error=>error.code==='23505');
+  assert.equal((await db.query('select count(*)::int as n from progress where user_id=$1 and path_id=$2',[learner,course.id])).rows[0].n,0);
+  await db.query("update path_memberships set status='approved' where user_id=$1 and path_id=$2",[learner,course.id]);
+  const item=course.modules[0].itemId;
+  // Same unique-key semantics used by POST /progress.
+  for(let i=0;i<2;i++)await db.query('insert into progress(user_id,path_id,item_key,done) values($1,$2,$3,true) on conflict(user_id,item_key) do update set done=excluded.done',[learner,course.id,item]);
+  await db.query("insert into notes(user_id,path_id,item_key,note_text) values($1,$2,$3,'My AI 101 reflection')",[learner,course.id,item]);
+  await db.exec(sql);assert.deepEqual(await snapshot(),initial);
+  assert.equal((await db.query('select count(*)::int as n from progress where path_id=$1',[course.id])).rows[0].n,1);
+  assert.equal((await db.query('select note_text from notes where path_id=$1',[course.id])).rows[0].note_text,'My AI 101 reflection');
+  assert.equal((await db.query("select status from path_memberships where user_id=$1 and path_id=$2",[learner,course.id])).rows[0].status,'approved');
+  const leaders=await db.query(`select pm.user_id,count(distinct p.item_key)::int as done_count,(select count(*)::int from lesson_items i join days d on d.id=i.day_id join phases ph on ph.id=d.phase_id where ph.path_id=$1) as total from path_memberships pm left join progress p on p.user_id=pm.user_id and p.path_id=pm.path_id and p.done=true and exists(select 1 from lesson_items i join days d on d.id=i.day_id join phases ph on ph.id=d.phase_id where i.id=p.item_key and ph.path_id=$1) where pm.path_id=$1 and pm.status='approved' group by pm.user_id order by done_count desc`,[course.id]);
+  assert.equal(leaders.rows[0].user_id,learner);assert.equal(leaders.rows[0].done_count,1);assert.equal(leaders.rows[0].total,7);assert.equal(leaders.rows.find(row=>row.user_id===owner).done_count,0);assert.equal(Math.round(100*leaders.rows[0].done_count/leaders.rows[0].total),14);
+  const edited=structuredClone(course);edited.modules[0].objective+=' Review one everyday example.';
+  await db.exec(ai101ImportSql(edited,owner));assert.equal((await snapshot()).revision,initial.revision+1);
+  assert.equal((await db.query('select count(*)::int as n from progress where path_id=$1',[course.id])).rows[0].n,1);
+  assert.equal((await db.query('select title from learning_paths where id=$1',[existing])).rows[0].title,'Existing path');
+  assert.deepEqual((await db.query('select read_learning_plan($1) as plan',[existing])).rows[0].plan,oldPlan);
+  assert.equal((await db.query('select done from progress where path_id=$1',[existing])).rows[0].done,true);
+  assert.equal((await db.query('select note_text from notes where path_id=$1',[existing])).rows[0].note_text,'Original private note');
+  // A manual extra lesson requires a deliberate removal decision; imports never delete it.
+  await db.query("insert into lesson_items(day_id,title,url,sort_order) values($1,'Manual addition','https://example.com/manual',2)",[course.modules[0].dayId]);
+  await assert.rejects(db.exec(ai101ImportSql(edited,owner)),/Confirm curriculum removals/);await db.exec('rollback');
+  assert.equal((await db.query("select count(*)::int as n from lesson_items where title='Manual addition'")).rows[0].n,1);
+ }finally{await db.close();}
+});
+
+test('serialized database lesson material contains teaching, practice, outcomes and every resource',async()=>{
+ const {courseOverviewMarkdown,moduleContentMarkdown}=await import('../lib/curricula/content.mjs');
+ const overview=courseOverviewMarkdown(course);
+ for(const reference of course.references)assert.ok(overview.includes(reference.url));
+ for(const lesson of course.modules){
+  const content=moduleContentMarkdown(lesson);
+  assert.ok(content.includes(lesson.teaching));assert.ok(content.includes(lesson.practice));assert.ok(content.includes(lesson.outcome));
+  for(const resource of lesson.resources)assert.ok(content.includes(resource.url));
+ }
+});
+
+test('day Markdown survives older clients, supports explicit clearing and validates atomically',async()=>{
+ const db=await setup();
+ try{
+  await db.exec("set odu.allow_development_seed='ai101-local-only'");
+  await db.exec(ai101ImportSql(course,owner));
+  const read=async()=>(await db.query('select read_learning_plan($1) as plan',[course.id])).rows[0].plan;
+  let plan=await read();
+  const content=plan.phases[0].days[0].contentMarkdown;
+  assert.ok(content.includes(course.modules[0].teaching));
+  const {courseOverviewMarkdown}=await import('../lib/curricula/content.mjs');
+  assert.equal((await db.query('select overview_markdown from learning_paths where id=$1',[course.id])).rows[0].overview_markdown,courseOverviewMarkdown(course));
+  const oldClient=structuredClone(plan.phases);
+  for(const phase of oldClient)for(const day of phase.days)delete day.contentMarkdown;
+  oldClient.reverse();
+  await db.query('select save_learning_plan($1,$2,$3,$4,false)',[course.id,owner,JSON.stringify(oldClient),plan.revision]);
+  plan=await read();
+  assert.equal(plan.phases.find(p=>p.id===course.modules[0].phaseId).days[0].contentMarkdown,content);
+  for(const invalid of [123,{},'x'.repeat(100001)]){
+   const bad=structuredClone(plan.phases);bad[0].days[0].contentMarkdown=invalid;
+   await assert.rejects(db.query('select save_learning_plan($1,$2,$3,$4,false)',[course.id,owner,JSON.stringify(bad),plan.revision]),/Day content must/);
+   assert.deepEqual(await read(),plan);
+  }
+  plan.phases[0].days[0].contentMarkdown=null;
+  await db.query('select save_learning_plan($1,$2,$3,$4,false)',[course.id,owner,JSON.stringify(plan.phases),plan.revision]);
+  assert.equal((await read()).phases[0].days[0].contentMarkdown,null);
+ }finally{await db.close();}
+});
+
+test('production SQL verifies owner identity, rolls back migration on quota failure and imports repeatably',async()=>{
+ const {ai101ProductionSql}=await import('../lib/curricula/ai101-import.mjs');
+ const migration=await readFile(new URL('../supabase/migrations/20261029182558_learning_material.sql',import.meta.url),'utf8');
+ const db=await setup();
+ try{
+  await db.exec('alter table auth.users add column email text; alter table auth.users add column email_confirmed_at timestamptz;');
+  await db.query("update auth.users set email='owner@example.com',email_confirmed_at=now() where id=$1",[owner]);
+  const sql=ai101ProductionSql(course,owner,'owner@example.com',migration);
+  await assert.rejects(db.exec(sql),/platform administrator role must match/);await db.exec('rollback');
+  await db.query('insert into platform_admins values($1)',[owner]);
+  await assert.rejects(db.exec(ai101ProductionSql(course,owner,'wrong@example.com',migration)),/verified email/);await db.exec('rollback');
+  // Start from the pre-material schema to verify DDL rollback and the combined upgrade.
+  await db.exec('alter table days drop column content_markdown; alter table learning_paths drop column overview_markdown;');
+  await db.query('insert into user_entitlements(user_id,max_created_paths) values($1,0)',[owner]);
+  await assert.rejects(db.exec(sql),/creator quota exceeded/);await db.exec('rollback');
+  assert.equal((await db.query("select count(*)::int n from information_schema.columns where table_schema='public' and table_name='days' and column_name='content_markdown'")).rows[0].n,0);
+  await db.query('update user_entitlements set max_created_paths=3 where user_id=$1',[owner]);
+  await db.exec(sql);
+  const first=(await db.query('select read_learning_plan($1) plan',[course.id])).rows[0].plan;
+  assert.deepEqual(first.phases,ai101Plan(course));
+  await db.exec(sql);
+  assert.deepEqual((await db.query('select read_learning_plan($1) plan',[course.id])).rows[0].plan,first);
+  assert.equal((await db.query('select count(*)::int n from learning_paths')).rows[0].n,1);
+  assert.throws(()=>ai101ProductionSql(course,owner,undefined,migration),/owner-email/);
+ }finally{await db.close();}
+});
+
+}
+
+test('lesson views preserve Markdown and expose resource/reference sections without duplicating teaching',async()=>{
+ const {unified}=await import('unified');
+ const {default:remarkParse}=await import('remark-parse');
+ const {selectMaterial,studyTime}=await import('../lib/learning-material.ts');
+ const markdown='Intro\n\n## Understand\nTeaching\n\n```md\n## Read\nExample, not a resource section\n```\n\n## Watch\n[Video](https://example.com/video)\n\n## Read\n[Reading][book]\n\n## Practice activity\nTry this\n\n## Expected outcome\nReflect\n\n[book]: https://example.com/book';
+ const tree=unified().use(remarkParse).parse(markdown);
+ const lesson=selectMaterial(tree,'lesson'),resources=selectMaterial(tree,'resources'),practice=selectMaterial(tree,'practice');
+ assert.ok(JSON.stringify(lesson).includes('Example, not a resource section'));
+ assert.ok(JSON.stringify(practice).includes('Try this'));
+ assert.ok(!JSON.stringify(lesson).includes('Try this'));
+ assert.ok(!JSON.stringify(lesson).includes('https://example.com/video'));
+ assert.ok(JSON.stringify(resources).includes('https://example.com/video'));
+ assert.ok(!JSON.stringify(resources).includes('Teaching'));
+ assert.ok(resources.children.some(node=>node.type==='definition'&&node.identifier==='book'));
+ for(const node of tree.children)assert.ok(lesson.children.includes(node)||resources.children.includes(node)||practice.children.includes(node),'No source node is lost');
+ const overview=unified().use(remarkParse).parse('About\n\n## What you will learn\nLearn\n\n## Optional reference library\n[Book](https://example.com)');
+ assert.ok(!JSON.stringify(selectMaterial(overview,'overview')).includes('https://example.com'));
+ assert.ok(JSON.stringify(selectMaterial(overview,'library')).includes('https://example.com'));
+ assert.equal(studyTime('1.08'),'1 hr 5 min');assert.equal(studyTime('1.50'),'1 hr 30 min');
 });

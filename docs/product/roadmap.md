@@ -473,3 +473,11 @@ Validate the actual journeys with seeded accounts and realistic data:
 - Treat profile identity separately from authentication identity.
 - Keep badges auditable and privacy-aware.
 - Treat creator allowance as a configurable entitlement enforced at the trusted server/database boundary.
+
+## AI 101 curated content preparation
+
+A seven-day beginner curriculum is prepared in Git, with original teaching content, 20 attributed external references, no-code practice, seven existing completion items and a repeatable development SQL generator. It reuses path enrollment, progress and Community Progress without new tables or scoring. Offline import/data-preservation tests cover its database contracts. Loading the course and completing the real learner browser journey are explicitly deferred until an isolated development project is configured; no production content was changed or deployed by this work.
+
+AI 101 database alignment: the owner approved two optional Markdown fields for course overview and per-day teaching/resources/practice. Migration, API, settings and Learning Space support are prepared offline; production application and data remain unchanged. The Git JSON is the import authoring source, while the learner experience reads the existing path/day database records.
+
+30 October 2026: the owner authorized AI 101 production installation in the absence of a separate database. A guarded, atomic production SQL generator is prepared and tested; remote execution is not complete because Supabase MCP OAuth refresh failed. Deployment and signed-in browser acceptance still remain.

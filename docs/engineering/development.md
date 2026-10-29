@@ -190,3 +190,99 @@ See [Git-backed documentation publishing](../decisions/content-publishing.md). N
 The owner reported successful localhost email callback, access to the local admin management section, enable/disable of QA accounts, and creation of a new QA account. These are owner-reported local checks, not production deployment evidence.
 
 The retained `scripts/check-documents.mjs` checks public articles and sitemap, rejects technical reads for visitors/learners, permits published technical reads for QA platform admins, and denies catalogue GET/PATCH to non-owner accounts. It uses existing QA sessions only, sends no email and changes no publishing settings. Run with `ODU_RUN_EXISTING_ACCOUNT_TESTS=1 node scripts/check-documents.mjs http://localhost:3100` only when existing-account checks are authorized.
+
+## AI 101 curated course — offline implementation
+
+The first curated course is defined in curricula/ai-101-beginners/course.json. It contains the original supplied teaching explanations, objectives, practice activities, outcomes, attribution links and optional references. Seven existing phases each contain one day and one required lesson completion item. Path identity and all 21 child IDs are deterministic UUIDs; the descriptive slug stays in Git metadata, while existing /paths/UUID routes and API contracts are unchanged.
+
+### Architecture assessment and reuse
+
+| Capability | Existing maturity | Implementation |
+|---|---|---|
+| Learning-path creation | Existing | learning_paths, creator trigger, quota RPC and CreatePathForm. |
+| Structured course ingestion | Missing reusable importer | A bounded offline SQL generator; no framework or hosted ingestion service. |
+| Video resources | Existing URL links; partial rich organization | Existing lesson URLs plus inline Watch links crediting original creators; no video hosting. |
+| Reading/reference resources | Existing URL links; partial rich organization | Authoring content is imported into days.content_markdown with Read, Practice and optional References groups. |
+| Enrollment | Existing | POST /api/paths/:pathId/join requests pending learner membership; existing moderator approval grants access. |
+| Progress | Existing | POST /progress and the unique user/item key; one completion item per day. |
+| Leaderboard | Existing | Path-specific approved members ranked by completed current lesson items; no new scoring. |
+| Database extensibility | Existing | Existing hierarchy retained; two approved optional Markdown columns, no new table. |
+
+Quick wins reuse PathBoard, JourneyDashboard, the join/approval/progress/leaderboard routes, path_memberships, progress and notes. Bounded changes add a generic LearningContent renderer, optional Markdown fields in Path Settings and the path APIs, and the offline generator/test utilities. New assessment systems, RAG/agents services, scoring, certificates and a general ingestion framework are deferred. The application does not import the course JSON at runtime or special-case the AI 101 UUID.
+
+The existing path-creation RPC does not accept a stable path ID. The trusted development seed therefore checks the same creator lock/quota rule, inserts the fixed-ID path once, reuses the creator membership trigger, and calls save_learning_plan for validated atomic content updates. It locks the path, preserves IDs, skips unchanged curriculum updates, refuses foreign-ID collisions and refuses unconfirmed removals. Only an explicitly selected development platform administrator may publish via --publish. Repeat imports do not rewrite membership, progress or notes. Private re-imports preserve existing publication settings.
+
+### Generate a development import
+
+The agreed scope is offline preparation only. The currently configured hosted project is production; no course was inserted there. The generator never reads credentials or connects to a database.
+
+```bash
+npm run course:ai101
+npm run course:ai101 -- --owner-id YOUR_DEVELOPMENT_AUTH_UUID --output /tmp/ai101-development.sql --publish
+```
+
+Use the confirmed Auth UUID from a separate development project, not a copied production UUID. Omit --publish to create a private pending-review path. The generator refuses to overwrite an existing output file. Review the SQL, then run it only against the isolated development database. In the same SQL session first set:
+
+```sql
+set odu.allow_development_seed = 'ai101-local-only';
+```
+
+For an explicitly configured development connection, the equivalent operator command is:
+
+```bash
+psql "$ODU_DEV_DATABASE_URL" --set ON_ERROR_STOP=1 --command "set odu.allow_development_seed='ai101-local-only'" --file /tmp/ai101-development.sql
+```
+
+The confirmation setting is an operator safeguard, not a way for SQL to identify whether a server is production. Never point this command at production. No Auth users or roles are created by the seed; the intended development owner must already exist and have platform-admin membership when publishing.
+
+### Content and completion
+
+Seven modules total 470 minutes (7 hours 50 minutes), within the 7–9 hour estimate. There are 12 core resource links, two optional developer references and six optional library references: 20 distinct URLs, including three videos. All returned HTTP 200 during the recorded check; video titles/authors were also confirmed through public metadata. Reachability is not proof of playback, free access or content suitability. The exact report is curricula/ai-101-beginners/link-checks.json; rerun node scripts/check-ai101-links.mjs --write-results for HTTP reachability checks.
+
+The learner's required action is to work through a day's activities and mark its existing lesson item complete. Current formula: completed items / total items; one day is 1/7, rounded to 14%. Optional resources are not separate lesson items and do not inflate the denominator. Community Progress remains sorted by doneCount. Completing activities is self-reported participation, not verified mastery. External AI-generated practice questions in Day 7 belong to the learner's own prototype; ODU has no new quiz, grading or AI endpoint.
+
+### Offline validation and remaining manual journey
+
+The retained AI 101 tests load the full current schema into PGlite, import twice, exercise pending/duplicate/approved membership, save progress and a note, calculate path-scoped completed-item counts, update content while retaining activity, and reject unintended removals. A separate existing path's curriculum, progress and notes remain unchanged. They also test quota and publication guards. These are offline database-contract tests, not hosted Auth/PostgREST or complete browser acceptance.
+
+### Approved optional content fields
+
+Migration `20261029182558_learning_material.sql` adds nullable `learning_paths.overview_markdown` and `days.content_markdown`. The full installer `docs/DB-schema.sql` includes the same changes for a fresh installation. Apply the migration to an isolated development database before testing these application changes. It has NOT been applied to production. Deploying this code requires that migration first; the metadata API selects the new overview field.
+
+The metadata API returns/saves overviewMarkdown; read_learning_plan and save_learning_plan return/save each day's contentMarkdown. The existing admin authorization, revision check, atomic transaction and removal confirmation remain in force. Older curriculum payloads that omit the new day key preserve stored material; explicit null or an empty string clears it. Both editing fields are limited to 100,000 characters and the existing 1 MiB curriculum request limit still applies.
+
+Path Settings supports these optional Markdown fields. The Learning Space renders overview and individual day material in expandable sections. Raw HTML and embedded images are disabled; resources remain external links. Existing completion items, personal notes and Community Progress use the same IDs and rules. The earlier one-page static course preview was retired: it was not the authenticated Learning Space.
+
+After a safe development import, verify Explore → AI 101 → Request to join → facilitator approval → Learning plan → complete a day → refresh → My Journey → Community Progress. Confirm the learner starts at 0/7, reaches 1/7 after the first completion, and that a second course's progress and leaderboard are unaffected. The entire authenticated browser journey remains unverified until a separate development database is available. The course is not yet present in the production Explore catalogue.
+
+### Production import authorized — 30 October 2026
+
+The owner explicitly approved using production because a separate database is unavailable. The earlier development-only restriction is superseded for this AI 101 installation. Supabase MCP currently fails OAuth refresh, so no production preflight, migration or import has been performed by the agent.
+
+The generator now supports an explicit production mode. It verifies the specified UUID, confirmed Auth email and platform-admin membership before DDL. It wraps the approved optional-field migration, curriculum import, publication and seven-day verification in one transaction. Identity, quota, collision or validation failure rolls back the transaction. Repeated successful imports retain the existing IDs and skip unchanged curriculum saves; existing learner activity remains untouched. It does not grant roles, reset passwords or increase quotas.
+
+```bash
+npm run course:ai101 -- --production --owner-id YOUR_CONFIRMED_OWNER_UUID --owner-email YOUR_VERIFIED_OWNER_EMAIL --output /tmp/ai101-production.sql
+```
+
+Run the entire generated SQL file in the intended project's SQL Editor. Production mode includes public/approved publication; the separate development confirmation setting is not used. The generated output is an installation artifact, not an additional migration source. It uses the versioned migration and Git curriculum as sources. The repository full installer must not be run on an existing production database.
+
+SQL Editor execution bypasses Supabase CLI migration history. After verifying success, reconcile version 20261029182558 as applied through the CLI migration repair workflow if maintaining remote CLI history; do not mark it applied before the SQL succeeds. The generator does not modify internal Supabase migration tables.
+
+Deploy the matching API/UI changes to see detailed day material. Then verify the actual signed-in learner journey, including progress persistence and path-isolated Community Progress. Production success remains unconfirmed until the SQL has been run and its results checked.
+
+### AI 101 production import review — 30 October 2026
+
+The owner ran the combined SQL installation. A read-only database audit confirmed public/approved publication, matching title/description/tags/overview, revision 1, and exact equality of all seven phases, days, completion items and per-day Markdown against the Git import source. The one-off read-only audit script was removed during pre-push cleanup; the comparison results are preserved here. Reusable import and data-preservation coverage is in tests/database.test.mjs.
+
+An explicitly authorized sign-in as the existing synthetic superadmin.test@odu.local account confirmed that its existing platform-admin override opens AI 101 without joining. The production UI shows the seven day titles/objectives, resource links, notes controls and 0/7 completion; Community Progress opens and shows the owner's 0/7 entry. No completion, notes, membership or curriculum writes were performed during review. Auth sign-in itself updates the QA account's session/sign-in metadata. The one-off production review-login script and its generated credential file were subsequently removed during cleanup. Existing reusable localhost QA tooling remains available; generated login links must never be logged or committed.
+
+The deployed public metadata API still omits overviewMarkdown, and the signed-in page omits both the course overview and all daily rich content. This is consistent with older application code still deployed: the database material is correct, but the corresponding local API/PathBoard/LearningContent changes must be deployed. Do not rerun the import merely to resolve this display gap. Recheck the rich material after deployment, then exercise learner join/approval, completion persistence and notes with a QA learner before declaring full acceptance.
+
+### Web learning-path cleanup — 30 October 2026
+
+The website now uses expandable day cards, opens the next unfinished day initially, and links the progress prompt to the day rather than directly to its completion checkbox. Matching one-day phase/day titles are not repeated. Durations are shown in minutes/hours instead of decimal hours. The course reference library has its own visible disclosure next to the overview. Each open day separates teaching/practice from titled external-resource links, with completion and personal notes below. This is a web presentation change only: no additional schema, tenant, authentication or scoring changes.
+
+Markdown is partitioned using its parsed heading nodes, preserving fenced examples, unknown lesson sections and reference-style link definitions. All stored source content remains available across the lesson/resource and overview/library views. The AI 101 regression tests were consolidated into the existing database suite; the standalone test file, one-off production audit/login scripts, stale preview, generated SQL artifact, screenshot and generated login files were removed. Curriculum JSON, resource verification report, repeatable SQL generator, reusable link checker, canonical installation schema and migration remain versioned for recreation.
+
+Web preview verification: signed in with the existing QA super-admin account on localhost. All 14 daily resource links across Days 1–6 matched the source, all six optional library links were visible, and Day 7 retained its supporting link. Checked accordion navigation, the next-day link and website layouts at 1280px and 390px with no horizontal overflow. Progress remained 0/7; no completion or notes writes were made. Lint, 34 automated checks and TypeScript pass. The production build was not rerun in this cleanup round because its execution permission was declined; earlier build success predates these latest UI edits.

@@ -16,7 +16,8 @@
     "docs:manifest": "node scripts/generate-document-manifest.mjs",
     "prebuild": "npm run docs:manifest",
     "predev": "npm run docs:manifest",
-    "postbuild": "node scripts/check-build-traces.mjs"
+    "postbuild": "node scripts/check-build-traces.mjs",
+    "course:ai101": "node scripts/prepare-ai101.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

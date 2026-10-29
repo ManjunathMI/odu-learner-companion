@@ -1,0 +1,259 @@
+{
+  "id": "ab832bcc-b30c-59cf-a3c2-fecf069bd475",
+  "slug": "ai-101-beginners",
+  "title": "AI 101 — From Curious Beginner to Building Your First AI Application",
+  "category": "Artificial Intelligence",
+  "level": "Beginner",
+  "durationDays": 7,
+  "estimatedHours": "7–9 hours",
+  "totalMinutes": 470,
+  "dailyCommitment": "Approximately 45–90 minutes per day",
+  "prerequisites": "Basic computer literacy. No AI or programming experience required.",
+  "audience": [
+    "Students",
+    "Working professionals",
+    "Career changers",
+    "Entrepreneurs",
+    "Lifelong learners"
+  ],
+  "description": "Discover artificial intelligence through a practical seven-day learning journey. Understand AI, machine learning, neural networks, generative AI, and large language models. Learn to communicate effectively with AI tools, explore real-world applications, understand how AI systems are built, and create your first AI-powered study assistant prototype.",
+  "outcomes": [
+    "Explain AI, machine learning, and deep learning.",
+    "Describe how machine learning models learn from data.",
+    "Describe generative AI and large language models.",
+    "Write effective prompts for AI applications.",
+    "Identify useful AI applications and their limitations.",
+    "Explain basic AI application architecture.",
+    "Describe RAG and AI agents at a conceptual level.",
+    "Build a simple prompt-based AI solution."
+  ],
+  "tags": [
+    "artificial-intelligence",
+    "ai-101",
+    "beginner",
+    "seven-days"
+  ],
+  "completionNote": "Completion records the activities you mark complete. It does not verify mastery, award a certificate, or grade your knowledge.",
+  "modules": [
+    {
+      "key": "day-1",
+      "number": 1,
+      "title": "What Is Artificial Intelligence?",
+      "minutes": 60,
+      "phaseId": "1a5b4426-6ded-5954-ab97-762d4ba9d5db",
+      "dayId": "2abef259-4f68-52dd-94d8-538ea628406b",
+      "itemId": "31858ba3-a772-5cd4-b68e-7d35e1280eaf",
+      "objective": "Understand what AI is and how AI, machine learning, deep learning, and generative AI relate to one another.",
+      "teaching": "Artificial intelligence is the broader field of building computer systems capable of performing tasks associated with human intelligence, such as recognizing patterns, understanding language, making predictions, and planning actions.\n\nMachine learning is a subset of AI in which models learn patterns from data rather than relying entirely on manually programmed rules.\n\nDeep learning is a subset of machine learning that uses neural networks containing multiple layers.\n\nGenerative AI creates new content, such as text, images, audio, code, and video.\n\nHere are everyday examples:\n\n- Spam filters identify unwanted emails.\n- Recommendation engines suggest videos and products.\n- Fraud detection identifies unusual transactions.\n- Voice assistants process spoken commands.\n- Generative AI assistants create and transform content.\n\nOrdinary automation is not necessarily AI: a fixed rule that sends a reminder is automation even if it never learns from data. Not every AI application uses a large language model; a spam classifier can predict a category without generating a conversation.",
+      "practice": "**Spot AI Around You**\n\nIdentify five applications that use AI.\n\nFor each, describe:\n- What problem it solves.\n- What input it processes.\n- What output it produces.\n- Whether it is predictive, generative, or another AI application.",
+      "outcome": "You can distinguish AI, ML, deep learning, and generative AI and identify practical use cases.",
+      "resources": [
+        {
+          "kind": "Watch",
+          "title": "John Savill — Artificial Intelligence and Machine Learning for Everyone",
+          "url": "https://www.youtube.com/watch?v=C7Iu2lcoAQ4",
+          "optional": false
+        },
+        {
+          "kind": "Read",
+          "title": "Microsoft Learn — Introduction to AI Concepts",
+          "url": "https://learn.microsoft.com/en-us/training/modules/get-started-ai-fundamentals/",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "key": "day-2",
+      "number": 2,
+      "title": "How Do Machines Learn?",
+      "minutes": 65,
+      "phaseId": "a5b9683b-d649-54bf-9b53-0bf6b0b2b3ae",
+      "dayId": "4974219b-bff7-50ae-9cf0-1ef15dd348d6",
+      "itemId": "6be99f81-28a4-59ae-87db-57f8b94572b1",
+      "objective": "Understand how data is used to train machine learning models and how models make predictions.",
+      "teaching": "Traditional software follows explicitly programmed instructions.\n\nMachine learning uses algorithms to identify patterns from data.\n\nKey ideas to recognize:\n\n- Training data\n- Features and labels\n- Supervised learning\n- Unsupervised learning\n- Training\n- Inference\n- Neural networks\n- Model evaluation\n- Generalization\n- Overfitting\n\nExample:\n\nA spam classifier can learn from labeled emails and predict whether a new message is spam.\n\nTraining is the process of learning from examples.\n\nInference is using a trained model to process new inputs.\n\nGeneralization means performing well on examples not seen during training.\n\nOverfitting happens when a model performs well on training examples but poorly on new data.\n\n**Features** are the information a model uses, such as words in an email. A **label** is the answer supplied in a training example, such as spam or not spam. **Supervised learning** uses examples with labels. **Unsupervised learning** looks for structure, such as groups of similar examples, without those answer labels.\n\nA **neural network** combines connected layers of calculations. Training adjusts its internal weights to reduce errors on examples. **Evaluation** checks performance on examples kept separate from training. A useful test includes unfamiliar cases, not just copies of the examples the model has already seen.",
+      "practice": "**Train Your First Model**\n\n1. Open Teachable Machine.\n2. Create two image categories.\n3. Add examples for each.\n4. Train the classifier.\n5. Test new examples.\n6. Observe correct and incorrect predictions.\n\nUse the written alternative below if the tool is unavailable.\n\n### Written alternative\n\nIf Teachable Machine is unavailable, draw two image categories and describe five training examples for each. Reserve two different examples for testing. Predict where the classifier might fail (lighting, backgrounds, or unfamiliar objects), and explain how you would improve the training data. No webcam or personal images are required.",
+      "outcome": "You understand how data influences model training and why models must work on unfamiliar examples.",
+      "resources": [
+        {
+          "kind": "Watch",
+          "title": "3Blue1Brown — But What Is a Neural Network?",
+          "url": "https://www.youtube.com/watch?v=aircAruvnKk",
+          "optional": false
+        },
+        {
+          "kind": "Read",
+          "title": "Google — Introduction to Machine Learning",
+          "url": "https://developers.google.com/machine-learning/intro-to-ml",
+          "optional": false
+        },
+        {
+          "kind": "Practice",
+          "title": "Google Teachable Machine",
+          "url": "https://teachablemachine.withgoogle.com/",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "key": "day-3",
+      "number": 3,
+      "title": "Generative AI and Large Language Models",
+      "minutes": 60,
+      "phaseId": "4ee4578d-93c3-5e2b-bfd2-3910ccb4f7f9",
+      "dayId": "4c731427-1a3f-5593-9b8b-b6630745e56c",
+      "itemId": "cfdebef2-9785-5604-b394-ce96e3354a7a",
+      "objective": "Understand generative AI, LLMs, tokens, context, and hallucinations.",
+      "teaching": "Large language models are trained on extensive data to learn patterns in sequences of tokens.\n\nDuring generation, an LLM predicts successive tokens based on the context available.\n\nKey terms:\n\n- Generative AI\n- Large language models\n- Tokens\n- Context windows\n- Transformers\n- Next-token prediction\n- Hallucinations\n- Factual reliability\n\nA token is a unit of text used during processing.\n\nThe context window limits the information the model can consider in a given interaction.\n\nTransformers are a neural network architecture widely used in modern LLMs.\n\nHallucinations occur when models generate inaccurate or unsupported information.\n\nPractical applications include:\n- Summarization\n- Translation\n- Document analysis\n- Writing assistance\n- Code generation\n- Personalized tutoring\n\n**Next-token prediction** means choosing another token based on the sequence so far, then repeating that process. A fluent answer can still be wrong: generating a plausible sequence is not the same as checking a fact. The context window is a limit on the information available in that interaction, not a guarantee of permanent memory.\n\nFor important factual claims, compare the answer with an independent, trustworthy source. Ask which claims are supported, what information is missing, and whether the answer expresses uncertainty. An AI tutor can help you practice, but you remain responsible for checking its explanations.",
+      "practice": "**Explore an AI Assistant**\n\nAsk an AI assistant to:\n\n1. Explain a complex topic in simple language.\n2. Summarize a paragraph.\n3. Generate a study plan.\n\nCompare the outputs and independently check at least one factual claim.\n\nThis is a practical reflection activity, not an ODU assessment.\n\nIf an AI assistant is unavailable, write the prompts and describe what a useful response should contain. Compare example responses with a peer or revisit the activity when a free assistant is available. Do not use private or sensitive information.",
+      "outcome": "You understand how LLMs generate language and recognizes their limitations.",
+      "resources": [
+        {
+          "kind": "Watch",
+          "title": "3Blue1Brown — Large Language Models Explained Briefly",
+          "url": "https://www.youtube.com/watch?v=LPZh9BOjkQs",
+          "optional": false
+        },
+        {
+          "kind": "Read",
+          "title": "Microsoft Learn — Introduction to Generative AI and Agents",
+          "url": "https://learn.microsoft.com/en-us/training/modules/fundamentals-generative-ai/",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "key": "day-4",
+      "number": 4,
+      "title": "Prompt Engineering Fundamentals",
+      "minutes": 60,
+      "phaseId": "908d6bbe-5f79-5297-bdda-01cb92568b74",
+      "dayId": "80f6d0dd-58bc-54cd-b914-fa2bdef02da4",
+      "itemId": "11926a4b-996c-5d84-8d75-eca4d0d77102",
+      "objective": "Learn to write clear and structured prompts to improve AI responses.",
+      "teaching": "A prompt is input that instructs an AI system to perform a task.\n\nA useful prompt typically includes:\n\n1. Task or objective.\n2. Relevant context.\n3. Constraints.\n4. Desired output format.\n5. Examples where helpful.\n\nWeak prompt:\n\n\"Teach me Python.\"\n\nImproved prompt:\n\n\"I am a complete beginner. Create a seven-day Python learning plan that takes 30 minutes per day. Include simple explanations, practical examples, and one daily exercise. Present it as a table.\"\n\nThe improved prompt identifies the learner, sets a seven-day scope and a daily time limit, asks for examples and exercises, and specifies a table. These details give the assistant a clearer target and make its response easier to evaluate. More detail helps only when it is relevant; extra words alone do not guarantee a correct answer.\n\nPrompt engineering is iterative: test, evaluate, and improve instructions.",
+      "practice": "**Improve Your Prompts**\n\nChoose three vague prompts.\n\nRewrite them with:\n- Clear task\n- Context\n- Constraints\n- Output format\n\nCompare the resulting outputs.\n\nIf an AI assistant is unavailable, write the prompts and describe what a useful response should contain. Compare example responses with a peer or revisit the activity when a free assistant is available. Do not use private or sensitive information.",
+      "outcome": "You can prepare effective prompts for common practical tasks.",
+      "resources": [
+        {
+          "kind": "Read",
+          "title": "Learn Prompting — Introduction",
+          "url": "https://learnprompting.org/docs/introduction",
+          "optional": false
+        },
+        {
+          "kind": "Read",
+          "title": "Microsoft Learn — Get Started with AI",
+          "url": "https://learn.microsoft.com/en-us/training/modules/get-started-with-ai/",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "key": "day-5",
+      "number": 5,
+      "title": "AI in the Real World and Responsible AI",
+      "minutes": 65,
+      "phaseId": "bd55e4f9-0c1a-51f6-8e96-993ee02898b0",
+      "dayId": "e3763245-16d3-5d14-ac2a-d1c44c100cc8",
+      "itemId": "a0886906-cff2-5ae9-95a9-5cc69735f517",
+      "objective": "Explore important AI applications and understand ethical and practical considerations.",
+      "teaching": "AI can improve existing workflows or make new applications possible.\n\nUse cases:\n\n**Education:**\nPersonalized tutoring, study recommendations, and content summarization.\n\n**Healthcare:**\nMedical image analysis and decision-support systems with professional oversight.\n\n**Agriculture:**\nCrop-health monitoring and disease detection.\n\n**Finance:**\nFraud detection and risk monitoring.\n\n**Telecommunications:**\nNetwork anomaly detection and predictive maintenance.\n\n**Software Engineering:**\nCoding assistance, test generation, and documentation.\n\nResponsible AI checks:\n\n- Accuracy and reliability\n- Bias and fairness\n- Privacy\n- Security\n- Transparency\n- Human oversight\n- Appropriate use-case selection\n\nSuccessful AI solutions start with a real problem and measurable outcomes.\n\nCheck **accuracy** with representative examples and **fairness** across the people or situations the system may affect. Protect **privacy** by avoiding unnecessary personal information. Consider **security** before sharing data or connecting tools. Explain the system's **limitations** and keep a person responsible for reviewing important decisions.\n\nFor example, a study-summary assistant might save time, but it can omit an important idea or invent a detail. A sensible success criterion is a useful summary with key claims checked against the source, rather than simply producing more text.",
+      "practice": "**Identify an AI Opportunity**\n\nChoose a problem and document:\n\n1. Problem description.\n2. Intended users.\n3. Proposed AI assistance.\n4. Input data.\n5. Expected benefits.\n6. Risks and limitations.\n7. Success criteria.",
+      "outcome": "You can identify a practical AI use case and describe its value and risks.",
+      "resources": [
+        {
+          "kind": "Read",
+          "title": "Google — Introduction to ML Problem Framing",
+          "url": "https://developers.google.com/machine-learning/problem-framing",
+          "optional": false
+        },
+        {
+          "kind": "Read",
+          "title": "Microsoft Learn — Prepare to Use Generative AI at Work",
+          "url": "https://learn.microsoft.com/en-us/training/modules/what-generative-ai/",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "key": "day-6",
+      "number": 6,
+      "title": "How AI-Powered Applications Are Built",
+      "minutes": 70,
+      "phaseId": "2a1342a2-b869-54db-b25b-207736872aef",
+      "dayId": "737568ff-ccb8-5f9e-904e-5cb9164ce57b",
+      "itemId": "55731943-4794-53e8-800f-817d524cc035",
+      "objective": "Understand how software applications interact with AI models and external knowledge sources.",
+      "teaching": "A simplified application flow:\n\nUser → Frontend → Backend → AI Model API → Response Processing → User\n\nFrontend:\nCaptures user inputs and displays results.\n\nBackend:\nPrepares requests, enforces business rules, protects credentials, and calls the model.\n\nAI Model API:\nProcesses input and generates a response.\n\nResponse Processing:\nValidates outputs and formats results.\n\nThree common patterns:\n\n**Chatbot:**\nUses a language model to generate responses from user input and supplied context.\n\n**Retrieval-Augmented Generation (RAG):**\nRetrieves relevant information from documents or other sources and provides that context to the model.\n\n**AI Agent:**\nCombines models with tools and workflow logic to perform multi-step tasks.\n\nRAG often works without retraining the underlying model: retrieval supplies relevant context when the request is made. It does not guarantee that the answer is accurate, so source selection and checking still matter.\n\nKeep API keys on the backend rather than exposing them in browser code. Check that inputs are appropriate before sending them to a provider, and validate responses before displaying or acting on them. Never paste secrets or private learning records into a public assistant.\n\nIn a study assistant, the frontend collects a topic, the backend prepares a request, and the model returns a draft explanation. Response handling can check that the answer has the requested sections and show a reminder to verify factual claims. A RAG version can retrieve relevant notes first. An agent adds tools and workflow steps; those actions need clear limits and human oversight. These are concepts for your design, not AI services currently provided by ODU.",
+      "practice": "**Design an AI Study Assistant**\n\nCreate a simple diagram or written description that shows:\n\n1. User question.\n2. Frontend.\n3. Backend.\n4. Model API.\n5. Response handling.\n6. Answer displayed.\n\nOptional: Add document retrieval to the design.",
+      "outcome": "You can explain the key components of an AI-powered application.",
+      "resources": [
+        {
+          "kind": "Read",
+          "title": "Microsoft Learn — AI Concepts for Developers",
+          "url": "https://learn.microsoft.com/en-us/training/paths/ai-concepts/",
+          "optional": false
+        },
+        {
+          "kind": "References",
+          "title": "Google Gemini API — Getting Started",
+          "url": "https://ai.google.dev/gemini-api/docs/get-started",
+          "optional": true
+        },
+        {
+          "kind": "References",
+          "title": "OpenAI API — Quickstart",
+          "url": "https://developers.openai.com/api/docs/quickstart",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "key": "day-7",
+      "number": 7,
+      "title": "Build Your First AI Solution",
+      "minutes": 90,
+      "phaseId": "e5405185-69c5-51e1-a5fe-3a22b6f72e6a",
+      "dayId": "b07e772a-bd31-57c9-b1d7-74c7a5e69291",
+      "itemId": "1466783c-2235-5496-9c8b-8373a8cb6224",
+      "objective": "Apply the concepts learned during the week to create a practical AI assistant prototype.",
+      "teaching": "## My AI Study Buddy\n\nCreate a prompt-based AI assistant that can:\n\n- Accept a learning topic.\n- Accept the learner's experience level.\n- Explain the topic.\n- Provide examples.\n- Generate practice questions.\n- Give feedback to the user.\n\n## Beginner implementation\n\nNo programming required.\n\nUse an AI assistant and create a reusable prompt.\n\nExample:\n\n\"You are an educational tutor helping beginners learn unfamiliar topics.\n\nAsk the learner for the topic and their experience level.\n\nExplain the topic in simple language.\n\nProvide two practical examples.\n\nGenerate five practice questions.\n\nAsk the learner to answer before revealing the correct answers.\n\nProvide explanations and suggest what to study next.\n\nAvoid inventing facts and clearly identify uncertainty.\"\n\nThe practice questions here are generated in an external AI assistant as part of the learner's own project, not through an ODU assessment module.\n\n## Optional developer extension\n\nDevelop a small frontend application connected to an AI model API.\n\nThis extension is optional. The reusable prompt is enough for required course completion; you do not need programming or a paid API.",
+      "practice": "Build and test the prompt-based study buddy described above.\n\n- A working prompt-based prototype.\n- Three test scenarios.\n- Example AI responses.\n- A short reflection describing strengths, limitations, and improvements.\n\nIf you cannot access a free AI assistant, prepare the reusable prompt and walk through the three test scenarios on paper as a design prototype. Running a model or paying for an API is not required. An optional coded extension is not part of required completion.",
+      "outcome": "You have built a simple AI-powered solution and understands how it works.",
+      "resources": []
+    }
+  ],
+  "references": [
+    {
+      "title": "Andrew Ng — AI for Everyone",
+      "url": "https://www.deeplearning.ai/courses/ai-for-everyone",
+      "optional": true
+    },
+    {
+      "title": "Google ML Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/",
+      "optional": true
+    },
+    {
+      "title": "Hugging Face LLM Course",
+      "url": "https://huggingface.co/learn/llm-course/chapter1/1",
+      "optional": true
+    },
+    {
+      "title": "Microsoft AI Fluency",
+      "url": "https://learn.microsoft.com/en-us/training/paths/ai-fluency/",
+      "optional": true
+    },
+    {
+      "title": "freeCodeCamp — AI Agents for Beginners",
+      "url": "https://www.freecodecamp.org/news/ai-agents-for-beginners/",
+      "optional": true
+    },
+    {
+      "title": "Microsoft Responsible AI",
+      "url": "https://learn.microsoft.com/en-us/training/paths/github-responsible-ai/",
+      "optional": true
+    }
+  ]
+}

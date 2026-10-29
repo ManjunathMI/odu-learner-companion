@@ -4,12 +4,14 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import LearningContent from '@/components/LearningContent';
+import { studyTime } from '@/lib/learning-material';
 import MultilingualLoader from '@/components/MultilingualLoader';
 
 interface Item { id: string; title: string; url: string; tag: string | null; }
-interface Day { id: string; dayLabel: string; title: string; hours: string | null; items: Item[]; }
+interface Day { id: string; dayLabel: string; title: string; hours: string | null; contentMarkdown?: string | null; items: Item[]; }
 interface Phase { id: string; title: string; goal: string | null; days: Day[]; }
-interface PathData { id: string; title: string; description: string | null; tags: string[] | null; visibility: string; wallStatus: string; myRole: string | null; membershipStatus: string | null; }
+interface PathData { id: string; title: string; description: string | null; overviewMarkdown?: string | null; tags: string[] | null; visibility: string; wallStatus: string; myRole: string | null; membershipStatus: string | null; }
 interface Leader { userId: string; displayName: string; doneCount: number; total: number; }
 interface SavedNote { id: string; itemId: string; text: string; createdAt: string; }
 interface ProgressData { completedItemIds: string[]; }
@@ -41,6 +43,7 @@ export default function PathBoard({ pathId }: { pathId: string }) {
   const [tab, setTab] = useState<'plan' | 'leaderboard'>('plan');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeDay, setActiveDay] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -109,6 +112,9 @@ export default function PathBoard({ pathId }: { pathId: string }) {
   const completedCount = items.filter((item) => done[item.id]).length;
   const progressPercent = items.length ? Math.round((completedCount / items.length) * 100) : 0;
   const nextItem = items.find((item) => !done[item.id]);
+  const nextDay = phases.flatMap(phase => phase.days).find(day => day.items.some(item => item.id === nextItem?.id));
+  const selectedDay = activeDay ?? nextDay?.id ?? phases[0]?.days[0]?.id;
+  const hasLibrary = /^##\s+(?:optional\s+)?reference library\s*$/im.test(path.overviewMarkdown ?? '');
 
   return (
     <div className="board">
@@ -128,11 +134,12 @@ export default function PathBoard({ pathId }: { pathId: string }) {
           )}
         </div>
       </header>
+      {path.overviewMarkdown && <div className="course-information"><details className="learning-material"><summary>About this learning path</summary><LearningContent markdown={path.overviewMarkdown} view="overview" /></details>{hasLibrary && <details className="learning-material"><summary>Reference library · optional reading</summary><LearningContent markdown={path.overviewMarkdown} view="library" /></details>}</div>}
       {notice && <p role="status">{notice} <Link href="/journey">My Journey</Link></p>}
       {!path.myRole && <p className="state">This public Learning Space is open for discovery. Request membership to view its plan and learn with the community.</p>}
       {path.myRole && <>
         <section className="progress-summary" aria-label="Your learning progress">
-          <div className="progress-copy"><p className="section-label">Your learning progress</p><strong>{completedCount} of {items.length} lessons complete</strong>{nextItem ? <span className="next-action">Next up: <a href={`#lesson-${nextItem.id}`}>{nextItem.title}</a></span> : <span>Every lesson is complete.</span>}</div>
+          <div className="progress-copy"><p className="section-label">Your learning progress</p><strong>{completedCount} of {items.length} lessons complete</strong>{nextItem ? <span className="next-action">Next up: <a href={`#day-${nextDay?.id}`} onClick={() => { if (nextDay) setActiveDay(nextDay.id); setTab('plan'); }}>{nextItem.title}</a></span> : <span>Every lesson is complete.</span>}</div>
           <div className="progress-meter"><span>{progressPercent}%</span><div className="meter-track"><i style={{ width: `${progressPercent}%` }} /></div></div>
         </section>
         <div className="tabs" role="tablist" aria-label="Learning Space views">
@@ -148,22 +155,33 @@ export default function PathBoard({ pathId }: { pathId: string }) {
         </ol>
       ) : path.myRole ? (
         <div id="plan-panel" className="plan" role="tabpanel" aria-labelledby="plan-tab" tabIndex={0}>
+          <p className="plan-intro">Open a day to learn and practise. Choose a resource by its title, then mark the activity complete when you are ready.</p>
           {phases.map((phase, phaseIndex) => <section className="phase" key={phase.id}>
-            <div className="phase-heading"><span>{String(phaseIndex + 1).padStart(2, '0')}</span><div><h2>{phase.title}</h2>{phase.goal && <p className="muted">{phase.goal}</p>}</div></div>
-            {phase.days.map((day) => <div className="day" key={day.id}>
-              <h3>{day.dayLabel}: {day.title} {day.hours && <small>({day.hours} hours)</small>}</h3>
-              {day.items.map((item) => <article className="item" id={`lesson-${item.id}`} key={item.id}>
-                <label className={done[item.id] ? 'complete' : ''}><input type="checkbox" checked={!!done[item.id]} onChange={() => toggle(item.id)} /> <span>{item.title}</span></label>
-                <div className="item-actions">{item.tag && <span className="item-tag">{item.tag}</span>}{item.url && <a href={item.url} target="_blank" rel="noreferrer">Open resource</a>}</div>
+            {(phase.days.length !== 1 || phase.days[0].title !== phase.title) && <div className="phase-heading"><span>{String(phaseIndex + 1).padStart(2, '0')}</span><div><h2>{phase.title}</h2>{phase.goal && <p className="muted">{phase.goal}</p>}</div></div>}
+            {phase.days.map(day => <details className="day-card" id={`day-${day.id}`} key={day.id} open={selectedDay === day.id}>
+              <summary onClick={event => { event.preventDefault(); setActiveDay(selectedDay === day.id ? '' : day.id); }}>
+                <span className="day-summary-copy"><span className="day-meta">{day.dayLabel}{day.hours && <> · {studyTime(day.hours)}</>}</span><span className="day-title">{day.title}</span></span>
+                <span className="day-summary-status"><span>{day.items.filter(item => done[item.id]).length}/{day.items.length} complete</span><span className="day-expand">{selectedDay === day.id ? 'Close lesson −' : 'Open lesson +'}</span></span>
+              </summary>
+              <div className="day-body">
+                {day.contentMarkdown ? <div className="lesson-layout"><div className="lesson-teaching"><LearningContent markdown={day.contentMarkdown} view="lesson" /></div><aside className="lesson-resources" aria-label={`${day.dayLabel} resources`}><h3>Resources &amp; references</h3><p className="muted">Select a title to open it in a new tab.</p><LearningContent markdown={day.contentMarkdown} view="resources" />{!/^##\s+(?:Watch|Read|Practice|References)(?:\s*[—–-].*)?$/im.test(day.contentMarkdown) && day.items.filter(item => item.url).map(item => <p key={item.id}><a href={item.url} target="_blank" rel="noopener noreferrer">Open supporting resource ↗</a></p>)}</aside></div> : phase.days.length === 1 && phase.goal && <p className="muted">{phase.goal}</p>}
+                {day.contentMarkdown && <div className="lesson-practice"><LearningContent markdown={day.contentMarkdown} view="practice" /></div>}
+                <div className="completion-area"><p className="section-label">Complete &amp; reflect</p>
+                {day.items.map(item => <article className="item" id={`lesson-${item.id}`} key={item.id}>
+                  <label className={done[item.id] ? 'complete' : ''}><input type="checkbox" checked={!!done[item.id]} onChange={() => toggle(item.id)} /> <span>{item.title}</span></label>
+                  {!day.contentMarkdown && <div className="item-actions">{item.url && <a href={item.url} target="_blank" rel="noopener noreferrer">Open resource ↗</a>}</div>}
                 <details><summary>Personal notes — only you can read these</summary><textarea value={notes[item.id] || ''} onChange={(e) => { setNotes((current) => ({ ...current, [item.id]: e.target.value })); setNoteStatus((current) => ({ ...current, [item.id]: 'idle' })); }} placeholder="Capture an idea, question, or useful reference" /><div className="note-actions"><button className="button-secondary" disabled={!notes[item.id]?.trim() || noteStatus[item.id] === 'saving'} onClick={() => saveNote(item.id)}>{noteStatus[item.id] === 'saving' ? 'Saving...' : 'Save note'}</button>{noteStatus[item.id] === 'saved' && <span className="note-status saved">Note saved</span>}{noteStatus[item.id] === 'error' && <span className="note-status error">Could not save note</span>}</div>{savedNotes.some((note) => note.itemId === item.id) && <details><summary>Saved note history</summary>{savedNotes.filter((note) => note.itemId === item.id).map((note) => <p key={note.id}><small>{new Date(note.createdAt).toLocaleString()}</small><br />{note.text}</p>)}</details>}</details>
-              </article>)}
-            </div>)}
+                </article>)}
+                </div>
+              </div>
+            </details>)}
           </section>)}
           {!phases.length && <p className="state">This path has no plan yet.</p>}
         </div>
       ) : null}
       <style jsx>{`
         .board { max-width: 1000px; margin: 0 auto; padding: 3.5rem 1.25rem 5rem; }.board-header { display:flex; justify-content:space-between; gap:2rem; border-bottom:1px solid var(--border-color); padding-bottom:2rem; }.header-actions { display:flex; gap:.5rem; align-items:flex-start; flex-wrap:wrap; }.board h1 { margin:.25rem 0; font-size:2.7rem; }.board h2 { margin:0; font-size:1.5rem; }.board h3 { margin:0 0 .85rem; font-family:var(--font-sans); font-size:1rem; }.board small,.muted,.board-header p { color:var(--text-secondary); }.eyebrow,.section-label { text-transform:uppercase; letter-spacing:.08em; font-size:.72rem; font-weight:800; color:var(--accent-primary); }.progress-summary { display:flex; justify-content:space-between; gap:2rem; align-items:center; margin:1.75rem 0 1.25rem; padding:1.25rem 1.4rem; border:1px solid var(--border-color); border-left:4px solid var(--accent-secondary); background:var(--bg-secondary); }.progress-copy { display:flex; flex-direction:column; gap:.28rem; }.progress-copy p { margin:0; }.progress-copy strong { font-size:1.05rem; }.progress-copy span { color:var(--text-secondary); font-size:.9rem; }.progress-meter { min-width:180px; text-align:right; color:var(--accent-secondary); font-size:.85rem; font-weight:800; }.meter-track { height:7px; margin-top:.45rem; background:var(--bg-tertiary); overflow:hidden; }.meter-track i { display:block; height:100%; background:var(--accent-secondary); transition:width .2s ease; }.tabs { display:flex; gap:.25rem; margin:1rem 0 1.5rem; border-bottom:1px solid var(--border-color); }.tabs button { border:0; border-bottom:2px solid transparent; background:none; padding:.75rem 1rem; cursor:pointer; color:var(--text-secondary); font-weight:700; }.tabs button.active { color:var(--accent-primary); border-bottom-color:var(--accent-primary); }.phase { margin:2rem 0; }.phase-heading { display:flex; gap:.85rem; align-items:flex-start; margin-bottom:1.25rem; }.phase-heading > span { color:var(--accent-primary); font-size:.78rem; font-weight:800; padding-top:.2rem; }.phase-heading .muted { margin:.35rem 0 0; }.day { border-top:1px solid var(--border-color); padding:1.25rem 0; }.item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.7rem 1rem; padding:1rem; margin:.55rem 0; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-md); }.item label { display:flex; gap:.65rem; align-items:center; font-weight:700; cursor:pointer; }.item label.complete span { color:var(--text-secondary); text-decoration:line-through; }.item input { accent-color:var(--accent-secondary); width:1rem; height:1rem; }.item-actions { display:flex; align-items:center; justify-content:flex-end; gap:.75rem; }.item a { font-size:.84rem; font-weight:700; }.item-tag { color:var(--text-secondary); font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }.item details { grid-column:1 / -1; color:var(--text-secondary); }.item summary { cursor:pointer; font-size:.85rem; font-weight:700; }.item textarea { display:block; width:100%; margin:.7rem 0; min-height:5rem; }.note-actions { display:flex; align-items:center; gap:.75rem; }.note-status { font-size:.82rem; font-weight:700; }.note-status.saved { color:var(--accent-secondary); }.note-status.error,.state.error { color:var(--accent-danger); }.leaderboard { list-style:none; padding:0; max-width:660px; }.leaderboard li { display:flex; justify-content:space-between; padding:1rem; border-bottom:1px solid var(--border-color); }.state { padding:3rem 0; color:var(--text-secondary); } @media (max-width:640px) { .board { padding:2.5rem 1rem 4rem; }.board-header,.progress-summary { align-items:flex-start; flex-direction:column; }.board h1 { font-size:2.15rem; }.progress-meter { min-width:100%; text-align:left; }.item { grid-template-columns:1fr; }.item-actions { justify-content:flex-start; }.tabs { overflow-x:auto; }.tabs button { white-space:nowrap; }.note-actions { align-items:flex-start; flex-direction:column; } }
+        .board-header>div:first-child { min-width:0; }.header-actions { flex-shrink:0; max-width:220px; }.header-actions a,.header-actions button { white-space:nowrap; }.board h1 { font-size:clamp(1.9rem,3.5vw,2.7rem);line-height:1.15;text-wrap:balance; }.course-information { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;align-items:start; }.plan-intro { color:var(--text-secondary);font-size:.92rem;line-height:1.6; }.phase { margin:1rem 0; }.day-card { border:1px solid var(--border-color);border-radius:var(--radius-md);background:var(--bg-secondary);scroll-margin-top:7rem;margin:.8rem 0; }.day-card>summary { display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.2rem;list-style:none;cursor:pointer; }.day-card>summary::-webkit-details-marker { display:none; }.day-card>summary:hover { background:var(--bg-tertiary); }.day-card>summary:focus-visible { outline:2px solid var(--accent-primary);outline-offset:3px; }.day-summary-copy,.day-summary-status { display:flex;flex-direction:column;gap:.4rem; }.day-meta { color:var(--text-secondary);font-size:.8rem; }.day-title { font-weight:750;line-height:1.4; }.day-summary-status { text-align:right;flex-shrink:0;font-size:.78rem;color:var(--text-secondary); }.day-expand { color:var(--accent-primary);font-weight:700; }.day-body { border-top:1px solid var(--border-color);padding:1.4rem; }.lesson-layout { display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,.65fr);gap:2rem;align-items:start; }.lesson-teaching { min-width:0; }.lesson-resources { border-left:1px solid var(--border-color);padding-left:1.4rem;min-width:0; }.lesson-resources>p { font-size:.85rem;line-height:1.5; }.lesson-practice { margin-top:1.5rem; }.completion-area { margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border-color); }.completion-area .item { grid-template-columns:1fr;background:var(--bg-primary); }.completion-area .item label { align-items:flex-start;line-height:1.5; }.completion-area .item input { flex-shrink:0;margin-top:.22rem; } @media(max-width:760px) { .board-header { flex-direction:column;gap:1rem; }.header-actions { max-width:none; }.course-information,.lesson-layout { grid-template-columns:1fr; }.course-information { gap:0; }.lesson-resources { border-left:0;border-top:1px solid var(--border-color);padding:1rem 0 0; }.day-card>summary { align-items:flex-start;padding:1rem; }.day-body { padding:1rem; }.day-title { font-size:.95rem; }.day-summary-status { max-width:100px; } }
       `}</style>
     </div>
   );

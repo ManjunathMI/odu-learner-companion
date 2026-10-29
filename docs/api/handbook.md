@@ -49,7 +49,9 @@ Approval and request audit updates are performed by the transactional `review_qu
 
 - `GET /api/paths/:pathId/plan` — approved members read the nested plan.
 - `PUT /api/paths/:pathId/plan` — path admins save phases, days, and items atomically. Retain the IDs returned by GET for existing nodes; omit IDs only for new nodes. Send `revision` from GET for an existing curriculum and `confirmRemovals: true` only after explicit removal confirmation. Stale revisions return 409; malformed content returns 400. Retained lessons keep progress and notes. GET and successful PUT return `{ revision, phases }`. Initial creation may omit revision only while the stored curriculum is empty. The old success-only PUT response is replaced by the saved snapshot.
-- `PUT /api/paths/:pathId` — path admins update metadata and visibility.
+- `PUT /api/paths/:pathId` — path admins update metadata and visibility. Optional `overviewMarkdown` accepts text or null (maximum 100,000 characters); GET returns it as part of the metadata.
+
+After applying `20261029182558_learning_material.sql`, each day in the plan may contain nullable `contentMarkdown` (maximum 100,000 characters). GET and successful PUT include it. Omit the key to preserve existing lesson material when saving older payloads; send null or an empty string to clear it. The existing 1 MiB plan body limit, membership checks, revision and removal rules still apply. This extension is prepared offline and is not yet applied to the hosted project.
 
 Plan shape:
 

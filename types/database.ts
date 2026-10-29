@@ -13,9 +13,9 @@ export interface Database {
         Relationships: [];
       };
       learning_paths: {
-        Row: { id: string; title: string; description: string | null; tags: string[] | null; created_by: string; visibility: 'public' | 'private'; wall_status: 'pending_review' | 'approved' | 'rejected' | 'unlisted'; created_at: string; updated_at: string; plan_revision: number };
-        Insert: { title: string; description?: string | null; tags?: string[] | null; created_by: string; visibility?: 'public' | 'private'; wall_status?: 'pending_review' | 'approved' | 'rejected' | 'unlisted' };
-        Update: { title?: string; description?: string | null; tags?: string[] | null; visibility?: 'public' | 'private'; wall_status?: 'pending_review' | 'approved' | 'rejected' | 'unlisted'; updated_at?: string };
+        Row: { id: string; title: string; description: string | null; overview_markdown: string | null; tags: string[] | null; created_by: string; visibility: 'public' | 'private'; wall_status: 'pending_review' | 'approved' | 'rejected' | 'unlisted'; created_at: string; updated_at: string; plan_revision: number };
+        Insert: { title: string; description?: string | null; overview_markdown?: string | null; tags?: string[] | null; created_by: string; visibility?: 'public' | 'private'; wall_status?: 'pending_review' | 'approved' | 'rejected' | 'unlisted' };
+        Update: { title?: string; description?: string | null; overview_markdown?: string | null; tags?: string[] | null; visibility?: 'public' | 'private'; wall_status?: 'pending_review' | 'approved' | 'rejected' | 'unlisted'; updated_at?: string };
         Relationships: [];
       };
       path_memberships: {
@@ -55,9 +55,9 @@ export interface Database {
         Relationships: [];
       };
       days: {
-        Row: { id: string; phase_id: string; day_label: string; title: string; hours: string | null; sort_order: number };
-        Insert: { phase_id: string; day_label: string; title: string; hours?: string | null; sort_order?: number };
-        Update: { day_label?: string; title?: string; hours?: string | null; sort_order?: number };
+        Row: { id: string; phase_id: string; day_label: string; title: string; hours: string | null; content_markdown: string | null; sort_order: number };
+        Insert: { phase_id: string; day_label: string; title: string; hours?: string | null; content_markdown?: string | null; sort_order?: number };
+        Update: { day_label?: string; title?: string; hours?: string | null; content_markdown?: string | null; sort_order?: number };
         Relationships: [];
       };
       lesson_items: {

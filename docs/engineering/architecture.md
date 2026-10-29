@@ -422,3 +422,7 @@ The login form supports email links and codes only. Password login is not offere
 ## Documentation architecture
 
 Articles are rendered from Git Markdown in content/ and docs/. Supabase document_catalog stores only audience and publication metadata. See [the publishing decision](../decisions/content-publishing.md) for registration, authorization, source tracing and maintenance.
+
+## Optional learning material — offline preparation
+
+The approved `20261029182558_learning_material.sql` migration adds nullable `learning_paths.overview_markdown` and `days.content_markdown`. The existing path metadata API and curriculum RPCs carry these as overviewMarkdown and contentMarkdown. Path Settings edits them; the Learning Space renders individual expandable sections through LearningContent. Raw HTML is disabled and external resources stay links. Learning paths remain the tenant root, with no new course tenant or completion/scoring model. Git curriculum JSON is an offline import source, not a runtime course overlay. The migration and seed have only been tested in embedded PostgreSQL; no hosted changes are authorized in this slice. See the development guide for the isolated development import workflow.

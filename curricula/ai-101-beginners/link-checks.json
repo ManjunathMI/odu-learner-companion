@@ -1,0 +1,164 @@
+{
+  "checkedAt": "2026-10-29T18:08:42.697Z",
+  "note": "HTTP reachability only; not proof of video availability, content relevance, free access or full external-course completion.",
+  "results": [
+    {
+      "title": "John Savill — Artificial Intelligence and Machine Learning for Everyone",
+      "url": "https://www.youtube.com/watch?v=C7Iu2lcoAQ4",
+      "status": 200,
+      "resolvedUrl": "https://www.youtube.com/watch?v=C7Iu2lcoAQ4",
+      "result": "http-accessible-content-not-reviewed",
+      "videoMetadata": {
+        "status": 200,
+        "title": "Artificial Intelligence (AI) and Machine Learning (ML) for Everyone!",
+        "author": "John Savill's Technical Training",
+        "note": "Confirmed through YouTube oEmbed; playback was not tested."
+      }
+    },
+    {
+      "title": "Microsoft Learn — Introduction to AI Concepts",
+      "url": "https://learn.microsoft.com/en-us/training/modules/get-started-ai-fundamentals/",
+      "status": 200,
+      "resolvedUrl": "https://learn.microsoft.com/en-us/training/modules/get-started-ai-fundamentals/",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "3Blue1Brown — But What Is a Neural Network?",
+      "url": "https://www.youtube.com/watch?v=aircAruvnKk",
+      "status": 200,
+      "resolvedUrl": "https://www.youtube.com/watch?v=aircAruvnKk",
+      "result": "http-accessible-content-not-reviewed",
+      "videoMetadata": {
+        "status": 200,
+        "title": "But what is a neural network? | Deep learning chapter 1",
+        "author": "3Blue1Brown",
+        "note": "Confirmed through YouTube oEmbed; playback was not tested."
+      }
+    },
+    {
+      "title": "Google — Introduction to Machine Learning",
+      "url": "https://developers.google.com/machine-learning/intro-to-ml",
+      "status": 200,
+      "resolvedUrl": "https://developers.google.com/machine-learning/intro-to-ml?hl=it",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Google Teachable Machine",
+      "url": "https://teachablemachine.withgoogle.com/",
+      "status": 200,
+      "resolvedUrl": "https://teachablemachine.withgoogle.com/",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "3Blue1Brown — Large Language Models Explained Briefly",
+      "url": "https://www.youtube.com/watch?v=LPZh9BOjkQs",
+      "status": 200,
+      "resolvedUrl": "https://www.youtube.com/watch?v=LPZh9BOjkQs",
+      "result": "http-accessible-content-not-reviewed",
+      "videoMetadata": {
+        "status": 200,
+        "title": "Large Language Models explained briefly",
+        "author": "3Blue1Brown",
+        "note": "Confirmed through YouTube oEmbed; playback was not tested."
+      }
+    },
+    {
+      "title": "Microsoft Learn — Introduction to Generative AI and Agents",
+      "url": "https://learn.microsoft.com/en-us/training/modules/fundamentals-generative-ai/",
+      "status": 200,
+      "resolvedUrl": "https://learn.microsoft.com/en-us/training/modules/fundamentals-generative-ai/",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Learn Prompting — Introduction",
+      "url": "https://learnprompting.org/docs/introduction",
+      "status": 200,
+      "resolvedUrl": "https://learnprompting.org/docs/introduction",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Microsoft Learn — Get Started with AI",
+      "url": "https://learn.microsoft.com/en-us/training/modules/get-started-with-ai/",
+      "status": 200,
+      "resolvedUrl": "https://learn.microsoft.com/en-us/training/modules/get-started-with-ai/",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Google — Introduction to ML Problem Framing",
+      "url": "https://developers.google.com/machine-learning/problem-framing",
+      "status": 200,
+      "resolvedUrl": "https://developers.google.com/machine-learning/problem-framing",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Microsoft Learn — Prepare to Use Generative AI at Work",
+      "url": "https://learn.microsoft.com/en-us/training/modules/what-generative-ai/",
+      "status": 200,
+      "resolvedUrl": "https://learn.microsoft.com/en-us/training/modules/what-generative-ai/",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Microsoft Learn — AI Concepts for Developers",
+      "url": "https://learn.microsoft.com/en-us/training/paths/ai-concepts/",
+      "status": 200,
+      "resolvedUrl": "https://learn.microsoft.com/en-us/training/paths/ai-concepts/",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Google Gemini API — Getting Started",
+      "url": "https://ai.google.dev/gemini-api/docs/get-started",
+      "status": 200,
+      "resolvedUrl": "https://ai.google.dev/gemini-api/docs/get-started?hl=ja",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "OpenAI API — Quickstart",
+      "url": "https://developers.openai.com/api/docs/quickstart",
+      "status": 200,
+      "resolvedUrl": "https://developers.openai.com/api/docs/quickstart",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Andrew Ng — AI for Everyone",
+      "url": "https://www.deeplearning.ai/courses/ai-for-everyone",
+      "status": 200,
+      "resolvedUrl": "https://www.deeplearning.ai/courses/ai-for-everyone",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Google ML Crash Course",
+      "url": "https://developers.google.com/machine-learning/crash-course/",
+      "status": 200,
+      "resolvedUrl": "https://developers.google.com/machine-learning/crash-course/",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Hugging Face LLM Course",
+      "url": "https://huggingface.co/learn/llm-course/chapter1/1",
+      "status": 200,
+      "resolvedUrl": "https://huggingface.co/learn/llm-course/chapter1/1",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Microsoft AI Fluency",
+      "url": "https://learn.microsoft.com/en-us/training/paths/ai-fluency/",
+      "status": 200,
+      "resolvedUrl": "https://learn.microsoft.com/en-us/training/paths/ai-fluency/",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "freeCodeCamp — AI Agents for Beginners",
+      "url": "https://www.freecodecamp.org/news/ai-agents-for-beginners/",
+      "status": 200,
+      "resolvedUrl": "https://www.freecodecamp.org/news/ai-agents-for-beginners/",
+      "result": "http-accessible-content-not-reviewed"
+    },
+    {
+      "title": "Microsoft Responsible AI",
+      "url": "https://learn.microsoft.com/en-us/training/paths/github-responsible-ai/",
+      "status": 200,
+      "resolvedUrl": "https://learn.microsoft.com/en-us/training/paths/github-responsible-ai/",
+      "result": "http-accessible-content-not-reviewed"
+    }
+  ]
+}

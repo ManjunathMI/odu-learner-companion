@@ -422,3 +422,11 @@ A server-side mail delivery connection is still required.
 ## Documentation catalogue
 
 The additive document_catalog migration creates a metadata-only, RLS-enabled table with no browser grants. Server service-role access is filtered through the document reader and owner publishing API. The initial reviewed sources are seeded once; new sources use draft/restricted defaults. See [content publishing](../decisions/content-publishing.md).
+
+## Optional AI 101 development content seed
+
+The application installation schema does not automatically publish course data. AI 101 is versioned in curricula/ai-101-beginners/course.json and has a deterministic path UUID. scripts/prepare-ai101.mjs generates a transactional development-only seed which reuses the creator trigger and atomic curriculum RPC. See the development guide's AI 101 section for commands, quota/publication checks and manual acceptance steps. The offline work did not modify the production project, its learners, or existing courses. The approved optional content fields are prepared in `20261029182558_learning_material.sql`: nullable learning_paths.overview_markdown and days.content_markdown, with updated curriculum RPCs. Apply this migration before deploying the corresponding application/API code or importing the course. The full installer includes it for new installations; do not replay the full installer against an existing production database. Offline tests cover both fresh installation and the upgrade sequence. No hosted migration or import has been performed.
+
+### AI 101 production execution approval — 30 October 2026
+
+The owner has now authorized production installation. `scripts/prepare-ai101.mjs --production` generates a single transactional SQL Editor script from the reviewed migration plus the course seed. It requires the owner UUID and confirmed email, verifies platform-admin membership and quota, and publishes only AI 101. The CLI migration history must be reconciled after successful SQL Editor execution; see the development guide. MCP authentication currently prevents remote execution or verification by the agent. Earlier offline-only status describes the preparation stage, not the latest authorization.

@@ -28,6 +28,7 @@ interface PlanDay {
   dayLabel: string;
   title: string;
   hours: string;
+  contentMarkdown: string;
   items: PlanItem[];
 }
 
@@ -44,7 +45,7 @@ interface PlanData {
 }
 
 const emptyItem = (): PlanItem => ({ title: '', url: '', tag: 'hands' });
-const emptyDay = (): PlanDay => ({ dayLabel: 'Day 1', title: '', hours: '', items: [emptyItem()] });
+const emptyDay = (): PlanDay => ({ dayLabel: 'Day 1', title: '', hours: '', contentMarkdown: '', items: [emptyItem()] });
 const emptyPhase = (): PlanPhase => ({ title: '', goal: '', days: [emptyDay()] });
 
 function normalizePlan(raw: Partial<PlanData> | null | undefined): PlanData {
@@ -60,6 +61,7 @@ function normalizePlan(raw: Partial<PlanData> | null | undefined): PlanData {
         dayLabel: day.dayLabel ?? 'Day 1',
         title: day.title ?? '',
         hours: day.hours ?? '',
+        contentMarkdown: day.contentMarkdown ?? '',
         items: Array.isArray(day.items) ? day.items.map((item) => ({
           id: item.id,
           title: item.title ?? '',
@@ -74,6 +76,7 @@ function normalizePlan(raw: Partial<PlanData> | null | undefined): PlanData {
 export default function PathSettings({ pathId }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [overviewMarkdown, setOverviewMarkdown] = useState('');
   const [visibility, setVisibility] = useState('private');
   const [plan, setPlan] = useState<PlanData>({ phases: [emptyPhase()] });
   const [savedPlan, setSavedPlan] = useState<PlanData | null>(null);
@@ -85,11 +88,11 @@ export default function PathSettings({ pathId }: Props) {
 
   useEffect(() => {
     Promise.all([
-      apiFetch<{ title: string; description: string | null; visibility: string }>(`/paths/${pathId}`),
+      apiFetch<{ title: string; description: string | null; overviewMarkdown?: string | null; visibility: string }>(`/paths/${pathId}`),
       apiFetch<PlanData>(`/paths/${pathId}/plan`),
       apiFetch<Member[]>(`/paths/${pathId}/members`),
     ]).then(([path, currentPlan, currentMembers]) => {
-      setTitle(path.title); setDescription(path.description || ''); setVisibility(path.visibility);
+      setTitle(path.title); setDescription(path.description || ''); setOverviewMarkdown(path.overviewMarkdown || ''); setVisibility(path.visibility);
       const normalized = normalizePlan(currentPlan);
       setPlan(normalized); setSavedPlan(normalized);
       setMembers(currentMembers);
@@ -103,7 +106,7 @@ export default function PathSettings({ pathId }: Props) {
     }));
   };
 
-  const updateDay = (phaseIndex: number, dayIndex: number, field: 'dayLabel' | 'title' | 'hours', value: string) => {
+  const updateDay = (phaseIndex: number, dayIndex: number, field: 'dayLabel' | 'title' | 'hours' | 'contentMarkdown', value: string) => {
     setPlan((current) => ({
       ...current,
       phases: current.phases.map((phase, phasePos) => phasePos !== phaseIndex ? phase : {
@@ -163,7 +166,7 @@ export default function PathSettings({ pathId }: Props) {
         setPlan(normalized); setSavedPlan(normalized);
         curriculumSaved = true;
       }
-      await apiFetch(`/paths/${pathId}`, { method: 'PUT', body: { title, description, visibility } });
+      await apiFetch(`/paths/${pathId}`, { method: 'PUT', body: { title, description, visibility, overviewMarkdown } });
       setMessage(curriculumChanged ? 'Settings and curriculum saved.' : 'Path details saved.');
     } catch (err) {
       setError(`${curriculumSaved ? 'Curriculum saved, but path details could not be saved. ' : ''}${err instanceof Error ? err.message : 'Unable to save settings'}`);
@@ -196,7 +199,7 @@ export default function PathSettings({ pathId }: Props) {
   return <div className="settings-page">
     <form className="settings" onSubmit={save}>
       <header className="settings-header"><div><p className="eyebrow">Path administration</p><h1>Build the learning experience</h1><p>Configure the path, shape the curriculum, and keep the right people involved.</p></div><button className="button-primary" type="submit" disabled={saving || !savedPlan}>{saving ? 'Saving…' : 'Save changes'}</button></header>
-      <section className="settings-section"><div className="section-title"><p className="section-kicker">Configuration</p><h2>Path details</h2></div><div className="metadata-grid"><label>Title<input value={title} onChange={(e) => setTitle(e.target.value)} required /></label><label>Visibility<select value={visibility} onChange={(e) => setVisibility(e.target.value)}><option value="private">Private</option><option value="public">Public</option></select></label></div><label>Description<textarea value={description} onChange={(e) => setDescription(e.target.value)} /></label></section>
+      <section className="settings-section"><div className="section-title"><p className="section-kicker">Configuration</p><h2>Path details</h2></div><div className="metadata-grid"><label>Title<input value={title} onChange={(e) => setTitle(e.target.value)} required /></label><label>Visibility<select value={visibility} onChange={(e) => setVisibility(e.target.value)}><option value="private">Private</option><option value="public">Public</option></select></label></div><label>Description<textarea value={description} onChange={(e) => setDescription(e.target.value)} /></label><label>Course overview (Markdown, optional)<textarea value={overviewMarkdown} maxLength={100000} onChange={(e) => setOverviewMarkdown(e.target.value)} /></label></section>
 
       <fieldset disabled={saving || !savedPlan} className="plan-editor settings-section">
         <div className="section-header">
@@ -234,6 +237,8 @@ export default function PathSettings({ pathId }: Props) {
                   <label>Day title<input value={day.title} onChange={(e) => updateDay(phaseIndex, dayIndex, 'title', e.target.value)} placeholder="Workshop" required /></label>
                   <label>Hours<input value={day.hours} onChange={(e) => updateDay(phaseIndex, dayIndex, 'hours', e.target.value)} placeholder="2" /></label>
                 </div>
+
+                <label>Lesson material (Markdown, optional)<textarea value={day.contentMarkdown} maxLength={100000} onChange={(e) => updateDay(phaseIndex, dayIndex, 'contentMarkdown', e.target.value)} placeholder="Teaching, resources and practice activity" /></label>
 
                 <div className="items-section">
                   <div className="items-header">

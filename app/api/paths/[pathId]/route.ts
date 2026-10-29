@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, { params }: Context) {
   const { pathId } = await params;
   const user = await getSession(req);
   const platformAdmin = user ? await isPlatformAdmin(user.id) : false;
-  const { data: path, error } = await adminClient.from('learning_paths').select('id, title, description, tags, visibility, wall_status, created_by, created_at, updated_at').eq('id', pathId).maybeSingle();
+  const { data: path, error } = await adminClient.from('learning_paths').select('id, title, description, overview_markdown, tags, visibility, wall_status, created_by, created_at, updated_at').eq('id', pathId).maybeSingle();
   if (error || !path) return notFound();
 
   if (path.visibility === 'private') {
@@ -22,6 +22,7 @@ export async function GET(req: NextRequest, { params }: Context) {
     id: path.id,
     title: path.title,
     description: path.description,
+    overviewMarkdown: path.overview_markdown,
     tags: path.tags,
     visibility: path.visibility,
     wallStatus: path.wall_status,
@@ -40,6 +41,7 @@ export async function PUT(req: NextRequest, { params }: Context) {
   const updates: {
     title?: string;
     description?: string | null;
+    overview_markdown?: string | null;
     tags?: string[];
     visibility?: 'public' | 'private';
     updated_at?: string;
@@ -49,6 +51,10 @@ export async function PUT(req: NextRequest, { params }: Context) {
     updates.title = body.title.trim();
   }
   if (body.description !== undefined) updates.description = typeof body.description === 'string' ? body.description.trim() || null : null;
+  if (body.overviewMarkdown !== undefined) {
+    if (body.overviewMarkdown !== null && (typeof body.overviewMarkdown !== 'string' || body.overviewMarkdown.length > 100000)) return badRequest('overviewMarkdown must be text or null (maximum 100000 characters)');
+    updates.overview_markdown = body.overviewMarkdown?.trim() || null;
+  }
   if (body.tags !== undefined) {
     if (!Array.isArray(body.tags)) return badRequest('tags must be an array');
     updates.tags = body.tags.filter((tag: unknown): tag is string => typeof tag === 'string').map((tag: string) => tag.trim()).filter(Boolean);
@@ -59,9 +65,9 @@ export async function PUT(req: NextRequest, { params }: Context) {
   }
   updates.updated_at = new Date().toISOString();
 
-  const { data, error } = await adminClient.from('learning_paths').update(updates).eq('id', pathId).select('id, title, description, tags, visibility, wall_status, updated_at').single();
+  const { data, error } = await adminClient.from('learning_paths').update(updates).eq('id', pathId).select('id, title, description, overview_markdown, tags, visibility, wall_status, updated_at').single();
   if (error) return Response.json({ error: 'Failed to update path' }, { status: 500 });
-  return Response.json({ ...data, wallStatus: data.wall_status });
+  return Response.json({ ...data, wallStatus: data.wall_status, overviewMarkdown: data.overview_markdown });
 }
 
 export async function DELETE(req: NextRequest, { params }: Context) {

@@ -49,3 +49,15 @@ test('catalogue migration denies browser roles and insert-only sync preserves ow
   assert.equal((await db.query("select relrowsecurity from pg_class where oid='public.document_catalog'::regclass")).rows[0].relrowsecurity,true);
  }finally{await db.close();}
 });
+
+test('navigation groups only supplied readable documents and follows Git subfolders',async()=>{
+ const {navigationGroups,documentGroup}=await import('../lib/documents/navigation.ts');
+ const publicEntries=[{title:'Start',description:'Start learning',section:'help',url:'/docs/how-to-use',group:''}];
+ assert.deepEqual(navigationGroups(publicEntries).map(group=>group.key),['help']);
+ assert.equal(documentGroup('docs/engineering/architecture.md','technical'),'engineering');
+ const entries=[...publicEntries,{title:'Architecture',description:'Design',section:'technical',url:'/docs/architecture',group:'engineering'}];
+ const groups=navigationGroups(entries);
+ assert.equal(groups[1].label,'Technical Guide');
+ assert.equal(groups[1].groups[0].label,'Development');
+ assert.equal(groups[1].groups[0].articles[0].url,'/docs/architecture');
+});

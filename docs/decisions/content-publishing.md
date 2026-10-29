@@ -35,7 +35,7 @@ The catalogue has RLS enabled, no browser-role grants, and no browser policies. 
 
 ## Reader experience
 
-Public About, Blog, and Help links appear in the shared header/footer. Articles use the same safe Markdown renderer, category navigation and a heading outline that highlights the current section while scrolling. On mobile the outline is collapsible. Raw HTML is skipped and executable MDX is unsupported. Relative Markdown links resolve only to registered article sources; SQL and other repository files are not exposed through a file-download API.
+Public About, Blog, and Help links appear in the shared footer; the top product navigation stays focused on Explore and My Journey. Articles and the catalogue share category navigation derived from the readable sources and their Git subfolders. Empty or unauthorized groups are omitted. Articles use the same safe Markdown renderer and a heading outline that highlights the current section while scrolling. Both desktop rails are sticky grid items with independent scrolling, so a long article does not carry its navigation out of view. On mobile the category navigation and outline are collapsible and start closed. Raw HTML is skipped and executable MDX is unsupported. Relative Markdown links resolve only to registered article sources; SQL and other repository files are not exposed through a file-download API.
 
 ## Maintenance
 

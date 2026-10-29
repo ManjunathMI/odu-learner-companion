@@ -16,7 +16,7 @@ The migration directory is an incremental upgrade set, not a complete Supabase C
 
 1. supabase/migrations/20261028140510_launch_data_safety.sql: revisioned atomic curriculum writes, note privacy, browser-write restrictions and indexes.
 2. supabase/migrations/20261028141705_curriculum_conflict_response.sql: stale-write HTTP 409 semantics.
-3. supabase/migrations/20261029120712_document_catalog.sql: metadata-only article catalogue and initial reviewed publication settings.
+3. supabase/migrations/20261029121526_document_catalog.sql: metadata-only article catalogue and initial reviewed publication settings.
 
 The historical baseline already includes creator entitlements, quota requests, profiles, badges, membership policies and creator membership triggers. For an older or unknown database, inspect its actual structure and prepare a separate migration plan; do not treat these three files as a universal upgrade for any schema.
 

@@ -93,7 +93,7 @@
     "title": "Deployment and recovery",
     "description": "Deploy the application and its Git-backed Markdown together. Runtime publishing settings live in document_catalog and are not part of a Git rollback.",
     "section": "technical",
-    "hash": "d737d8ca93f7e423661dab4623c8dc246e2c1d7f5c3dcb48ff8e0930d8dc63c4"
+    "hash": "3f44927a6d50c699522550043a233a81b8e5dbbcafa6e0eaafe29a5a69e30eef"
   },
   {
     "source_path": "docs/operations/recreate-installation.md",
@@ -101,7 +101,7 @@
     "title": "Recreate ODU for a new installation",
     "description": "The repository includes the application database definition, incremental upgrades, and a repeatable owner-bootstrap script. Article text stays in Git. Supabase Auth configuration a",
     "section": "technical",
-    "hash": "e7728a9d7607670df7b8f2a24eb3f81607eb885cb8c50b9f5dd05223d20daf52"
+    "hash": "5723985c9c4130c40f9f8bd8080bb030ec603bcbdb6178af0d596b989104c563"
   },
   {
     "source_path": "docs/operations/release-checklist.md",

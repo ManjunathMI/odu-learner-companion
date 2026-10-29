@@ -35,7 +35,7 @@ test('catalogue migration denies browser roles and insert-only sync preserves ow
  const db=new PGlite();
  try{
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create table auth.users(id uuid primary key);');
-  await db.exec(await readFile(new URL('../supabase/migrations/20261029120712_document_catalog.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261029121526_document_catalog.sql',import.meta.url),'utf8'));
   const before=await db.query('select source_path from public.document_catalog limit 1');const source=before.rows[0].source_path;
   await db.query("update public.document_catalog set status='archived',visibility='platform_admin' where source_path=$1",[source]);
   await db.query('insert into public.document_catalog(source_path) values($1) on conflict(source_path) do nothing',[source]);

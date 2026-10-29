@@ -37,3 +37,7 @@ Supabase db pull captures schema, not a data backup. Use a database backup/expor
 ## Monitoring
 
 Review Vercel runtime errors and Supabase Auth/database logs. Assign an operator to membership/publication queues. Review response latency, First Contentful Paint, Largest Contentful Paint and Cumulative Layout Shift in the monitoring tools actually configured for the deployment. Do not log access tokens, sign-in URLs, service keys or private note text.
+
+## Deployment exclusion regression
+
+The 29 October 2026 Vercel build failed before compilation because the unanchored supabase/ pattern in .vercelignore excluded lib/supabase/client.ts and server.ts as well as the root migration directory. The corrected pattern is /supabase/, anchored at the project root. Local next build does not apply Vercel's pre-upload filtering, so a successful local build alone could not catch this problem. The retained deployment-input test now checks that required Supabase modules, Markdown and build utilities survive the ignore rules while CLI assets, credentials and QA session tools remain excluded. No database change is part of this fix.

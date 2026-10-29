@@ -30,7 +30,7 @@ for (const mode of ['fresh installation','upgrade from baseline']) test(`${mode}
     await db.exec(migration);
     await db.exec(migration); // Existing-database safety migration is idempotent.
     await db.exec(conflictMigration);
-    await db.exec(await readFile(new URL('../supabase/migrations/20261029120712_document_catalog.sql',import.meta.url),'utf8'));
+    await db.exec(await readFile(new URL('../supabase/migrations/20261029121526_document_catalog.sql',import.meta.url),'utf8'));
   }
   const [admin, learner, other, moderator, outsider, platform] = Array.from({length:6}, (_, i) => `00000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`);
   for (const id of [admin,learner,other,moderator,outsider,platform]) await db.query('insert into auth.users values ($1)',[id]);

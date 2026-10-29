@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getSession, requirePlatformAdmin } from '@/lib/auth';
+import { getSession, requirePlatformOwner } from '@/lib/auth';
 import { adminClient } from '@/lib/supabase/server';
 import { unauthorized, forbidden, badRequest, notFound } from '@/lib/path-auth';
 
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest, { params }: Context) {
   const { pathId } = await params;
   const user = await getSession(req);
   if (!user) return unauthorized();
-  if (!(await requirePlatformAdmin(user.id))) return forbidden('Platform admin access required');
+  if (!(await requirePlatformOwner(user))) return forbidden('Platform owner access required');
 
   const body = await req.json().catch(() => ({}));
   if (!['approved', 'rejected', 'unlisted'].includes(body.decision)) {

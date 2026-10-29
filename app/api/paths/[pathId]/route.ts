@@ -25,6 +25,7 @@ export async function GET(req: NextRequest, { params }: Context) {
     tags: path.tags,
     visibility: path.visibility,
     wallStatus: path.wall_status,
+    membershipStatus: membership?.status ?? null,
     myRole: platformAdmin ? 'admin' : membership?.status === 'approved' ? membership.role : null,
   });
 }

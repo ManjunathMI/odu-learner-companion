@@ -25,9 +25,9 @@ Before making any change:
 2. Read `AGENTS.md`.
 3. Read `.continue/rules/CONTINUE.md` if using Continue.
 4. Read the relevant sections of:
-   - `docs/business-guide.md`
-   - `docs/architecture.md`
-   - `docs/roadmap.md`
+   - `docs/product/business-guide.md`
+   - `docs/engineering/architecture.md`
+   - `docs/product/roadmap.md`
 5. Inspect the actual route/component/API/database-type implementation affected by the task.
 6. Do not assume a feature exists because it appears in documentation.
 
@@ -485,12 +485,12 @@ There is one canonical documentation set under `docs/`.
 
 Update existing files when decisions change:
 
-- `docs/business-guide.md`
-- `docs/architecture.md`
-- `docs/roadmap.md`
-- `docs/api.md`
-- `docs/development.md`
-- `docs/database-operations.md`
+- `docs/product/business-guide.md`
+- `docs/engineering/architecture.md`
+- `docs/product/roadmap.md`
+- `docs/api/handbook.md`
+- `docs/engineering/development.md`
+- `docs/operations/database.md`
 - `docs/README.md`
 
 Do not create duplicate files such as:

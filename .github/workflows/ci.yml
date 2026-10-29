@@ -26,5 +26,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Database safety tests
+        run: npm test
+
       - name: Production build
         run: npm run build

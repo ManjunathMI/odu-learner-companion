@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: Context) {
   const user = await getSession(req);
   if (!user) return unauthorized();
   if (!(await requirePathMember(user.id, pathId))) return forbidden('Approved membership required');
-  const { data, error } = await adminClient.from('notes').select('user_id, note_text, created_at').eq('path_id', pathId).eq('item_key', itemId).order('created_at');
+  const { data, error } = await adminClient.from('notes').select('user_id, note_text, created_at').eq('path_id', pathId).eq('item_key', itemId).eq('user_id', user.id).order('created_at');
   if (error) return Response.json({ error: 'Failed to load notes' }, { status: 500 });
   return Response.json((data || []).map((note) => ({ userId: note.user_id, text: note.note_text, createdAt: note.created_at })));
 }

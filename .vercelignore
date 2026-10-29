@@ -26,7 +26,6 @@ tsconfig.tsbuildinfo
 .gitignore
 
 # Documentation and design
-docs/
 designDocs/
 AGENTS.md
 CLAUDE.md
@@ -35,3 +34,21 @@ CLAUDE.md
 # Development config
 .env.*.example
 
+
+# Local tooling and generated authentication artifacts
+.agents/
+.codex/
+.claude/
+skills-lock.json
+.mcp.json
+mcp.json
+.local/
+tests/
+test-results/
+playwright-report/
+supabase/
+
+# Keep only the content-manifest build utility; QA/session tools stay local.
+scripts/*
+!scripts/generate-document-manifest.mjs
+!scripts/check-build-traces.mjs

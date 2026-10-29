@@ -15,9 +15,12 @@ export async function POST(req: NextRequest, { params }: Context) {
   const action = body.action;
   if (!['promote', 'demote', 'remove'].includes(action)) return badRequest('action must be promote, demote, or remove');
 
+  if (userId === user.id) return badRequest('You cannot change your own membership');
+
   if (action === 'remove') {
-    const { error } = await adminClient.from('path_memberships').delete().eq('path_id', pathId).eq('user_id', userId);
+    const { data, error } = await adminClient.from('path_memberships').delete().eq('path_id', pathId).eq('user_id', userId).neq('role', 'admin').select('id').maybeSingle();
     if (error) return Response.json({ error: 'Failed to remove member' }, { status: 500 });
+    if (!data) return notFound('Non-admin member not found');
     return Response.json({ success: true });
   }
 
@@ -27,6 +30,7 @@ export async function POST(req: NextRequest, { params }: Context) {
     .update({ role: nextRole })
     .eq('path_id', pathId)
     .eq('user_id', userId)
+    .neq('role', 'admin')
     .eq('status', 'approved')
     .select('user_id')
     .maybeSingle();

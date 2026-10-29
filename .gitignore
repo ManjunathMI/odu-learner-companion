@@ -42,3 +42,25 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local agent skills and connector configuration (never application source)
+/.agents/
+/.codex/
+/.claude/
+/.continue/
+/CLAUDE.md
+/skills-lock.json
+/.mcp.json
+/mcp.json
+/.vscode/
+
+# Local auth links, sessions, reports, and Supabase CLI state
+/.local/
+/test-results/
+/playwright-report/
+/blob-report/
+/supabase/.temp/
+/supabase/.branches/
+
+# Safe installation template (all actual environment files remain ignored)
+!/.env.example

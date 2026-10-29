@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
@@ -38,6 +39,7 @@ const emptyDay = (): PlanDay => ({ dayLabel: 'Day 1', title: '', hours: '', item
 const emptyPhase = (): PlanPhase => ({ title: '', goal: '', days: [emptyDay()] });
 
 export default function CreatePathForm({ onCancel }: Props) {
+  const [createdPathId, setCreatedPathId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tagsInput, setTagsInput] = useState('');
@@ -168,10 +170,12 @@ export default function CreatePathForm({ onCancel }: Props) {
         .map((t) => t.trim())
         .filter(Boolean);
 
-      const newPath = await apiFetch<{ id: string; title: string }>('/paths', {
+      const newPath = createdPathId ? { id: createdPathId } : await apiFetch<{ id: string; title: string }>('/paths', {
         method: 'POST',
         body: { title: title.trim(), description: description.trim() || undefined, tags },
       });
+      setCreatedPathId(newPath.id);
+      if (createdPathId) await apiFetch(`/paths/${newPath.id}`, { method: 'PUT', body: { title: title.trim(), description, tags } });
 
       await apiFetch(`/paths/${newPath.id}/plan`, {
         method: 'PUT',
@@ -187,6 +191,7 @@ export default function CreatePathForm({ onCancel }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="create-path-form">
+      {createdPathId && <p role="status">Your draft is saved. <Link href={`/paths/${createdPathId}/settings`}>Continue editing the saved draft</Link> if the curriculum could not be saved.</p>}
       <div className="form-header">
         <div>
           <p className="eyebrow">Create Learning Path</p>
@@ -259,7 +264,7 @@ export default function CreatePathForm({ onCancel }: Props) {
 
             <label>
               Phase title
-              <input value={phase.title} onChange={(e) => updatePhase(phaseIndex, 'title', e.target.value)} placeholder="Foundations" />
+              <input value={phase.title} onChange={(e) => updatePhase(phaseIndex, 'title', e.target.value)} placeholder="Foundations" required />
             </label>
 
             <label>
@@ -280,10 +285,10 @@ export default function CreatePathForm({ onCancel }: Props) {
 
                 <div className="row-grid">
                   <label>Day label
-                    <input value={day.dayLabel} onChange={(e) => updateDay(phaseIndex, dayIndex, 'dayLabel', e.target.value)} placeholder="Day 1" />
+                    <input value={day.dayLabel} onChange={(e) => updateDay(phaseIndex, dayIndex, 'dayLabel', e.target.value)} placeholder="Day 1" required />
                   </label>
                   <label>Day title
-                    <input value={day.title} onChange={(e) => updateDay(phaseIndex, dayIndex, 'title', e.target.value)} placeholder="Workshop" />
+                    <input value={day.title} onChange={(e) => updateDay(phaseIndex, dayIndex, 'title', e.target.value)} placeholder="Workshop" required />
                   </label>
                   <label>Hours
                     <input value={day.hours} onChange={(e) => updateDay(phaseIndex, dayIndex, 'hours', e.target.value)} placeholder="2" />
@@ -306,10 +311,10 @@ export default function CreatePathForm({ onCancel }: Props) {
 
                       <div className="row-grid item-grid">
                         <label>Title
-                          <input value={item.title} onChange={(e) => updateItem(phaseIndex, dayIndex, itemIndex, 'title', e.target.value)} placeholder="Read chapter" />
+                          <input value={item.title} onChange={(e) => updateItem(phaseIndex, dayIndex, itemIndex, 'title', e.target.value)} placeholder="Read chapter" required />
                         </label>
                         <label>URL
-                          <input value={item.url} onChange={(e) => updateItem(phaseIndex, dayIndex, itemIndex, 'url', e.target.value)} placeholder="https://" />
+                          <input value={item.url} onChange={(e) => updateItem(phaseIndex, dayIndex, itemIndex, 'url', e.target.value)} placeholder="https://" type="url" required />
                         </label>
                         <label>Type
                           <select value={item.tag || 'hands'} onChange={(e) => updateItem(phaseIndex, dayIndex, itemIndex, 'tag', e.target.value)}>

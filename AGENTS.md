@@ -132,7 +132,7 @@ Implemented capabilities include:
 
 ## Current Delivery Focus
 
-The immediate priority is the Product Experience phase in `docs/roadmap.md`:
+The immediate priority is the Product Experience phase in `docs/product/roadmap.md`:
 
 1. Modernize the homepage around discovery and “Learn anything. Together.”
 2. Introduce `/explore` for topic and learning-path discovery.
@@ -162,8 +162,11 @@ Never claim or visually present an AI capability as available until its backend 
 
 ## Coding and Change Rules
 
+- User approval is required before applying any database schema changes or major architectural changes. Explain the concrete proposed change and obtain approval first. This includes changes to how the existing QA accounts are set up or authenticated. Routine inspection, tests, and small UI fixes may proceed within the requested scope.
+
+
 - Prefer minimal, targeted edits.
-- Read `docs/business-guide.md`, `docs/architecture.md`, and `docs/roadmap.md` before major product changes.
+- Read `docs/product/business-guide.md`, `docs/engineering/architecture.md`, and `docs/product/roadmap.md` before major product changes.
 - Preserve existing API contracts and reuse existing APIs where possible.
 - Do not change database schema, RLS, authentication, authorization, API contracts, or tenant boundaries during a UI-only task unless explicitly requested.
 - Do not create duplicate documentation for an existing decision; update the canonical document in `docs/`.
@@ -183,3 +186,7 @@ npm run build
 Also manually validate the affected user journey at desktop and mobile widths when the change is UI-related.
 
 Record important architectural or workflow changes in the canonical documentation so future sessions preserve project continuity.
+
+## Documentation publishing memory
+
+Learner-facing Markdown lives in content/about, content/blog and content/help. Product, engineering, API, operations and decision documents live under docs/ subfolders. docs/README.md is the index. The metadata-only document_catalog table stores publishing status and visibility. New Markdown sources are discovered by prebuild/predev and registered as restricted drafts on catalogue access; existing settings are preserved. Owner-only /api/admin/documents manages metadata, never source files. Published technical documents require platform-admin read access, and technical sources cannot be made public through the admin selector. See docs/decisions/content-publishing.md.

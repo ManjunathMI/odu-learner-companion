@@ -5,6 +5,18 @@ import { requirePathMember, unauthorized, forbidden, badRequest, notFound } from
 
 type Context = { params: Promise<{ pathId: string }> };
 
+export async function GET(req: NextRequest, { params }: Context) {
+  const { pathId } = await params;
+  const user = await getSession(req);
+  if (!user) return unauthorized();
+  if (!(await requirePathMember(user.id, pathId))) return forbidden('Approved membership required');
+  const { data, error } = await adminClient.from('notes')
+    .select('id, item_key, user_id, note_text, created_at')
+    .eq('path_id', pathId).eq('user_id', user.id).order('created_at', { ascending: false });
+  if (error) return Response.json({ error: 'Failed to load notes' }, { status: 500 });
+  return Response.json((data || []).map((note) => ({ id: note.id, itemId: note.item_key, userId: note.user_id, text: note.note_text, createdAt: note.created_at })));
+}
+
 export async function POST(req: NextRequest, { params }: Context) {
   const { pathId } = await params;
   const user = await getSession(req);
@@ -19,5 +31,5 @@ export async function POST(req: NextRequest, { params }: Context) {
   if (!phase) return notFound('Lesson item not found in this path');
   const { data, error } = await adminClient.from('notes').insert({ path_id: pathId, item_key: body.itemId, user_id: user.id, note_text: body.text.trim() }).select('id, user_id, note_text, created_at').single();
   if (error) return Response.json({ error: 'Failed to save note' }, { status: 500 });
-  return Response.json({ userId: data.user_id, text: data.note_text, createdAt: data.created_at }, { status: 201 });
+  return Response.json({ id: data.id, itemId: body.itemId, userId: data.user_id, text: data.note_text, createdAt: data.created_at }, { status: 201 });
 }

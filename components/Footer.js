@@ -31,13 +31,15 @@ const Footer = () => {
         </div>
 
         <div className="footer-section">
-          <h4>Support</h4>
+          <h4>About and help</h4>
           <ul>
+            <li><Link href="/about">About ODU</Link></li>
+            <li><Link href="/blog">Blog</Link></li>
             <li>
               <a href="https://www.linkedin.com/in/manjunath-islampure/" target="_blank" rel="noreferrer">Contact Us</a>
             </li>
             <li>
-              <Link href="/docs">Documentation</Link>
+              <Link href="/docs">Help &amp; Guides</Link>
             </li>
           </ul>
         </div>

@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
-import { getSession, requirePlatformAdmin } from '@/lib/auth';
+import { getSession, requirePlatformOwner } from '@/lib/auth';
 import { adminClient } from '@/lib/supabase/server';
 import { forbidden, unauthorized } from '@/lib/path-auth';
 
 export async function GET(req: NextRequest) {
   const user = await getSession(req);
   if (!user) return unauthorized();
-  if (!(await requirePlatformAdmin(user.id))) return forbidden('Platform admin access required');
+  if (!(await requirePlatformOwner(user))) return forbidden('Platform owner access required');
 
   const { data, error } = await adminClient.from('quota_requests').select('id, user_id, current_limit, requested_limit, reason, status, created_at, reviewed_at').order('created_at', { ascending: false });
   if (error) return Response.json({ error: 'Failed to load quota requests' }, { status: 500 });

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getSession, isPlatformAdmin } from '@/lib/auth';
+import { getSession, isPlatformAdmin, requirePlatformOwner } from '@/lib/auth';
 import { unauthorized } from '@/lib/path-auth';
 
 export async function GET(req: NextRequest) {
@@ -12,5 +12,6 @@ export async function GET(req: NextRequest) {
       email: user.email,
     },
     isPlatformAdmin: await isPlatformAdmin(user.id),
+    isPlatformOwner: await requirePlatformOwner(user),
   });
 }

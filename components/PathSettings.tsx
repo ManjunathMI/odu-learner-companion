@@ -17,12 +17,14 @@ interface Member {
 type PlanTag = 'hands' | 'exam' | '';
 
 interface PlanItem {
+  id?: string;
   title: string;
   url: string;
   tag: PlanTag;
 }
 
 interface PlanDay {
+  id?: string;
   dayLabel: string;
   title: string;
   hours: string;
@@ -30,12 +32,14 @@ interface PlanDay {
 }
 
 interface PlanPhase {
+  id?: string;
   title: string;
   goal: string;
   days: PlanDay[];
 }
 
 interface PlanData {
+  revision?: number;
   phases: PlanPhase[];
 }
 
@@ -43,22 +47,26 @@ const emptyItem = (): PlanItem => ({ title: '', url: '', tag: 'hands' });
 const emptyDay = (): PlanDay => ({ dayLabel: 'Day 1', title: '', hours: '', items: [emptyItem()] });
 const emptyPhase = (): PlanPhase => ({ title: '', goal: '', days: [emptyDay()] });
 
-function normalizePlan(raw: Partial<{ phases?: PlanPhase[] }> | null | undefined): PlanData {
-  const phases = Array.isArray(raw?.phases) && raw.phases.length ? raw.phases : [emptyPhase()];
+function normalizePlan(raw: Partial<PlanData> | null | undefined): PlanData {
+  const phases = Array.isArray(raw?.phases) ? raw.phases : [];
   return {
+    revision: raw?.revision,
     phases: phases.map((phase) => ({
+      id: phase.id,
       title: phase.title ?? '',
       goal: phase.goal ?? '',
-      days: Array.isArray(phase.days) && phase.days.length ? phase.days.map((day) => ({
+      days: Array.isArray(phase.days) ? phase.days.map((day) => ({
+        id: day.id,
         dayLabel: day.dayLabel ?? 'Day 1',
         title: day.title ?? '',
         hours: day.hours ?? '',
-        items: Array.isArray(day.items) && day.items.length ? day.items.map((item) => ({
+        items: Array.isArray(day.items) ? day.items.map((item) => ({
+          id: item.id,
           title: item.title ?? '',
           url: item.url ?? '',
           tag: item.tag === 'exam' ? 'exam' : 'hands',
-        })) : [emptyItem()],
-      })) : [emptyDay()],
+        })) : [],
+      })) : [],
     })),
   };
 }
@@ -68,6 +76,8 @@ export default function PathSettings({ pathId }: Props) {
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState('private');
   const [plan, setPlan] = useState<PlanData>({ phases: [emptyPhase()] });
+  const [savedPlan, setSavedPlan] = useState<PlanData | null>(null);
+  const [saving, setSaving] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -76,11 +86,12 @@ export default function PathSettings({ pathId }: Props) {
   useEffect(() => {
     Promise.all([
       apiFetch<{ title: string; description: string | null; visibility: string }>(`/paths/${pathId}`),
-      apiFetch<{ phases: PlanPhase[] }>(`/paths/${pathId}/plan`),
+      apiFetch<PlanData>(`/paths/${pathId}/plan`),
       apiFetch<Member[]>(`/paths/${pathId}/members`),
     ]).then(([path, currentPlan, currentMembers]) => {
       setTitle(path.title); setDescription(path.description || ''); setVisibility(path.visibility);
-      setPlan(normalizePlan(currentPlan));
+      const normalized = normalizePlan(currentPlan);
+      setPlan(normalized); setSavedPlan(normalized);
       setMembers(currentMembers);
     }).catch((err) => setError(err instanceof Error ? err.message : 'Unable to load settings'));
   }, [pathId]);
@@ -134,12 +145,29 @@ export default function PathSettings({ pathId }: Props) {
   const moveItem = (phaseIndex: number, dayIndex: number, itemIndex: number, direction: -1 | 1) => setPlan((current) => ({ ...current, phases: current.phases.map((phase, phasePos) => phasePos !== phaseIndex ? phase : { ...phase, days: phase.days.map((day, dayPos) => dayPos !== dayIndex ? day : { ...day, items: (() => { const nextItems = [...day.items]; const target = itemIndex + direction; if (target < 0 || target >= nextItems.length) return day.items; [nextItems[itemIndex], nextItems[target]] = [nextItems[target], nextItems[itemIndex]]; return nextItems; })() }) }) }));
 
   const save = async (event: React.FormEvent) => {
-    event.preventDefault(); setError(''); setMessage('');
+    event.preventDefault();
+    if (saving || !savedPlan) return;
+    setError(''); setMessage('');
+    const curriculumChanged = JSON.stringify(plan) !== JSON.stringify(savedPlan);
+    const ids = (value: PlanData) => value.phases.flatMap((phase) => [phase.id, ...phase.days.flatMap((day) => [day.id, ...day.items.map((item) => item.id)])]).filter(Boolean);
+    const retained = new Set(ids(plan));
+    const hasRemovals = ids(savedPlan).some((id) => !retained.has(id));
+    if (hasRemovals && !window.confirm('Remove the deleted curriculum sections and their associated learner progress and notes permanently? Retained lessons keep their data.')) return;
+    setSaving(true);
+    let curriculumSaved = false;
     try {
+      // Save curriculum first so invalid content cannot partially save metadata.
+      if (curriculumChanged) {
+        const result = await apiFetch<PlanData>(`/paths/${pathId}/plan`, { method: 'PUT', body: { ...plan, confirmRemovals: hasRemovals } });
+        const normalized = normalizePlan(result);
+        setPlan(normalized); setSavedPlan(normalized);
+        curriculumSaved = true;
+      }
       await apiFetch(`/paths/${pathId}`, { method: 'PUT', body: { title, description, visibility } });
-      await apiFetch(`/paths/${pathId}/plan`, { method: 'PUT', body: plan });
-      setMessage('Settings and plan saved.');
-    } catch (err) { setError(err instanceof Error ? err.message : 'Unable to save settings'); }
+      setMessage(curriculumChanged ? 'Settings and curriculum saved.' : 'Path details saved.');
+    } catch (err) {
+      setError(`${curriculumSaved ? 'Curriculum saved, but path details could not be saved. ' : ''}${err instanceof Error ? err.message : 'Unable to save settings'}`);
+    } finally { setSaving(false); }
   };
 
   const updateMember = async (userId: string, action: 'promote' | 'demote' | 'remove') => {
@@ -167,17 +195,17 @@ export default function PathSettings({ pathId }: Props) {
 
   return <div className="settings-page">
     <form className="settings" onSubmit={save}>
-      <header className="settings-header"><div><p className="eyebrow">Path administration</p><h1>Build the learning experience</h1><p>Configure the path, shape the curriculum, and keep the right people involved.</p></div><button className="button-primary" type="submit">Save changes</button></header>
+      <header className="settings-header"><div><p className="eyebrow">Path administration</p><h1>Build the learning experience</h1><p>Configure the path, shape the curriculum, and keep the right people involved.</p></div><button className="button-primary" type="submit" disabled={saving || !savedPlan}>{saving ? 'Saving…' : 'Save changes'}</button></header>
       <section className="settings-section"><div className="section-title"><p className="section-kicker">Configuration</p><h2>Path details</h2></div><div className="metadata-grid"><label>Title<input value={title} onChange={(e) => setTitle(e.target.value)} required /></label><label>Visibility<select value={visibility} onChange={(e) => setVisibility(e.target.value)}><option value="private">Private</option><option value="public">Public</option></select></label></div><label>Description<textarea value={description} onChange={(e) => setDescription(e.target.value)} /></label></section>
 
-      <section className="plan-editor settings-section">
+      <fieldset disabled={saving || !savedPlan} className="plan-editor settings-section">
         <div className="section-header">
           <div><p className="section-kicker">Curriculum</p><h2>Learning plan</h2></div>
           <button type="button" className="button-secondary" onClick={addPhase}>+ Add phase</button>
         </div>
 
         {plan.phases.map((phase, phaseIndex) => (
-          <div className="phase-card" key={`${phaseIndex}-${phase.title || 'phase'}`}>
+          <div className="phase-card" key={phase.id || `phase-${phaseIndex}`}>
             <div className="phase-header">
               <h3>Phase {phaseIndex + 1}</h3>
               <div className="inline-actions">
@@ -187,11 +215,11 @@ export default function PathSettings({ pathId }: Props) {
               </div>
             </div>
 
-            <label>Phase title<input value={phase.title} onChange={(e) => updatePhase(phaseIndex, 'title', e.target.value)} placeholder="Foundations" /></label>
+            <label>Phase title<input value={phase.title} onChange={(e) => updatePhase(phaseIndex, 'title', e.target.value)} placeholder="Foundations" required /></label>
             <label>Phase goal<textarea value={phase.goal} onChange={(e) => updatePhase(phaseIndex, 'goal', e.target.value)} placeholder="What should learners accomplish in this phase?" /></label>
 
             {phase.days.map((day, dayIndex) => (
-              <div className="day-card" key={`${phaseIndex}-${dayIndex}-${day.dayLabel}`}>
+              <div className="day-card" key={day.id || `day-${dayIndex}`}>
                 <div className="day-header">
                   <h4>Day {dayIndex + 1}</h4>
                   <div className="inline-actions">
@@ -202,8 +230,8 @@ export default function PathSettings({ pathId }: Props) {
                 </div>
 
                 <div className="row-grid">
-                  <label>Day label<input value={day.dayLabel} onChange={(e) => updateDay(phaseIndex, dayIndex, 'dayLabel', e.target.value)} placeholder="Day 1" /></label>
-                  <label>Day title<input value={day.title} onChange={(e) => updateDay(phaseIndex, dayIndex, 'title', e.target.value)} placeholder="Workshop" /></label>
+                  <label>Day label<input value={day.dayLabel} onChange={(e) => updateDay(phaseIndex, dayIndex, 'dayLabel', e.target.value)} placeholder="Day 1" required /></label>
+                  <label>Day title<input value={day.title} onChange={(e) => updateDay(phaseIndex, dayIndex, 'title', e.target.value)} placeholder="Workshop" required /></label>
                   <label>Hours<input value={day.hours} onChange={(e) => updateDay(phaseIndex, dayIndex, 'hours', e.target.value)} placeholder="2" /></label>
                 </div>
 
@@ -222,8 +250,8 @@ export default function PathSettings({ pathId }: Props) {
                       </div>
 
                       <div className="row-grid item-grid">
-                        <label>Title<input value={item.title} onChange={(e) => updateItem(phaseIndex, dayIndex, itemIndex, 'title', e.target.value)} placeholder="Read chapter" /></label>
-                        <label>URL<input value={item.url} onChange={(e) => updateItem(phaseIndex, dayIndex, itemIndex, 'url', e.target.value)} placeholder="https://" /></label>
+                        <label>Title<input value={item.title} onChange={(e) => updateItem(phaseIndex, dayIndex, itemIndex, 'title', e.target.value)} placeholder="Read chapter" required /></label>
+                        <label>URL<input value={item.url} onChange={(e) => updateItem(phaseIndex, dayIndex, itemIndex, 'url', e.target.value)} placeholder="https://" type="url" required /></label>
                         <label>Type<select value={item.tag || 'hands'} onChange={(e) => updateItem(phaseIndex, dayIndex, itemIndex, 'tag', e.target.value)}>
                           <option value="hands">Hands-on</option>
                           <option value="exam">Exam</option>
@@ -238,10 +266,10 @@ export default function PathSettings({ pathId }: Props) {
             <button type="button" className="button-secondary" onClick={() => addDay(phaseIndex)}>+ Add day</button>
           </div>
         ))}
-      </section>
+      </fieldset>
 
       {(error || message) && <p className={error ? 'error feedback' : 'success feedback'}>{error || message}</p>}
-      <div className="save-bar"><span>Changes are saved only when you select Save changes.</span><button className="button-primary" type="submit">Save changes</button></div>
+      <div className="save-bar"><span>Changes are saved only when you select Save changes.</span><button className="button-primary" type="submit" disabled={saving || !savedPlan}>{saving ? 'Saving…' : 'Save changes'}</button></div>
     </form>
 
     <section className="members-panel">

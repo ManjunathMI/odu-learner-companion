@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import {visibleDocuments,documentUrl} from '@/lib/documents/server';
 import { adminClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -15,12 +16,7 @@ const STATIC_PUBLIC_ROUTES = [
   '',
   '/explore',
   '/docs',
-  '/docs/business-guide',
-  '/docs/architecture',
-  '/docs/roadmap',
-  '/docs/database-operations',
-  '/docs/development',
-  '/docs/api',
+  '/blog',
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -29,6 +25,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = STATIC_PUBLIC_ROUTES.map((route) => ({
     url: `${baseUrl}${route}`,
   }));
+
+  try {
+    const articles=await visibleDocuments(true);
+    for(const article of articles) staticEntries.push({url:`${baseUrl}${documentUrl(article)}`,lastModified:new Date(article.updated_at)});
+  } catch { /* Fail closed: never publish a private article from a fallback manifest. */ }
 
   try {
     const { data: paths, error } = await adminClient

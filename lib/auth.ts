@@ -1,4 +1,5 @@
 import 'server-only';
+import { isOwnerIdentity } from '@/lib/platform-owner';
 import { createClient, adminClient } from '@/lib/supabase/server';
 
 /**
@@ -16,7 +17,7 @@ export async function getSession(req: Request) {
     const token = authHeader.slice(7);
     const supabase = await createClient();
     const { data, error } = await supabase.auth.getUser(token);
-    if (!error && data.user) return data.user;
+    return !error && data.user ? data.user : null;
   }
 
   // ── 2. Cookie session (server-rendered Next.js pages) ──
@@ -33,14 +34,18 @@ export async function getSession(req: Request) {
  * (which has zero policies on that table) never blocks the lookup.
  */
 export async function isPlatformAdmin(userId: string): Promise<boolean> {
-  const { data } = await adminClient
+  const { data, error } = await adminClient
     .from('platform_admins')
     .select('user_id')
     .eq('user_id', userId)
     .maybeSingle();
-  return data !== null;
+  return !error && data !== null;
 }
 
 export async function requirePlatformAdmin(userId: string): Promise<boolean> {
   return isPlatformAdmin(userId);
+}
+
+export async function requirePlatformOwner(user: { id: string; email?: string | null }): Promise<boolean> {
+  return isOwnerIdentity(user) && await isPlatformAdmin(user.id);
 }

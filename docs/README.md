@@ -1,15 +1,26 @@
-# ODU Learner Companion Documentation
+# Engineering and product documentation
 
-This directory is the maintained documentation for the multi-tenant ODU Learner Companion platform.
+Git is the canonical source for these documents. The website renders the same Markdown for authorized platform administrators. Learner-facing material lives in content/.
 
-## Documents
+## Product and decisions
 
-- [How to Use ODU Learner Companion](how-to-use.md): end-user guide for what the product does and how visitors, learners, creators, moderators, and platform admins use it.
-- [Business Guide](business-guide.md): product behavior, users, roles, and workflows.
-- [Architecture](architecture.md): application boundaries, data model, authorization, and mobile compatibility.
-- [Development](development.md): local setup, environment variables, database setup, and verification.
-- [API Reference](api.md): path-scoped HTTP endpoints and response contracts.
-- [Database Operations](database-operations.md): setup, entitlement backfill, quota requests, admin approval, inspection, and rollback SQL commands.
-- [Product Roadmap](roadmap.md): completed foundation, next phases, and pending product decisions.
+- [Business guide](product/business-guide.md): product vocabulary, roles and rules.
+- [Roadmap](product/roadmap.md): delivery history, current priorities and future scope.
+- [Content publishing](decisions/content-publishing.md): source ownership, registration, visibility and maintenance.
 
-The canonical database schema is maintained in [DB-schema.sql](DB-schema.sql). For an existing database, apply only the additive migration section documented in [Database Operations](database-operations.md); do not recreate existing tables or run legacy single-room schemas.
+## Build and integrate
+
+- [Development](engineering/development.md): local setup and retained tests.
+- [Architecture](engineering/architecture.md): tenant boundaries, identity and system design.
+- [API handbook](api/handbook.md): authentication, endpoints and data contracts.
+
+## Operate
+
+- [Launch candidate review](operations/release-review.md): push scope, deletion audit and remaining checks.
+- [Recreate an installation](operations/recreate-installation.md): complete SQL/setup paths for a new project.
+
+- [Database operations](operations/database.md): migrations, inspection and QA setup.
+- [Deployment](operations/deployment.md): environments, release and recovery.
+- [Release checklist](operations/release-checklist.md): repeatable verification.
+
+The canonical installation schema remains [DB-schema.sql](DB-schema.sql). Existing databases use reviewed additive migrations in supabase/migrations/; never rerun installation SQL against an existing database.

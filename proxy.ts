@@ -8,6 +8,8 @@ const PUBLIC_ROUTES = [
   '/auth',
   '/start-learning',
   '/docs',
+  '/about',
+  '/blog',
   '/paths',
   '/robots.txt',
   '/sitemap.xml',
@@ -28,7 +30,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon');
 
-  if (isPublic) {
+  if (isPublic || pathname.startsWith('/api/')) {
     return NextResponse.next();
   }
 
@@ -58,7 +60,9 @@ export async function proxy(request: NextRequest) {
 
   // Redirect unauthenticated users trying to access protected routes.
   if (!user && !pathname.startsWith('/api/')) {
-    return NextResponse.redirect(new URL('/auth', request.url));
+    const destination = new URL('/auth', request.url);
+    destination.searchParams.set('next', pathname);
+    return NextResponse.redirect(destination);
   }
 
   // API routes return 401, not a redirect.

@@ -6,8 +6,14 @@ export type Json = string | number | boolean | null | { [key: string]: Json } | 
 export interface Database {
   public: {
     Tables: {
+      document_catalog: {
+        Row: {source_path:string; visibility:'public'|'platform_admin'; status:'draft'|'published'|'archived'; created_at:string; updated_at:string; updated_by:string|null};
+        Insert: {source_path:string; visibility?:'public'|'platform_admin'; status?:'draft'|'published'|'archived'; updated_at?:string; updated_by?:string|null};
+        Update: {visibility?:'public'|'platform_admin'; status?:'draft'|'published'|'archived'; updated_at?:string; updated_by?:string|null};
+        Relationships: [];
+      };
       learning_paths: {
-        Row: { id: string; title: string; description: string | null; tags: string[] | null; created_by: string; visibility: 'public' | 'private'; wall_status: 'pending_review' | 'approved' | 'rejected' | 'unlisted'; created_at: string; updated_at: string };
+        Row: { id: string; title: string; description: string | null; tags: string[] | null; created_by: string; visibility: 'public' | 'private'; wall_status: 'pending_review' | 'approved' | 'rejected' | 'unlisted'; created_at: string; updated_at: string; plan_revision: number };
         Insert: { title: string; description?: string | null; tags?: string[] | null; created_by: string; visibility?: 'public' | 'private'; wall_status?: 'pending_review' | 'approved' | 'rejected' | 'unlisted' };
         Update: { title?: string; description?: string | null; tags?: string[] | null; visibility?: 'public' | 'private'; wall_status?: 'pending_review' | 'approved' | 'rejected' | 'unlisted'; updated_at?: string };
         Relationships: [];
@@ -93,6 +99,8 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      read_learning_plan: { Args: { p_path_id: string }; Returns: Json };
+      save_learning_plan: { Args: { p_path_id: string; p_actor: string; p_phases: Json; p_expected_revision: number | null; p_confirm_removals: boolean }; Returns: Json };
       get_role: { Args: { p_path_id: string }; Returns: 'admin' | 'moderator' | 'learner' | null };
       is_path_admin: { Args: { p_path_id: string }; Returns: boolean };
       is_moderator_or_above: { Args: { p_path_id: string }; Returns: boolean };

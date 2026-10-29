@@ -73,7 +73,7 @@ const Header = () => {
         avatar_url: profileData.avatar_url ?? null,
       });
       setAvatarFailed(false);
-      setIsPlatformAdmin(Boolean(sessionData.isPlatformAdmin));
+      setIsPlatformAdmin(Boolean(sessionData.isPlatformOwner));
     };
 
     const loadCurrentUser = () => supabase.auth.getUser().then(({ data: { user: currentUser } }) => loadIdentity(currentUser));
@@ -129,6 +129,9 @@ const Header = () => {
         <div className="header-right">
           <nav className="top-nav" aria-label="Main navigation">
             <Link href="/explore" className={pathname === '/' || pathname.startsWith('/explore') ? 'nav-link active' : 'nav-link'}>Explore</Link>
+            <Link href="/about" className={pathname.startsWith('/about') ? 'nav-link active' : 'nav-link'}>About</Link>
+            <Link href="/blog" className={pathname.startsWith('/blog') ? 'nav-link active' : 'nav-link'}>Blog</Link>
+            <Link href="/docs" className={pathname.startsWith('/docs') ? 'nav-link active' : 'nav-link'}>Help</Link>
             {user && <Link href="/journey" className={pathname.startsWith('/journey') || pathname.startsWith('/paths') ? 'nav-link active' : 'nav-link'}>My Journey</Link>}
           </nav>
 
@@ -247,7 +250,8 @@ const Header = () => {
         .top-nav {
           display: flex;
           align-items: center;
-          gap: 0.25rem;
+          gap: 0.65rem;
+          flex-wrap: wrap;
           margin-right: 0.25rem;
         }
 
@@ -392,9 +396,22 @@ const Header = () => {
           color: var(--accent-danger);
         }
 
+        @media (max-width: 600px) {
+          .header-container { padding: .65rem 1rem; }
+          .header-content { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem; }
+          .header-left { grid-column: 1; grid-row: 1; min-width: 0; }
+          .brand-mark { flex-shrink: 0; }
+          .brand-copy strong { white-space: nowrap; }
+          .header-right { display: contents; }
+          .user-menu { grid-column: 2; grid-row: 1; justify-self: end; }
+          .top-nav { grid-column: 1; grid-row: 2; margin: 0; }
+          .nav-link { font-size: .8rem; padding: .45rem .35rem; white-space: nowrap; }
+          .theme-switcher { grid-column: 2; grid-row: 2; justify-self: end; }
+        }
+
         @media (max-width: 768px) {
           .header-content {
-            gap: 1rem;
+            column-gap: .5rem;
           }
 
           .brand-copy strong { font-size: 1rem; }

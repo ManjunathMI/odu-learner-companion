@@ -1,0 +1,138 @@
+[
+  {
+    "source_path": "content/about/about-odu.md",
+    "slug": "about-odu",
+    "title": "About ODU",
+    "description": "Learn anything. Together.",
+    "section": "about",
+    "hash": "76a3e45dc8d072835fc4da0e4eb6a92c3147bcc55f3ae9a683fb5f87137c07ba"
+  },
+  {
+    "source_path": "content/blog/learning-together.md",
+    "slug": "learning-together",
+    "title": "Why learning together matters",
+    "description": "ODU starts with a simple idea: you do not have to learn alone.",
+    "section": "blog",
+    "hash": "3b8df64d2f68e4a939aa6278c49385961045044fa959069a1ea06e6d212c5e3f"
+  },
+  {
+    "source_path": "content/help/account-and-access.md",
+    "slug": "account-and-access",
+    "title": "Account and sign-in help",
+    "description": "Use your email to sign in, and keep your learning profile up to date.",
+    "section": "help",
+    "hash": "124bc0c8f3cb761a962290897a742618b0e9422f3940675d3baf527bb568a0e3"
+  },
+  {
+    "source_path": "content/help/create-a-learning-space.md",
+    "slug": "create-a-learning-space",
+    "title": "Create and manage a Learning Space",
+    "description": "Create a Learning Path when you want to organize learning for yourself or a group.",
+    "section": "help",
+    "hash": "317f67837a9dc674ce3006d79bad41558f8aff62cf9d2b1db15962b001bde270"
+  },
+  {
+    "source_path": "content/help/how-to-use.md",
+    "slug": "how-to-use",
+    "title": "Get started with ODU",
+    "description": "Choose something you want to learn, find a Learning Path, and take your first step.",
+    "section": "help",
+    "hash": "84176012857f9e7517314d4401bc91550001e230a73bc5544dc4a4a4f5e73642"
+  },
+  {
+    "source_path": "content/help/learning-and-notes.md",
+    "slug": "learning-and-notes",
+    "title": "Learning and Personal Notes",
+    "description": "Use your Learning Space to follow a plan, record progress, and capture what you learn.",
+    "section": "help",
+    "hash": "66656a43161637afb4d5f0b198d12147affa64f5b592d34d2807e4cf249c761f"
+  },
+  {
+    "source_path": "docs/api/handbook.md",
+    "slug": "handbook",
+    "title": "API Reference",
+    "description": "All API responses are JSON. Errors use `{ \"error\": \"message\" }`. Protected endpoints authenticate in their own handlers and accept either the SSR cookie session or `Authorization: ",
+    "section": "technical",
+    "hash": "ad62bba584bd9eee173783935799d3967975972e63c5fdc486c007e67a38dd2b"
+  },
+  {
+    "source_path": "docs/decisions/content-publishing.md",
+    "slug": "content-publishing",
+    "title": "Git-backed documentation publishing",
+    "description": "Keep article content as Markdown in the application repository. Store publication status and visibility in one Supabase table, document_catalog. The website manages these settings ",
+    "section": "technical",
+    "hash": "308d33996f91b104eaa418c98043f8b22a511ac3f29222f320ed3de90822570b"
+  },
+  {
+    "source_path": "docs/engineering/architecture.md",
+    "slug": "architecture",
+    "title": "Architecture",
+    "description": "ODU Learner Companion is a collaborative learning product for students, working professionals, and lifelong learners. The architecture should support a polished discovery-first exp",
+    "section": "technical",
+    "hash": "283d62132aa7a97309934a787c127ae5bc2dc38cf035a3bcb41de5e5263bfdd3"
+  },
+  {
+    "source_path": "docs/engineering/development.md",
+    "slug": "development",
+    "title": "Development Guide",
+    "description": "npm install",
+    "section": "technical",
+    "hash": "f893fbfa8fecc09bbc22e8805b1e28ff004894a9cce8e9ba8584b66cc67a5a57"
+  },
+  {
+    "source_path": "docs/operations/database.md",
+    "slug": "database",
+    "title": "Database Operations",
+    "description": "This file records the SQL operations used during local setup and testing. It intentionally contains no credentials or service-role keys.",
+    "section": "technical",
+    "hash": "d145d0ac1c512ef3401e18d74af46d0d253802218b37d66f47225fdc6fd1d3a7"
+  },
+  {
+    "source_path": "docs/operations/deployment.md",
+    "slug": "deployment",
+    "title": "Deployment and recovery",
+    "description": "Deploy the application and its Git-backed Markdown together. Runtime publishing settings live in document_catalog and are not part of a Git rollback.",
+    "section": "technical",
+    "hash": "d737d8ca93f7e423661dab4623c8dc246e2c1d7f5c3dcb48ff8e0930d8dc63c4"
+  },
+  {
+    "source_path": "docs/operations/recreate-installation.md",
+    "slug": "recreate-installation",
+    "title": "Recreate ODU for a new installation",
+    "description": "The repository includes the application database definition, incremental upgrades, and a repeatable owner-bootstrap script. Article text stays in Git. Supabase Auth configuration a",
+    "section": "technical",
+    "hash": "e7728a9d7607670df7b8f2a24eb3f81607eb885cb8c50b9f5dd05223d20daf52"
+  },
+  {
+    "source_path": "docs/operations/release-checklist.md",
+    "slug": "release-checklist",
+    "title": "Release checklist",
+    "description": "Use this checklist with the deployment guide; it records work to verify, not proof that production is already configured.",
+    "section": "technical",
+    "hash": "115c7dd39be8cc59d5471657ee9ec86352a7f44548e951327142abafa9f12c7f"
+  },
+  {
+    "source_path": "docs/operations/release-review.md",
+    "slug": "release-review",
+    "title": "Launch candidate review",
+    "description": "This review records what is included in the launch branch and why old paths are removed. It is not a production deployment approval. The application changes have not yet been promo",
+    "section": "technical",
+    "hash": "6e863f7ae25261231746ad1e01e15544670b1b6fb5590c9ab757326f517ccfec"
+  },
+  {
+    "source_path": "docs/product/business-guide.md",
+    "slug": "business-guide",
+    "title": "Business Guide",
+    "description": "ODU Learner Companion is a collaborative learning companion for students, working professionals, and lifelong learners.",
+    "section": "technical",
+    "hash": "c13d818e91eb302e6caaab158ca5d1da2c1757c3595a67dc4d9ddb92f41f2912"
+  },
+  {
+    "source_path": "docs/product/roadmap.md",
+    "slug": "roadmap",
+    "title": "Product Roadmap",
+    "description": "This roadmap is the canonical planning document for ODU Learner Companion. It evolves the existing learning-tracker foundation into a collaborative learning companion for students,",
+    "section": "technical",
+    "hash": "d197a0bbdc0aaa54becbf14f766ed403b3a40e80994b34843825b1927ceba594"
+  }
+]

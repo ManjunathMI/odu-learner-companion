@@ -1,0 +1,16 @@
+import nextEnv from '@next/env';
+import { createClient } from '@supabase/supabase-js';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { testAccountLink } from './lib/test-accounts.mjs';
+nextEnv.loadEnvConfig(process.cwd());
+const [persona,origin]=process.argv.slice(2);
+const admin=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+const link=await testAccountLink(admin,persona,origin);
+const folder=resolve('.local/test-login');
+await mkdir(folder,{recursive:true,mode:0o700});
+await writeFile(resolve(folder,`${persona}.json`),JSON.stringify({email:link.user.email,url:link.url},null,2),{mode:0o600});
+const escaped=link.url.replaceAll('&','&amp;').replaceAll('"','&quot;');
+const file=resolve(folder,`${persona}.html`);
+await writeFile(file,`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>ODU local test login</title><h1>Sign in as ${persona}</h1><p>Existing synthetic QA account. This one-time link uses real Supabase Auth. No email was sent.</p><a href="${escaped}" rel="noreferrer">Open localhost as ${persona}</a><p>Do not share this file. Generate a new link if it expires or has already been used.</p></html>`,{mode:0o600});
+console.log(`Local one-time login prepared: ${file}\nOpen that file in your browser and select the sign-in link. No passwords were changed.`);

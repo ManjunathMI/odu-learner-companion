@@ -46,7 +46,8 @@ mcp.json
 tests/
 test-results/
 playwright-report/
-supabase/
+# Exclude only root CLI/migration assets; lib/supabase is application source.
+/supabase/
 
 # Keep only the content-manifest build utility; QA/session tools stay local.
 scripts/*

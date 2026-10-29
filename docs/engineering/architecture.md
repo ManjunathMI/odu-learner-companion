@@ -262,7 +262,7 @@ The platform provides dynamic search engine discovery via Next.js App Router met
   - `/` (Homepage / discovery)
   - `/explore` (Public learning paths directory)
   - `/docs` (Documentation index)
-  - `/docs/business-guide`, `/docs/architecture`, `/docs/roadmap`, `/docs/database-operations`, `/docs/development`, `/docs/api`
+  - `/blog` (public article listing). Published public articles, including About ODU and learner guides, are added from the document catalogue. Technical articles and drafts are excluded.
 - Dynamic paths included:
   - `/paths/[pathId]` exclusively for learning paths that meet BOTH criteria:
     1. `visibility = 'public'`

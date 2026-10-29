@@ -129,9 +129,6 @@ const Header = () => {
         <div className="header-right">
           <nav className="top-nav" aria-label="Main navigation">
             <Link href="/explore" className={pathname === '/' || pathname.startsWith('/explore') ? 'nav-link active' : 'nav-link'}>Explore</Link>
-            <Link href="/about" className={pathname.startsWith('/about') ? 'nav-link active' : 'nav-link'}>About</Link>
-            <Link href="/blog" className={pathname.startsWith('/blog') ? 'nav-link active' : 'nav-link'}>Blog</Link>
-            <Link href="/docs" className={pathname.startsWith('/docs') ? 'nav-link active' : 'nav-link'}>Help</Link>
             {user && <Link href="/journey" className={pathname.startsWith('/journey') || pathname.startsWith('/paths') ? 'nav-link active' : 'nav-link'}>My Journey</Link>}
           </nav>
 

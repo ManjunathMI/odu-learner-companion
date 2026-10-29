@@ -61,7 +61,7 @@
     "title": "Git-backed documentation publishing",
     "description": "Keep article content as Markdown in the application repository. Store publication status and visibility in one Supabase table, document_catalog. The website manages these settings ",
     "section": "technical",
-    "hash": "308d33996f91b104eaa418c98043f8b22a511ac3f29222f320ed3de90822570b"
+    "hash": "025f3aceb7126f2b734351092bb97be235c8fdbdc95be5903e8df3a7b29b1d8d"
   },
   {
     "source_path": "docs/engineering/architecture.md",
@@ -69,7 +69,7 @@
     "title": "Architecture",
     "description": "ODU Learner Companion is a collaborative learning product for students, working professionals, and lifelong learners. The architecture should support a polished discovery-first exp",
     "section": "technical",
-    "hash": "283d62132aa7a97309934a787c127ae5bc2dc38cf035a3bcb41de5e5263bfdd3"
+    "hash": "ba67d64e46b768f2533a2dd71d0a27376950ea658a1d762ac8642068b706c104"
   },
   {
     "source_path": "docs/engineering/development.md",

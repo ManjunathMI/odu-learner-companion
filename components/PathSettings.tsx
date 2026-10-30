@@ -5,6 +5,8 @@ import { apiFetch } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { confirmPathDeletion } from '@/lib/path-actions';
+import { useDeletePathConfirmation } from '@/components/ConfirmationDialog';
+import PathSettingsActions from '@/components/PathSettingsActions';
 import PathMaterialField from '@/components/PathMaterialField';
 import { pathMetadataFields } from '@/lib/path-editor';
 
@@ -80,6 +82,8 @@ function normalizePlan(raw: Partial<PlanData> | null | undefined): PlanData {
 
 export default function PathSettings({ pathId }: Props) {
   const router = useRouter();
+  const { confirm, confirmation } = useDeletePathConfirmation();
+  const formId = `path-settings-${pathId}`;
   const [canDelete, setCanDelete] = useState(false);
   const [savedTitle, setSavedTitle] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -213,7 +217,7 @@ export default function PathSettings({ pathId }: Props) {
     setDeleteError('');
     setDeleting(true);
     try {
-      const deleted = await confirmPathDeletion(pathId, savedTitle, message => window.confirm(message),
+      const deleted = await confirmPathDeletion(pathId, savedTitle, confirm,
         id => apiFetch(`/paths/${id}`, { method: 'DELETE' }));
       if (deleted) { router.replace('/journey'); router.refresh(); }
     } catch (err) {
@@ -223,8 +227,9 @@ export default function PathSettings({ pathId }: Props) {
 
   return <div className="settings-page">
     <Link href={`/paths/${pathId}`} className="button-secondary">← Back to learning path</Link>
-    <form className="settings" onSubmit={save}>
-      <header className="settings-header"><div><p className="eyebrow">Path administration</p><h1>Build the learning experience</h1><p>Configure the path, shape the curriculum, and keep the right people involved.</p></div><button className="button-primary" type="submit" disabled={saving || deleting || !savedPlan}>{saving ? 'Saving…' : 'Save changes'}</button></header>
+    <header className="settings-header"><div><p className="eyebrow">Path administration</p><h1>Build the learning experience</h1><p>Configure the path, shape the curriculum, and keep the right people involved.</p></div></header>
+    <PathSettingsActions formId={formId} saving={saving} deleting={deleting} saveDisabled={saving || deleting || !savedPlan} deleteDisabled={saving || deleting || !savedPlan || !!actioningUser} canDelete={canDelete} onDelete={deletePath} error={deleteError} />
+    <form id={formId} className="settings" onSubmit={save}>
       <section className="settings-section"><div className="section-title"><p className="section-kicker">Configuration</p><h2>Path details</h2></div><div className="metadata-grid"><label>Title<input value={title} onChange={(e) => setTitle(e.target.value)} required /></label><label>Visibility<select value={visibility} onChange={(e) => setVisibility(e.target.value)}><option value="private">Private</option><option value="public">Public</option></select></label></div><label>Description<textarea value={description} onChange={(e) => setDescription(e.target.value)} /></label><label>Tags (comma-separated)<input value={tagsInput} onChange={event => setTagsInput(event.target.value)} placeholder="artificial-intelligence, beginner, machine-learning" /></label><PathMaterialField id="path-material" kind="overview" value={overviewMarkdown} onChange={setOverviewMarkdown} /></section>
 
       <fieldset disabled={saving || deleting || !savedPlan} className="plan-editor settings-section">
@@ -300,7 +305,7 @@ export default function PathSettings({ pathId }: Props) {
       </fieldset>
 
       {(error || message) && <p className={error ? 'error feedback' : 'success feedback'}>{error || <>{message} <Link href={`/paths/${pathId}`}>View updated learning path →</Link></>}</p>}
-      <div className="save-bar"><Link href={`/paths/${pathId}`}>Back to learning path</Link><span>Changes are saved only when you select Save changes.</span><button className="button-primary" type="submit" disabled={saving || deleting || !savedPlan}>{saving ? 'Saving…' : 'Save changes'}</button></div>
+      <div className="save-bar"><Link href={`/paths/${pathId}`}>Back to learning path</Link><span>Changes are saved only when you select Save changes.</span></div>
     </form>
 
     <section className="members-panel">
@@ -347,12 +352,12 @@ export default function PathSettings({ pathId }: Props) {
       <h2 id="delete-path-heading">Delete learning path</h2>
       <p>Permanently remove this path and its lessons, memberships, progress and personal notes for all its learners. This cannot be undone.</p>
       <button type="button" className="button-secondary delete-path-button" disabled={saving || deleting || !savedPlan || !!actioningUser} onClick={deletePath}>{deleting ? 'Deleting…' : 'Delete path'}</button>
-      {deleteError && <p className="error" role="alert">{deleteError}</p>}
     </section>}
 
+    {confirmation}
     <style jsx>{`
       .danger-zone { margin-top:2rem;padding:1.4rem;border:1px solid var(--accent-danger);border-radius:var(--radius-md); }.danger-zone h2 { margin:0 0 .7rem;font-size:1.2rem; }.danger-zone p { color:var(--text-secondary);line-height:1.6; }.delete-path-button { color:var(--accent-danger);border-color:var(--accent-danger); }.danger-zone .error { color:var(--accent-danger); }
-      .settings-page { max-width: 1020px; margin: 0 auto; padding: 3.5rem 1.25rem 5rem; display: flex; flex-direction: column; gap: 2rem; }.settings { display: flex; flex-direction: column; gap: 1.5rem; }.settings-header { display:flex; justify-content:space-between; align-items:flex-end; gap:2rem; padding-bottom:2rem; border-bottom:1px solid var(--border-color); }.settings h1 { margin:0; font-size:2.6rem; }.settings-header p:not(.eyebrow) { color:var(--text-secondary); margin:.65rem 0 0; max-width:600px; }.eyebrow,.section-kicker { color:var(--accent-primary); font-size:.75rem; font-weight:800; letter-spacing:.08em; margin:0 0 .4rem; text-transform:uppercase; }.settings-section { border:1px solid var(--border-color); border-radius:var(--radius-md); padding:1.4rem; background:var(--bg-secondary); }.section-title { margin-bottom:1rem; }.section-title h2 { margin:0; font-size:1.35rem; }.metadata-grid { display:grid; grid-template-columns:2fr 1fr; gap:.75rem; }
+      .settings-page { max-width: 1020px; margin: 0 auto; padding: 3.5rem 1.25rem 5rem; display: flex; flex-direction: column; gap: 2rem; }.settings { display: flex; flex-direction: column; gap: 1.5rem; }.settings-header { display:flex; justify-content:space-between; align-items:flex-end; gap:2rem; padding-bottom:2rem; border-bottom:1px solid var(--border-color); }.settings-page h1 { margin:0; font-size:2.6rem; }.settings-header p:not(.eyebrow) { color:var(--text-secondary); margin:.65rem 0 0; max-width:600px; }.eyebrow,.section-kicker { color:var(--accent-primary); font-size:.75rem; font-weight:800; letter-spacing:.08em; margin:0 0 .4rem; text-transform:uppercase; }.settings-section { border:1px solid var(--border-color); border-radius:var(--radius-md); padding:1.4rem; background:var(--bg-secondary); }.section-title { margin-bottom:1rem; }.section-title h2 { margin:0; font-size:1.35rem; }.metadata-grid { display:grid; grid-template-columns:2fr 1fr; gap:.75rem; }
       .settings label { display: flex; flex-direction: column; gap: .4rem; font-weight: 600; }
       .plan-editor { display: flex; flex-direction: column; gap: 1rem; }
       .section-header, .phase-header, .day-header, .items-header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
@@ -377,7 +382,7 @@ export default function PathSettings({ pathId }: Props) {
       .status-badge.pending { background: rgba(234,179,8,.12); color: #b45309; }
       .status-badge.rejected { background: rgba(239,68,68,.12); color: #b91c1c; }
       .button-danger { background: rgba(239,68,68,.12); color: var(--accent-danger); border: 1px solid rgba(239,68,68,.25); border-radius: var(--radius-md); padding: .55rem .9rem; cursor: pointer; }
-      .empty-state { color: var(--text-secondary); } @media(max-width:640px) { .settings-page { padding:2.5rem 1rem 4rem; }.settings-header { align-items:flex-start; flex-direction:column; }.settings h1 { font-size:2.1rem; }.metadata-grid { grid-template-columns:1fr; }.save-bar { align-items:flex-start; flex-direction:column; }.member-row { align-items:flex-start; flex-direction:column; } }
+      .empty-state { color: var(--text-secondary); } @media(max-width:640px) { .settings-page { padding:2.5rem 1rem 4rem; }.settings-header { align-items:flex-start; flex-direction:column; }.settings-page h1 { font-size:2.1rem; }.metadata-grid { grid-template-columns:1fr; }.save-bar { align-items:flex-start; flex-direction:column; }.member-row { align-items:flex-start; flex-direction:column; } }
     `}</style>
   </div>;
 }

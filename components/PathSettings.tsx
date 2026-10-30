@@ -2,6 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { confirmPathDeletion } from '@/lib/path-actions';
+import PathMaterialField from '@/components/PathMaterialField';
+import { pathMetadataFields } from '@/lib/path-editor';
 
 interface Props { pathId: string; }
 
@@ -74,8 +79,14 @@ function normalizePlan(raw: Partial<PlanData> | null | undefined): PlanData {
 }
 
 export default function PathSettings({ pathId }: Props) {
+  const router = useRouter();
+  const [canDelete, setCanDelete] = useState(false);
+  const [savedTitle, setSavedTitle] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [tagsInput, setTagsInput] = useState('');
   const [overviewMarkdown, setOverviewMarkdown] = useState('');
   const [visibility, setVisibility] = useState('private');
   const [plan, setPlan] = useState<PlanData>({ phases: [emptyPhase()] });
@@ -88,11 +99,11 @@ export default function PathSettings({ pathId }: Props) {
 
   useEffect(() => {
     Promise.all([
-      apiFetch<{ title: string; description: string | null; overviewMarkdown?: string | null; visibility: string }>(`/paths/${pathId}`),
+      apiFetch<{ title: string; description: string | null; overviewMarkdown?: string | null; visibility: string; tags?: string[] | null; myRole: string | null }>(`/paths/${pathId}`),
       apiFetch<PlanData>(`/paths/${pathId}/plan`),
       apiFetch<Member[]>(`/paths/${pathId}/members`),
     ]).then(([path, currentPlan, currentMembers]) => {
-      setTitle(path.title); setDescription(path.description || ''); setOverviewMarkdown(path.overviewMarkdown || ''); setVisibility(path.visibility);
+      setCanDelete(path.myRole === 'admin'); setSavedTitle(path.title); setTagsInput((path.tags ?? []).join(', ')); setTitle(path.title); setDescription(path.description || ''); setOverviewMarkdown(path.overviewMarkdown || ''); setVisibility(path.visibility);
       const normalized = normalizePlan(currentPlan);
       setPlan(normalized); setSavedPlan(normalized);
       setMembers(currentMembers);
@@ -149,7 +160,7 @@ export default function PathSettings({ pathId }: Props) {
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (saving || !savedPlan) return;
+    if (saving || deleting || !savedPlan) return;
     setError(''); setMessage('');
     const curriculumChanged = JSON.stringify(plan) !== JSON.stringify(savedPlan);
     const ids = (value: PlanData) => value.phases.flatMap((phase) => [phase.id, ...phase.days.flatMap((day) => [day.id, ...day.items.map((item) => item.id)])]).filter(Boolean);
@@ -166,7 +177,8 @@ export default function PathSettings({ pathId }: Props) {
         setPlan(normalized); setSavedPlan(normalized);
         curriculumSaved = true;
       }
-      await apiFetch(`/paths/${pathId}`, { method: 'PUT', body: { title, description, visibility, overviewMarkdown } });
+      await apiFetch(`/paths/${pathId}`, { method: 'PUT', body: { ...pathMetadataFields({ title, description, overviewMarkdown, tagsInput }), visibility } });
+      setSavedTitle(title.trim());
       setMessage(curriculumChanged ? 'Settings and curriculum saved.' : 'Path details saved.');
     } catch (err) {
       setError(`${curriculumSaved ? 'Curriculum saved, but path details could not be saved. ' : ''}${err instanceof Error ? err.message : 'Unable to save settings'}`);
@@ -196,12 +208,26 @@ export default function PathSettings({ pathId }: Props) {
     }
   };
 
-  return <div className="settings-page">
-    <form className="settings" onSubmit={save}>
-      <header className="settings-header"><div><p className="eyebrow">Path administration</p><h1>Build the learning experience</h1><p>Configure the path, shape the curriculum, and keep the right people involved.</p></div><button className="button-primary" type="submit" disabled={saving || !savedPlan}>{saving ? 'Saving…' : 'Save changes'}</button></header>
-      <section className="settings-section"><div className="section-title"><p className="section-kicker">Configuration</p><h2>Path details</h2></div><div className="metadata-grid"><label>Title<input value={title} onChange={(e) => setTitle(e.target.value)} required /></label><label>Visibility<select value={visibility} onChange={(e) => setVisibility(e.target.value)}><option value="private">Private</option><option value="public">Public</option></select></label></div><label>Description<textarea value={description} onChange={(e) => setDescription(e.target.value)} /></label><label>Course overview (Markdown, optional)<textarea value={overviewMarkdown} maxLength={100000} onChange={(e) => setOverviewMarkdown(e.target.value)} /></label></section>
+  const deletePath = async () => {
+    if (!canDelete || saving || deleting || !savedPlan || actioningUser) return;
+    setDeleteError('');
+    setDeleting(true);
+    try {
+      const deleted = await confirmPathDeletion(pathId, savedTitle, message => window.confirm(message),
+        id => apiFetch(`/paths/${id}`, { method: 'DELETE' }));
+      if (deleted) { router.replace('/journey'); router.refresh(); }
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Unable to delete this learning path. Please try again.');
+    } finally { setDeleting(false); }
+  };
 
-      <fieldset disabled={saving || !savedPlan} className="plan-editor settings-section">
+  return <div className="settings-page">
+    <Link href={`/paths/${pathId}`} className="button-secondary">← Back to learning path</Link>
+    <form className="settings" onSubmit={save}>
+      <header className="settings-header"><div><p className="eyebrow">Path administration</p><h1>Build the learning experience</h1><p>Configure the path, shape the curriculum, and keep the right people involved.</p></div><button className="button-primary" type="submit" disabled={saving || deleting || !savedPlan}>{saving ? 'Saving…' : 'Save changes'}</button></header>
+      <section className="settings-section"><div className="section-title"><p className="section-kicker">Configuration</p><h2>Path details</h2></div><div className="metadata-grid"><label>Title<input value={title} onChange={(e) => setTitle(e.target.value)} required /></label><label>Visibility<select value={visibility} onChange={(e) => setVisibility(e.target.value)}><option value="private">Private</option><option value="public">Public</option></select></label></div><label>Description<textarea value={description} onChange={(e) => setDescription(e.target.value)} /></label><label>Tags (comma-separated)<input value={tagsInput} onChange={event => setTagsInput(event.target.value)} placeholder="artificial-intelligence, beginner, machine-learning" /></label><PathMaterialField id="path-material" kind="overview" value={overviewMarkdown} onChange={setOverviewMarkdown} /></section>
+
+      <fieldset disabled={saving || deleting || !savedPlan} className="plan-editor settings-section">
         <div className="section-header">
           <div><p className="section-kicker">Curriculum</p><h2>Learning plan</h2></div>
           <button type="button" className="button-secondary" onClick={addPhase}>+ Add phase</button>
@@ -238,7 +264,7 @@ export default function PathSettings({ pathId }: Props) {
                   <label>Hours<input value={day.hours} onChange={(e) => updateDay(phaseIndex, dayIndex, 'hours', e.target.value)} placeholder="2" /></label>
                 </div>
 
-                <label>Lesson material (Markdown, optional)<textarea value={day.contentMarkdown} maxLength={100000} onChange={(e) => updateDay(phaseIndex, dayIndex, 'contentMarkdown', e.target.value)} placeholder="Teaching, resources and practice activity" /></label>
+                <PathMaterialField id={day.id ? `day-material-${day.id}` : undefined} kind="day" value={day.contentMarkdown} onChange={value => updateDay(phaseIndex, dayIndex, 'contentMarkdown', value)} />
 
                 <div className="items-section">
                   <div className="items-header">
@@ -273,8 +299,8 @@ export default function PathSettings({ pathId }: Props) {
         ))}
       </fieldset>
 
-      {(error || message) && <p className={error ? 'error feedback' : 'success feedback'}>{error || message}</p>}
-      <div className="save-bar"><span>Changes are saved only when you select Save changes.</span><button className="button-primary" type="submit" disabled={saving || !savedPlan}>{saving ? 'Saving…' : 'Save changes'}</button></div>
+      {(error || message) && <p className={error ? 'error feedback' : 'success feedback'}>{error || <>{message} <Link href={`/paths/${pathId}`}>View updated learning path →</Link></>}</p>}
+      <div className="save-bar"><Link href={`/paths/${pathId}`}>Back to learning path</Link><span>Changes are saved only when you select Save changes.</span><button className="button-primary" type="submit" disabled={saving || deleting || !savedPlan}>{saving ? 'Saving…' : 'Save changes'}</button></div>
     </form>
 
     <section className="members-panel">
@@ -317,7 +343,15 @@ export default function PathSettings({ pathId }: Props) {
       )}
     </section>
 
+    {canDelete && <section className="danger-zone" aria-labelledby="delete-path-heading">
+      <h2 id="delete-path-heading">Delete learning path</h2>
+      <p>Permanently remove this path and its lessons, memberships, progress and personal notes for all its learners. This cannot be undone.</p>
+      <button type="button" className="button-secondary delete-path-button" disabled={saving || deleting || !savedPlan || !!actioningUser} onClick={deletePath}>{deleting ? 'Deleting…' : 'Delete path'}</button>
+      {deleteError && <p className="error" role="alert">{deleteError}</p>}
+    </section>}
+
     <style jsx>{`
+      .danger-zone { margin-top:2rem;padding:1.4rem;border:1px solid var(--accent-danger);border-radius:var(--radius-md); }.danger-zone h2 { margin:0 0 .7rem;font-size:1.2rem; }.danger-zone p { color:var(--text-secondary);line-height:1.6; }.delete-path-button { color:var(--accent-danger);border-color:var(--accent-danger); }.danger-zone .error { color:var(--accent-danger); }
       .settings-page { max-width: 1020px; margin: 0 auto; padding: 3.5rem 1.25rem 5rem; display: flex; flex-direction: column; gap: 2rem; }.settings { display: flex; flex-direction: column; gap: 1.5rem; }.settings-header { display:flex; justify-content:space-between; align-items:flex-end; gap:2rem; padding-bottom:2rem; border-bottom:1px solid var(--border-color); }.settings h1 { margin:0; font-size:2.6rem; }.settings-header p:not(.eyebrow) { color:var(--text-secondary); margin:.65rem 0 0; max-width:600px; }.eyebrow,.section-kicker { color:var(--accent-primary); font-size:.75rem; font-weight:800; letter-spacing:.08em; margin:0 0 .4rem; text-transform:uppercase; }.settings-section { border:1px solid var(--border-color); border-radius:var(--radius-md); padding:1.4rem; background:var(--bg-secondary); }.section-title { margin-bottom:1rem; }.section-title h2 { margin:0; font-size:1.35rem; }.metadata-grid { display:grid; grid-template-columns:2fr 1fr; gap:.75rem; }
       .settings label { display: flex; flex-direction: column; gap: .4rem; font-weight: 600; }
       .plan-editor { display: flex; flex-direction: column; gap: 1rem; }

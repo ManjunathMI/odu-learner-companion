@@ -1,4 +1,4 @@
-import type { Root, RootContent } from 'mdast';
+import type { Root, RootContent, List } from 'mdast';
 
 export type MaterialView = 'all' | 'lesson' | 'resources' | 'practice' | 'overview' | 'library';
 const resourceHeading = /^(watch|read|practice|references)(?:\s*[—–-].*)?$/i;
@@ -30,8 +30,46 @@ export function selectMaterial(tree: Root, view: MaterialView): Root {
   return { ...tree, children };
 }
 
-export function materialViewPlugin({ view }: { view: MaterialView }) {
-  return (tree: Root) => { tree.children = selectMaterial(tree, view).children; };
+export interface LessonResource { title: string; url: string; }
+
+// Keep existing lesson links visible even when Markdown resource headings are empty.
+// Resolve reference-style links and ignore fenced code when deduplicating.
+export function withLessonResources(tree: Root, resources: LessonResource[]): Root {
+  const definitions = new Map(tree.children.filter(node => node.type === 'definition').map(node => [node.identifier.toLowerCase(), node.url]));
+  const seen = new Set<string>();
+  function visit(node: RootContent) {
+    if (node.type === 'link') seen.add(node.url);
+    if (node.type === 'linkReference') {
+      const url = definitions.get(node.identifier.toLowerCase());
+      if (url) seen.add(url);
+    }
+    if ('children' in node) node.children.forEach(child => visit(child as RootContent));
+  }
+  tree.children.forEach(visit);
+  const missing = resources.filter(resource => {
+    if (!resource.url || seen.has(resource.url)) return false;
+    seen.add(resource.url);
+    return true;
+  });
+  const children = [...tree.children];
+  if (missing.length) {
+    const list: List = { type: 'list', ordered: false, spread: false, children: missing.map(resource => ({
+      type: 'listItem', spread: false, children: [{ type: 'paragraph', children: [{
+        type: 'link', url: resource.url, children: [{ type: 'text', value: resource.title }],
+      }] }],
+    })) };
+    children.push(list);
+  } else if (!seen.size) {
+    children.push({ type: 'paragraph', children: [{ type: 'text', value: 'Resources have not been added yet.' }] });
+  }
+  return { ...tree, children };
+}
+
+export function materialViewPlugin({ view, resources }: { view: MaterialView; resources?: LessonResource[] }) {
+  return (tree: Root) => {
+    const selected = selectMaterial(tree, view);
+    tree.children = view === 'resources' && resources ? withLessonResources(selected, resources).children : selected.children;
+  };
 }
 
 export function studyTime(hours: string | null): string | null {

@@ -4,6 +4,8 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import PathMaterialField from '@/components/PathMaterialField';
+import { pathMetadataFields } from '@/lib/path-editor';
 
 interface Props {
   onCancel: () => void;
@@ -21,6 +23,7 @@ interface PlanDay {
   dayLabel: string;
   title: string;
   hours: string;
+  contentMarkdown: string;
   items: PlanItem[];
 }
 
@@ -35,13 +38,14 @@ interface PlanData {
 }
 
 const emptyItem = (): PlanItem => ({ title: '', url: '', tag: 'hands' });
-const emptyDay = (): PlanDay => ({ dayLabel: 'Day 1', title: '', hours: '', items: [emptyItem()] });
+const emptyDay = (): PlanDay => ({ dayLabel: 'Day 1', title: '', hours: '', contentMarkdown: '', items: [emptyItem()] });
 const emptyPhase = (): PlanPhase => ({ title: '', goal: '', days: [emptyDay()] });
 
 export default function CreatePathForm({ onCancel }: Props) {
   const [createdPathId, setCreatedPathId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [overviewMarkdown, setOverviewMarkdown] = useState('');
   const [tagsInput, setTagsInput] = useState('');
   const [plan, setPlan] = useState<PlanData>({ phases: [emptyPhase()] });
   const [submitting, setSubmitting] = useState(false);
@@ -55,7 +59,7 @@ export default function CreatePathForm({ onCancel }: Props) {
     }));
   };
 
-  const updateDay = (phaseIndex: number, dayIndex: number, field: 'dayLabel' | 'title' | 'hours', value: string) => {
+  const updateDay = (phaseIndex: number, dayIndex: number, field: 'dayLabel' | 'title' | 'hours' | 'contentMarkdown', value: string) => {
     setPlan((current) => ({
       ...current,
       phases: current.phases.map((phase, phasePos) => phasePos !== phaseIndex ? phase : {
@@ -165,17 +169,15 @@ export default function CreatePathForm({ onCancel }: Props) {
     setSubmitting(true);
 
     try {
-      const tags = tagsInput
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
-
+      const metadata = pathMetadataFields({ title, description, overviewMarkdown, tagsInput });
       const newPath = createdPathId ? { id: createdPathId } : await apiFetch<{ id: string; title: string }>('/paths', {
         method: 'POST',
-        body: { title: title.trim(), description: description.trim() || undefined, tags },
+        body: { title: metadata.title, description: metadata.description, tags: metadata.tags },
       });
       setCreatedPathId(newPath.id);
-      if (createdPathId) await apiFetch(`/paths/${newPath.id}`, { method: 'PUT', body: { title: title.trim(), description, tags } });
+      // Reuse the existing metadata endpoint; persist optional material before the plan.
+      // If this fails, retry the saved draft instead of creating another path.
+      await apiFetch(`/paths/${newPath.id}`, { method: 'PUT', body: metadata });
 
       await apiFetch(`/paths/${newPath.id}/plan`, {
         method: 'PUT',
@@ -240,6 +242,7 @@ export default function CreatePathForm({ onCancel }: Props) {
             placeholder="aws, cloud, certification"
           />
         </label>
+        <PathMaterialField kind="overview" value={overviewMarkdown} onChange={setOverviewMarkdown} />
       </section>
 
       <section className="settings-section plan-editor">
@@ -294,6 +297,8 @@ export default function CreatePathForm({ onCancel }: Props) {
                     <input value={day.hours} onChange={(e) => updateDay(phaseIndex, dayIndex, 'hours', e.target.value)} placeholder="2" />
                   </label>
                 </div>
+
+                <PathMaterialField kind="day" value={day.contentMarkdown} onChange={value => updateDay(phaseIndex, dayIndex, 'contentMarkdown', value)} />
 
                 <div className="items-section">
                   <div className="items-header">

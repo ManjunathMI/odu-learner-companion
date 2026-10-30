@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import { confirmPathDeletion } from '@/lib/path-actions';
 import MultilingualLoader from '@/components/MultilingualLoader';
 
 interface AccountPath {
@@ -89,11 +90,10 @@ export default function AccountDashboard() {
   };
 
   const deletePath = async (pathId: string, title: string) => {
-    const confirmed = window.confirm(`Delete "${title}" permanently? This removes the Learning Path and its dependent path data. This action cannot be undone.`);
-    if (!confirmed) return;
     setError('');
     try {
-      await apiFetch(`/paths/${pathId}`, { method: 'DELETE' });
+      const deleted = await confirmPathDeletion(pathId, title, message => window.confirm(message), id => apiFetch(`/paths/${id}`, { method: 'DELETE' }));
+      if (!deleted) return;
       setMessage(`${title} was deleted and your creator capacity was restored.`);
       await load();
     } catch (err) {

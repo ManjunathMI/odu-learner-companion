@@ -191,7 +191,9 @@ The owner reported successful localhost email callback, access to the local admi
 
 The retained `scripts/check-documents.mjs` checks public articles and sitemap, rejects technical reads for visitors/learners, permits published technical reads for QA platform admins, and denies catalogue GET/PATCH to non-owner accounts. It uses existing QA sessions only, sends no email and changes no publishing settings. Run with `ODU_RUN_EXISTING_ACCOUNT_TESTS=1 node scripts/check-documents.mjs http://localhost:3100` only when existing-account checks are authorized.
 
-## AI 101 curated course — offline implementation
+## AI 101 curated course — implementation history
+
+**Current status:** see the AI 101 handoff in [the roadmap](../product/roadmap.md). Initial offline-only and deployment-pending statements below record earlier stages. The owner subsequently authorized and ran the production SQL, and reported production path verification on 30 October 2026. Remaining end-to-end learner checks and build/history reconciliation are listed in the handoff.
 
 The first curated course is defined in curricula/ai-101-beginners/course.json. It contains the original supplied teaching explanations, objectives, practice activities, outcomes, attribution links and optional references. Seven existing phases each contain one day and one required lesson completion item. Path identity and all 21 child IDs are deterministic UUIDs; the descriptive slug stays in Git metadata, while existing /paths/UUID routes and API contracts are unchanged.
 
@@ -286,3 +288,36 @@ The website now uses expandable day cards, opens the next unfinished day initial
 Markdown is partitioned using its parsed heading nodes, preserving fenced examples, unknown lesson sections and reference-style link definitions. All stored source content remains available across the lesson/resource and overview/library views. The AI 101 regression tests were consolidated into the existing database suite; the standalone test file, one-off production audit/login scripts, stale preview, generated SQL artifact, screenshot and generated login files were removed. Curriculum JSON, resource verification report, repeatable SQL generator, reusable link checker, canonical installation schema and migration remain versioned for recreation.
 
 Web preview verification: signed in with the existing QA super-admin account on localhost. All 14 daily resource links across Days 1–6 matched the source, all six optional library links were visible, and Day 7 retained its supporting link. Checked accordion navigation, the next-day link and website layouts at 1280px and 390px with no horizontal overflow. Progress remained 0/7; no completion or notes writes were made. Lint, 34 automated checks and TypeScript pass. The production build was not rerun in this cleanup round because its execution permission was declined; earlier build success predates these latest UI edits.
+
+### Session close — 30 October 2026
+
+The owner reports successful verification of the path on production. No additional agent production actions were taken to confirm that latest report. The current plan, completed scope, evidence limits and ordered next-session tasks are consolidated in product/roadmap.md under AI 101 handoff. Resume there on 31 October rather than repeating the import or rebuilding the course.
+
+### Shared path authoring and legacy layout — 30 October 2026
+
+Existing paths now render the same course overview/reference library and per-day Resources & references layout even when optional Markdown is absent. These are presentation-only empty states, not seeded placeholder data. Existing lesson_items URLs remain titled resource links, and their IDs/completion/notes behavior is unchanged. Missing material is identified clearly; path admins can open the corresponding Settings field.
+
+Settings now provides back links before and below the form and a View updated learning path link after a successful save. Tags can be edited there. CreatePathForm and PathSettings reuse PathMaterialField and pathMetadataFields: optional overview/reference Markdown, per-day lesson Markdown and normalized/deduplicated tags are authored consistently. References remain inside overview_markdown under `## Optional reference library`, not a new database column. Creation reuses the existing POST path, PUT metadata and PUT plan endpoints, persists optional metadata before the plan, and reuses the draft on retry. No schema, RLS, auth, API-contract or architectural changes were required.
+
+The production public metadata endpoint was inspected read-only and confirmed AI 101's existing tags: artificial-intelligence, ai-101, beginner, seven-days. Five further topic tags are proposed, retained in the Git course source for recreation. The following optional SQL is for owner execution only; it was not applied by the agent:
+
+```sql
+update public.learning_paths
+set tags = array[
+  'artificial-intelligence', 'ai-101', 'beginner', 'seven-days',
+  'machine-learning', 'generative-ai', 'large-language-models',
+  'prompt-engineering', 'responsible-ai'
+], updated_at = now()
+where id = 'ab832bcc-b30c-59cf-a3c2-fecf069bd475'
+returning id, title, tags;
+```
+
+Verification: existing tests/database.test.mjs extended for creation with overview, reference library, tags and day content in both fresh-install and upgrade modes. 36 tests, TypeScript and production build passed; lint has no errors and the two existing image warnings. No manual-test scripts were added, and no hosted data/schema was modified.
+
+### Path deletion in Settings — 30 October 2026
+
+Path deletion already existed in AccountDashboard and DELETE /api/paths/:pathId. The handler independently authenticates and calls requirePathAdmin: approved path admins and platform admins (including the QA super-admin's existing platform role) may delete; moderators/learners may not. Direct authenticated database deletes remain revoked; the authorized API uses its service client. No permissions or schema were changed.
+
+PathSettings now shows an admin-only permanent-deletion section after Members. It is disabled during loading, saving, deletion or member actions. The shared confirmPathDeletion action is used by Settings and Account: the native confirmation names the saved path, lists lessons/memberships/progress/personal notes removed for everyone in the selected path, and states the action cannot be undone. Cancel sends no DELETE. Errors stay visible and do not navigate; success returns Settings users to My Journey. Deleting a path does not delete Auth accounts.
+
+Existing tests/database.test.mjs covers cancellation (zero delete calls), confirmed deletion, failure propagation, direct-client denial and selected-path cascade/data isolation in fresh/upgrade databases. All 39 tests and the production build passed; lint has only the two existing image warnings. No live path was deleted and no new test scripts or migrations were added.

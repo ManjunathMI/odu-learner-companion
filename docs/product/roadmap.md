@@ -474,10 +474,49 @@ Validate the actual journeys with seeded accounts and realistic data:
 - Keep badges auditable and privacy-aware.
 - Treat creator allowance as a configurable entitlement enforced at the trusted server/database boundary.
 
-## AI 101 curated content preparation
+## AI 101 handoff — 30 October 2026
 
-A seven-day beginner curriculum is prepared in Git, with original teaching content, 20 attributed external references, no-code practice, seven existing completion items and a repeatable development SQL generator. It reuses path enrollment, progress and Community Progress without new tables or scoring. Offline import/data-preservation tests cover its database contracts. Loading the course and completing the real learner browser journey are explicitly deferred until an isolated development project is configured; no production content was changed or deployed by this work.
+This is the current resume point. It supersedes earlier offline-only and deployment-pending notes for AI 101. Next planned session: 31 October 2026 (India time).
 
-AI 101 database alignment: the owner approved two optional Markdown fields for course overview and per-day teaching/resources/practice. Migration, API, settings and Learning Space support are prepared offline; production application and data remain unchanged. The Git JSON is the import authoring source, while the learner experience reads the existing path/day database records.
+### Original plan and boundaries
 
-30 October 2026: the owner authorized AI 101 production installation in the absence of a separate database. A guarded, atomic production SQL generator is prepared and tested; remote execution is not complete because Supabase MCP OAuth refresh failed. Deployment and signed-in browser acceptance still remain.
+Deliver **AI 101 — From Curious Beginner to Building Your First AI Application** as a seven-day beginner learning path inside ODU's existing learning-path system. Follow Understand → Watch/Read → Practice → Complete. Reuse enrollment/approval, progress, private notes, My Journey and Community Progress. Keep the required course free of programming and paid APIs. Do not add an assessment engine, certificates, new scoring, an AI backend or a second tenant hierarchy. The latest interface work is for the website only.
+
+The owner has no separate development database and explicitly authorized the production AI 101 installation. Do not ask again for a development database as a prerequisite to reviewing this already-installed course. New schema/major architecture changes still require discussion; this handoff does not authorize unrelated production changes.
+
+### Achieved
+
+- Git authoring source: curricula/ai-101-beginners/course.json. Seven days total 470 minutes (7 hours 50 minutes), with explanations, practice activities, expected outcomes and 20 distinct external URLs. Fourteen day-level links include two optional developer references; six further links form the optional reference library. Day 7 has a supporting link and a no-code prompt/design prototype.
+- Existing learning_paths → phases → days → lesson_items hierarchy reused, with seven stable completion item IDs. Completion stays self-reported: one completed day is 1/7, rounded to 14%; optional references do not add completion items.
+- Owner approved nullable learning_paths.overview_markdown and days.content_markdown. Migration: 20261029182558_learning_material.sql. The full fresh-install schema and curriculum RPCs/types/API/settings support are retained in Git sources.
+- Repeatable importer: scripts/prepare-ai101.mjs plus lib/curricula/. Explicit production mode produces one transaction containing owner/role checks, the reviewed migration, quota-aware import and verification. Repeat imports preserve stable IDs and existing learner activity; no role grants or password resets.
+- The owner ran the production SQL. A subsequent agent read-only audit confirmed public/approved publication and exact matching overview, seven phases/days/items and day Markdown at revision 1. Course UUID: ab832bcc-b30c-59cf-a3c2-fecf069bd475.
+- Earlier production review as existing superadmin.test@odu.local verified admin access without a join request, seven completion controls and Community Progress. That older UI initially omitted rich material; the database was correct.
+- Web cleanup now provides expandable day cards, the next unfinished day open initially, a next-day link, readable durations, no duplicate one-day phase/title headings, named resource links beside teaching, practice below, then completion/notes. Course overview and optional reference library have separate visible controls.
+- Agent checked the updated local website at 1280px and 390px with no horizontal overflow, all fourteen daily resource links, all six library references, and the Day 7 supporting link. No progress, notes or curriculum writes were made during these checks.
+- Temporary credential files, old preview/artifacts and one-off production audit/login scripts were removed. AI 101 regression coverage was consolidated into tests/database.test.mjs. Keep the reusable importer, link checker, source JSON, migration, installer and meaningful regression tests.
+- Latest local validation: 34 tests, TypeScript and lint pass (two pre-existing image warnings). The production build passed before the final UI cleanup; the final cleanup build was not rerun because permission was declined.
+- **Latest owner report:** on 30 October the owner said they were able to verify this path on production after the web changes. Treat this as owner-reported production verification, not independent proof that every learner scenario or latest Git revision was tested. The agent has not independently rechecked the final production deployment. Production URL: https://odu-learner-companion-j86o.vercel.app/paths/ab832bcc-b30c-59cf-a3c2-fecf069bd475.
+
+### Resume here next session
+
+1. Check the current Git diff/branch and deployed revision first; the last agent inspection had uncommitted changes. Do not assume the owner has or has not pushed since then. Recheck the production rich-material UI/API and confirm the owner-reported result. Do not rerun the seed to fix a display-only issue.
+2. Complete the remaining **QA learner** journey: Explore → AI 101 → request membership → facilitator approval → read resources → complete Day 1 → refresh → My Journey → Community Progress. The platform-admin override review did not test learner approval. Use synthetic accounts; preserve real learner activity.
+3. Verify 0/7 → 1/7 (14%) persistence; verify a private note survives refresh and is not visible to other learners/admins. Confirm another path's progress and leaderboard stay unaffected. These scenarios pass offline contracts but have not been completed end-to-end in the production browser.
+4. Verify resource opening/keyboard navigation and an ordinary learner's access boundaries on the deployed website. Earlier external checks established reachability/metadata, not complete video playback or permanent free access.
+5. Run the final production build when authorized or inspect the actual deployment/CI result for the final UI revision. Record revision and results in the release record. Do not claim the final build passed from the earlier result.
+6. Check/reconcile Supabase CLI migration history for version 20261029182558, because the owner executed SQL through SQL Editor. Verify first; do not blindly mark a migration applied or rerun the full installer.
+
+### Separate backlog after AI 101 acceptance
+
+QA email forwarding to a configured recipient and permanent QA-account deletion remain unfinished; account metadata alone does not reroute standard Supabase Auth email. Production hardening still includes backup/restore, alerts/rate limits and the security/advisor follow-ups documented in operations/database.md. These are separate from the AI 101 web cleanup. Do not expand into quizzes, certificates, agents, native apps or a new content system merely because they are on the longer roadmap.
+
+See engineering/development.md for implementation and verification history, operations/database.md for database procedures, and operations/release-checklist.md for release acceptance.
+
+### Follow-up: existing paths and authoring parity — 30 October 2026
+
+Implemented the owner's four follow-ups: existing paths now keep overview/library and daily resource spaces with honest missing-content states; existing lesson URLs appear as titled resources; Settings provides back navigation and a post-save path link; Create Path exposes the same optional overview/reference and day-material fields as Settings. Settings also edits tags, and path pages display their topic tags. The existing metadata/plan APIs and schema are reused; no new schema, table, auth or architecture changes and no hosted writes were made.
+
+Production AI 101 metadata was read and confirmed to have four tags. An optional nine-tag UPDATE (retaining the four existing tags and adding topic tags) is recorded in engineering/development.md for owner execution; it has not been applied. The Git course authoring source contains the proposed tags for recreation.
+
+Only the existing database test suite was extended, covering rich-content creation in fresh-install and upgrade modes. All 36 tests, TypeScript, lint and the production build pass. Read-only browser checks on the built local site confirmed the legacy AI Learning Foundations layout, its retained 12 completion items, Settings back links and six day fields, and the creation form's optional Markdown fields. Narrow browser width was checked without overflow. No forms were submitted and no new manual-test scripts were created. Pending learner acceptance work from the handoff remains separate.

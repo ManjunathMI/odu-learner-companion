@@ -112,6 +112,43 @@ for (const mode of ['fresh installation','upgrade from baseline']) test(`${mode}
   await t.test('learners and unrelated path admins cannot invoke privileged saves through the service wrapper', async () => {
     for (const actor of [learner,other,moderator,outsider]) await assert.rejects(save(plan.phases,plan.revision,false,actor), /Admin access required/);
   });
+  await t.test('new paths save overview, references, tags and day material through existing fields', async () => {
+    const {pathMetadataFields}=await import('../lib/path-editor.ts');
+    const fields=pathMetadataFields({title:' New path ',description:' First course ',overviewMarkdown:'## What you will learn\nBasics\n\n## Optional reference library\n[Guide](https://example.com/guide)',tagsInput:'AI, beginner, ai, ,'});
+    assert.deepEqual(fields.tags,['AI','beginner']);
+    const created=await as('authenticated',outsider,async()=>
+      (await db.query('select * from create_learning_path_with_entitlement($1,$2,$3,$4)',[fields.title,fields.description,fields.tags,outsider])).rows[0]);
+    await as('service_role',outsider,()=>db.query('update learning_paths set overview_markdown=$1 where id=$2',[fields.overviewMarkdown,created.id]));
+    const material='## Understand\nLearn safely\n\n## Read\n[Read](https://example.com/read)\n\n## Practice activity\nTry one example';
+    const saved=await save([{title:'Start',days:[{dayLabel:'Day 1',title:'Basics',contentMarkdown:material,items:[{title:'First activity',url:'https://example.com/read'}]}]}],null,false,outsider,created.id);
+    assert.equal(saved.phases[0].days[0].contentMarkdown,material);
+    const stored=(await db.query('select title,tags,overview_markdown from learning_paths where id=$1',[created.id])).rows[0];
+    assert.equal(stored.title,'New path');assert.deepEqual(stored.tags,['AI','beginner']);assert.equal(stored.overview_markdown,fields.overviewMarkdown);
+    assert.deepEqual(pathMetadataFields({title:'Unchanged',description:' ',overviewMarkdown:' ',tagsInput:''}),{title:'Unchanged',description:null,overviewMarkdown:null,tags:[]});
+  });
+
+  await t.test('direct clients cannot delete paths; service deletion cascades only the selected path data', async () => {
+    const target=(await db.query("insert into learning_paths(title,created_by) values('Disposable deletion fixture',$1) returning id",[admin])).rows[0].id;
+    const targetPlan=await save(initial,null,false,admin,target);
+    const targetDay=targetPlan.phases[0].days[0].id,targetItem=targetPlan.phases[0].days[0].items[0].id;
+    for(const [userId,role] of [[learner,'learner'],[moderator,'moderator']])await db.query("insert into path_memberships(user_id,path_id,role,status) values($1,$2,$3,'approved')",[userId,target,role]);
+    await db.query('insert into progress(user_id,path_id,item_key,done) values($1,$2,$3,true)',[learner,target,targetItem]);
+    await db.query("insert into notes(user_id,path_id,item_key,note_text) values($1,$2,$3,'Fixture note')",[learner,target,targetItem]);
+    const untouched=await snapshot();
+    for(const actor of [learner,moderator,other,outsider,admin,platform]){
+      await assert.rejects(as('authenticated',actor,()=>db.query('delete from learning_paths where id=$1 returning id',[target])),error=>error.code==='42501');
+    }
+    // The existing HTTP DELETE handler checks requirePathAdmin before its service client delete.
+    const deleted=await as('service_role',admin,()=>db.query('delete from learning_paths where id=$1 returning id',[target]));
+    assert.equal(deleted.rows[0].id,target);
+    for(const table of ['phases','path_memberships','progress','notes'])assert.equal((await db.query(`select count(*)::int n from ${table} where path_id=$1`,[target])).rows[0].n,0);
+    assert.equal((await db.query('select count(*)::int n from days where id=$1',[targetDay])).rows[0].n,0);
+    assert.equal((await db.query('select count(*)::int n from lesson_items where id=$1',[targetItem])).rows[0].n,0);
+    assert.equal((await db.query('select count(*)::int n from learning_paths where id=$1',[pathB])).rows[0].n,1);
+    assert.equal((await db.query('select count(*)::int n from auth.users where id=$1',[learner])).rows[0].n,1);
+    const after=await snapshot();assert.equal(after.rows[0].progress,untouched.rows[0].progress-1);assert.equal(after.rows[0].notes,untouched.rows[0].notes-1);
+  });
+
 });
 
 // Curated-course regression coverage is retained in the existing suite.
@@ -279,4 +316,33 @@ test('lesson views preserve Markdown and expose resource/reference sections with
  assert.ok(!JSON.stringify(selectMaterial(overview,'overview')).includes('https://example.com'));
  assert.ok(JSON.stringify(selectMaterial(overview,'library')).includes('https://example.com'));
  assert.equal(studyTime('1.08'),'1 hr 5 min');assert.equal(studyTime('1.50'),'1 hr 30 min');
+});
+
+
+test('permanent path deletion requires confirmation, respects cancellation and propagates failures',async()=>{
+ const {confirmPathDeletion}=await import('../lib/path-actions.ts');
+ const calls=[];
+ const remove=async id=>{calls.push(id);};
+ assert.equal(await confirmPathDeletion('path-a','Example',message=>{assert.match(message,/cannot be undone/);assert.match(message,/personal notes for everyone/);return false;},remove),false);
+ assert.deepEqual(calls,[]);
+ assert.equal(await confirmPathDeletion('path-a','Example',()=>true,remove),true);
+ assert.deepEqual(calls,['path-a']);
+ await assert.rejects(confirmPathDeletion('path-b','Example',()=>true,async()=>{throw new Error('Forbidden');}),/Forbidden/);
+});
+
+
+test('empty resource headings retain lesson URLs and real Markdown links are not duplicated',async()=>{
+ const {unified}=await import('unified');
+ const {default:remarkParse}=await import('remark-parse');
+ const {selectMaterial,withLessonResources}=await import('../lib/learning-material.ts');
+ const parse=markdown=>selectMaterial(unified().use(remarkParse).parse(markdown),'resources');
+ const links=[{title:'Existing reading',url:'https://example.com/read'}];
+ const empty=withLessonResources(parse('## Watch\n\n## Read'),links);
+ assert.ok(JSON.stringify(empty).includes('Existing reading'));
+ const reference=withLessonResources(parse('## Read\n[Reading][ref]\n\n[ref]: https://example.com/read'),links);
+ assert.equal(reference.children.filter(node=>node.type==='list').length,0);
+ const fenced=withLessonResources(parse('## Read\n```md\n[Example](https://example.com/read)\n```'),links);
+ assert.equal(fenced.children.filter(node=>node.type==='list').length,1);
+ const missing=withLessonResources(parse(''),[]);
+ assert.ok(JSON.stringify(missing).includes('Resources have not been added yet.'));
 });

@@ -325,7 +325,9 @@ test('permanent path deletion requires confirmation, respects cancellation and p
  const remove=async id=>{calls.push(id);};
  assert.equal(await confirmPathDeletion('path-a','Example',message=>{assert.match(message,/cannot be undone/);assert.match(message,/personal notes for everyone/);return false;},remove),false);
  assert.deepEqual(calls,[]);
- assert.equal(await confirmPathDeletion('path-a','Example',()=>true,remove),true);
+ assert.equal(await confirmPathDeletion('path-a','Example',async()=>false,remove),false);
+ assert.deepEqual(calls,[]);
+ assert.equal(await confirmPathDeletion('path-a','Example',async()=>true,remove),true);
  assert.deepEqual(calls,['path-a']);
  await assert.rejects(confirmPathDeletion('path-b','Example',()=>true,async()=>{throw new Error('Forbidden');}),/Forbidden/);
 });

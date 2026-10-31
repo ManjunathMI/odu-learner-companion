@@ -180,7 +180,7 @@ export default function PlatformWorkspace() {
         .status-badge {
           padding: .3rem .65rem;
           border-radius: 999px;
-          background: rgba(234, 179, 8, 0.15);
+          background: var(--surface-warning);
           color: var(--accent-warning);
           font-size: .7rem;
           font-weight: 700;

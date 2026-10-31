@@ -1,56 +1,34 @@
-/* Light Theme
-   NOTE: this now only sets tokens + badge color variants. Structural rules
-   for .card, .button-primary, header, footer, etc. moved to global.css
-   using var(--...) so they work for BOTH themes without duplication.
-   That's what was causing the two-palettes-fighting problem: global.css
-   defaults and this file previously disagreed on shadows/radii/gradient. */
-
 :root[data-theme="light"] {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
-  --bg-tertiary: #f3f4f6;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
-  --text-tertiary: #9ca3af;
-  --border-color: #e5e7eb;
-  --border-light: #f3f4f6;
-  --accent-primary: #3b82f6;
-  --accent-secondary: #10b981;
-  --accent-danger: #ef4444;
-  --accent-warning: #f59e0b;
-  --accent-info: #0ea5e9;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 6px 0 rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 8px 16px -2px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 16px 28px -4px rgba(0, 0, 0, 0.10);
-}
-
-[data-theme="light"] {
   color-scheme: light;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-/* Flat background — no gradient. If you want texture back later, do it
-   deliberately (e.g. a very faint radial glow), not a diagonal blend. */
-[data-theme="light"] body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-/* Badge color variants — theme-specific because these hard-coded pastel
-   backgrounds don't have tokens of their own */
-[data-theme="light"] .badge-success {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-[data-theme="light"] .badge-warning {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-[data-theme="light"] .badge-danger {
-  background: #fee2e2;
-  color: #7f1d1d;
+  --bg-primary: #fafafe;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f2f0fb;
+  --surface-card: #ffffff;
+  --surface-input: #ffffff;
+  --text-primary: #201d2d;
+  --text-secondary: #625e73;
+  --text-tertiary: #77738a;
+  --border-color: #e7e4f0;
+  --border-light: #f0eef6;
+  --accent-primary: #2158b8;
+  --accent-violet: #6e40c4;
+  --accent-blue: #3b82f6;
+  --accent-violet-bright: #8b5cf6;
+  --accent-gradient: linear-gradient(110deg, #8b5cf6 0%, #3b82f6 100%);
+  --button-gradient: linear-gradient(110deg, #7040d0 0%, #225dbf 100%);
+  --text-on-accent: #08080f;
+  --accent-secondary: #087a55;
+  --accent-danger: #c6283d;
+  --accent-warning: #925300;
+  --accent-info: #2563eb;
+  --surface-accent: rgba(139, 92, 246, 0.09);
+  --surface-success: #e7f6ef;
+  --surface-warning: #fff4dc;
+  --surface-danger: #fff0f1;
+  --focus-ring: rgba(139, 92, 246, 0.48);
+  --focus-shadow: 0 0 0 3px rgba(139, 92, 246, 0.16);
+  --shadow-sm: 0 1px 3px rgba(39, 31, 74, 0.06);
+  --shadow-md: 0 5px 16px rgba(39, 31, 74, 0.09);
+  --shadow-lg: 0 12px 30px rgba(39, 31, 74, 0.12);
+  --shadow-xl: 0 20px 46px rgba(39, 31, 74, 0.16);
 }

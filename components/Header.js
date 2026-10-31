@@ -1,16 +1,20 @@
 // components/Header.js
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '../lib/supabase/client';
 import { apiFetch } from '@/lib/api';
+import { resolveThemePreference } from '../lib/theme-preference';
 
-const getInitialTheme = () => {
-  if (typeof window === 'undefined') return 'system';
-  return localStorage.getItem('theme') || 'system';
+const subscribeToTheme = (onStoreChange) => {
+  window.addEventListener('odu-theme-change', onStoreChange);
+  return () => window.removeEventListener('odu-theme-change', onStoreChange);
 };
+
+const getThemeSnapshot = () => resolveThemePreference(document.documentElement.dataset.theme, false);
+const getServerThemeSnapshot = () => 'light';
 
 const Header = () => {
   const [user, setUser] = useState(null);
@@ -18,7 +22,7 @@ const Header = () => {
   const [profile, setProfile] = useState({ display_name: '', avatar_url: null });
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [theme, setTheme] = useState(getInitialTheme);
+  const theme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -44,11 +48,15 @@ const Header = () => {
 
   const applyTheme = (themeName) => {
     document.documentElement.setAttribute('data-theme', themeName);
-    localStorage.setItem('theme', themeName);
+    try {
+      localStorage.setItem('theme', themeName);
+    } catch {}
+    window.dispatchEvent(new Event('odu-theme-change'));
   };
 
-  const switchTheme = (themeName) => {
-    setTheme(themeName);
+  const switchTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    applyTheme(nextTheme);
   };
 
   useEffect(() => {
@@ -102,10 +110,6 @@ const Header = () => {
     };
   }, []);
 
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
-
   const handleLogout = async () => {
     try {
       const supabase = createClient();
@@ -132,37 +136,17 @@ const Header = () => {
             {user && <Link href="/journey" className={pathname.startsWith('/journey') || pathname.startsWith('/paths') ? 'nav-link active' : 'nav-link'}>My Journey</Link>}
           </nav>
 
-          {/* Theme Switcher */}
-          <div className="theme-switcher">
-            <button
-              onClick={() => switchTheme('light')}
-              className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
-              title="Light theme"
-            >
-              ☀️
-            </button>
-            <button
-              onClick={() => switchTheme('dark')}
-              className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
-              title="Dark theme"
-            >
-              🌙
-            </button>
-            <button
-              onClick={() => switchTheme('neon')}
-              className={`theme-btn ${theme === 'neon' ? 'active' : ''}`}
-              title="Neon theme"
-            >
-              ⚡
-            </button>
-            <button
-              onClick={() => switchTheme('system')}
-              className={`theme-btn ${theme === 'system' ? 'active' : ''}`}
-              title="System theme"
-            >
-              💻
-            </button>
-          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-label="Dark mode"
+            aria-checked={theme === 'dark'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className={`theme-toggle ${theme === 'dark' ? 'is-dark' : ''}`}
+            onClick={switchTheme}
+          >
+            <span className="theme-toggle-thumb" aria-hidden="true" />
+          </button>
 
           {/* User Menu */}
           {!isLoading && (
@@ -236,7 +220,7 @@ const Header = () => {
           gap: 2rem;
         }
 
-        .header-left { flex: 1; }.brand { align-items: center; color: var(--text-primary); display: inline-flex; gap: .7rem; text-decoration: none; }.brand:hover { color: var(--text-primary); text-decoration: none; }.brand-mark { align-items: center; background: var(--accent-primary); border-radius: .35rem; color: #fff; display: inline-flex; font-family: var(--font-sans); font-size: .7rem; font-weight: 800; height: 2rem; justify-content: center; letter-spacing: .04em; width: 2rem; }.brand-copy { display: flex; flex-direction: column; line-height: 1.05; }.brand-copy strong { font-family: var(--font-display); font-size: 1.12rem; }.brand-copy small { color: var(--text-secondary); font-size: .7rem; font-weight: 700; letter-spacing: .06em; margin-top: .18rem; text-transform: uppercase; }
+        .header-left { flex: 1; }.brand { align-items: center; color: var(--text-primary); display: inline-flex; gap: .7rem; text-decoration: none; }.brand:hover { color: var(--text-primary); text-decoration: none; }.brand-mark { align-items: center; background: var(--accent-gradient); border-radius: .35rem; color: var(--text-on-accent); display: inline-flex; font-family: var(--font-sans); font-size: .7rem; font-weight: 800; height: 2rem; justify-content: center; letter-spacing: .04em; width: 2rem; }.brand-copy { display: flex; flex-direction: column; line-height: 1.05; }.brand-copy strong { font-family: var(--font-display); font-size: 1.12rem; }.brand-copy small { color: var(--text-secondary); font-size: .7rem; font-weight: 700; letter-spacing: .06em; margin-top: .18rem; text-transform: uppercase; }
 
         .header-right {
           display: flex;
@@ -263,37 +247,64 @@ const Header = () => {
 
         .nav-link.active {
           color: var(--accent-primary);
-          background: rgba(25, 87, 184, 0.1);
+          background: var(--surface-accent);
         }
 
-        .theme-switcher {
-          display: flex;
-          gap: 0.15rem;
-          background: var(--bg-primary);
+        .theme-toggle {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 3.25rem;
+          height: 1.9rem;
+          padding: 0 0.35rem;
           border: 1px solid var(--border-color);
-          border-radius: 6px;
-          padding: 0.16rem;
-        }
-
-        .theme-btn {
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 0.4rem;
-          font-size: .9rem;
-          border-radius: 4px;
-          transition: all 0.2s ease;
+          border-radius: var(--radius-full);
+          background: var(--bg-tertiary);
           color: var(--text-secondary);
+          cursor: pointer;
+          transition: background-color 180ms ease, border-color 180ms ease;
         }
 
-        .theme-btn:hover {
-          background: var(--bg-secondary);
+        .theme-toggle:disabled {
+          cursor: default;
+        }
+
+        .theme-toggle-thumb {
+          position: absolute;
+          top: 0.16rem;
+          left: 0.16rem;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 1.48rem;
+          height: 1.48rem;
+          border: 1px solid var(--border-color);
+          border-radius: 50%;
+          background: var(--bg-primary);
+          box-shadow: var(--shadow-sm);
+          transition: transform 180ms ease;
+        }
+
+        .theme-toggle-thumb::before {
+          content: "☼";
           color: var(--accent-primary);
+          font-size: 0.78rem;
+          line-height: 1;
         }
 
-        .theme-btn.active {
-          background: var(--accent-primary);
-          color: white;
+        .theme-toggle.is-dark .theme-toggle-thumb::before {
+          content: "☾";
+          color: var(--accent-violet);
+        }
+
+        .theme-toggle.is-dark .theme-toggle-thumb {
+          transform: translateX(1.34rem);
+        }
+
+        .theme-toggle:focus-visible {
+          outline: 3px solid var(--focus-ring);
+          outline-offset: 3px;
         }
 
         .user-menu {
@@ -403,7 +414,7 @@ const Header = () => {
           .user-menu { grid-column: 2; grid-row: 1; justify-self: end; }
           .top-nav { grid-column: 1; grid-row: 2; margin: 0; }
           .nav-link { font-size: .8rem; padding: .45rem .35rem; white-space: nowrap; }
-          .theme-switcher { grid-column: 2; grid-row: 2; justify-self: end; }
+          .theme-toggle { grid-column: 2; grid-row: 2; justify-self: end; }
         }
 
         @media (max-width: 768px) {
@@ -412,15 +423,6 @@ const Header = () => {
           }
 
           .brand-copy strong { font-size: 1rem; }
-
-          .theme-switcher {
-            gap: 0.25rem;
-          }
-
-          .theme-btn {
-            padding: 0.4rem;
-            font-size: 0.9rem;
-          }
 
           .profile-meta { display: none; }
         }

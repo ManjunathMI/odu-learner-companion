@@ -50,10 +50,11 @@
 .content-index h1 { font-size: clamp(2rem, 5vw, 3rem); margin: .5rem 0 1rem; }
 .content-intro { color: var(--text-secondary); max-width: 65ch; line-height: 1.7; }
 .content-search { display: block; margin: 2rem 0; }
-.content-search input { display: block; width: 100%; box-sizing: border-box; margin-top: .5rem; padding: .85rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); }
+.content-search input { display: block; width: 100%; box-sizing: border-box; margin-top: .5rem; padding: .85rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); }
 .content-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1rem; margin-top: 1.5rem; }
-.content-card { display: block; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 10px; text-decoration: none!important; background: var(--bg-secondary); color: var(--text-primary); }
-.content-card:hover { border-color: var(--accent-primary); }
+.content-card { display: block; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-lg); text-decoration: none!important; background: var(--surface-card); color: var(--text-primary); box-shadow: var(--shadow-sm); transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
+.content-card:hover { border-color: var(--accent-violet); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) { .content-card:hover { transform: none; } }
 .content-card h2 { font-size: 1.2rem; margin: .4rem 0 .7rem; }
 .content-card p { color: var(--text-secondary); line-height: 1.6; }
 .content-card small { color: var(--accent-primary); }

@@ -28,12 +28,13 @@ export function ConfirmationDialog({ open, title, message, confirmLabel, onConfi
       <button type="button" className="button-secondary confirm-danger" onClick={onConfirm}>{confirmLabel}</button>
     </div>
     <style jsx>{`
-      .confirmation-dialog { box-sizing:border-box;width:calc(100% - 2rem);max-width:32rem;max-height:calc(100dvh - 2rem);overflow:auto;padding:1.5rem;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:var(--radius-md);box-shadow:var(--shadow-md); }
+      .confirmation-dialog { position:fixed;inset:0;margin:auto;box-sizing:border-box;width:calc(100% - 2rem);max-width:32rem;max-height:calc(100dvh - 2rem);overflow:auto;padding:1.5rem;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg); }
       .confirmation-dialog::backdrop { background:rgba(0,0,0,.6); }
       .confirmation-dialog h2 { margin:0 0 1rem;font-size:1.35rem; }
       .confirmation-dialog p { margin:0;color:var(--text-secondary);line-height:1.65;white-space:pre-line;overflow-wrap:anywhere; }
       .dialog-actions { display:flex;justify-content:flex-end;flex-wrap:wrap;gap:.75rem;margin-top:1.5rem; }
       .confirm-danger { color:var(--accent-danger);border-color:var(--accent-danger); }
+      .confirm-danger:hover:not(:disabled) { background:var(--surface-danger);border-color:var(--accent-danger);color:var(--accent-danger); }
     `}</style>
   </dialog>;
 }

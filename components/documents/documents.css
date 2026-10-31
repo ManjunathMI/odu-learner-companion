@@ -30,7 +30,7 @@
 .document-tree a[aria-current] { color: var(--accent-primary); font-weight: 700; background: var(--bg-secondary); }
 .document-tree summary { cursor: pointer; padding: .45rem 0; color: var(--text-secondary); }
 .document-folder-all { display: block; font-size: .75rem; margin: .4rem 0 .4rem .7rem; color: var(--accent-primary); }
-.markdown-article { min-width: 0; line-height: 1.8; overflow-wrap: anywhere; }
+.markdown-article { min-width: 0; line-height: 1.8; overflow-wrap: anywhere; background: var(--bg-primary); }
 .markdown-article h1 { font-size: clamp(2rem, 4vw, 3rem); line-height: 1.15; margin: .5rem 0 1.5rem; letter-spacing: -.025em; }
 .markdown-article h2 { font-size: 1.5rem; margin: 2.5rem 0 .8rem; line-height: 1.35; }
 .markdown-article h3 { font-size: 1.15rem; margin: 1.8rem 0 .6rem; }

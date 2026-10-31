@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import EducationalWallpaper from '../components/EducationalWallpaper';
 import './globals.css';
 import '../styles/light-theme.css';
 import '../styles/dark-theme.css';
@@ -118,6 +119,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         <div className="layout-wrapper">
+          <EducationalWallpaper />
           <Header />
           <a className="skip-link" href="#main-content">Skip to content</a>
           <main id="main-content" className="main-content">{children}</main>

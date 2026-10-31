@@ -126,10 +126,11 @@ export default function ProfilePage() {
       <style jsx>{`
         .profile-page { max-width: 820px; margin: 0 auto; padding: 2rem 1rem; }
         .panel {
-          background: var(--bg-secondary);
+          background: var(--surface-card);
           border: 1px solid var(--border-color);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-lg);
           padding: 1.5rem;
+          box-shadow: var(--shadow-sm);
         }
         .page-header { margin-bottom: 1rem; }
         .eyebrow {

@@ -193,22 +193,28 @@ export default function CreatePathForm({ onCancel }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="create-path-form">
-      {createdPathId && <p role="status">Your draft is saved. <Link href={`/paths/${createdPathId}/settings`}>Continue editing the saved draft</Link> if the curriculum could not be saved.</p>}
-      <div className="form-header">
-        <div>
-          <p className="eyebrow">Create Learning Path</p>
-          <h2>Build a new learning journey</h2>
-        </div>
-      </div>
+      {createdPathId && <p className="draft-status" role="status">Your draft is saved. <Link href={`/paths/${createdPathId}/settings`}>Continue editing the saved draft</Link> if the curriculum could not be saved.</p>}
 
       <section className="settings-section">
         <div className="section-title">
-          <p className="section-kicker">Details</p>
-          <h3>Path overview</h3>
+          <div>
+            <p className="section-kicker">Details</p>
+            <h3 id="path-overview-heading">Path overview</h3>
+          </div>
+          <Link
+            className="section-help"
+            href="/docs/create-a-learning-space#create-your-path-5"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Path details help (opens in a new tab)"
+          >
+            Path details help <span aria-hidden="true">↗</span>
+            <span className="new-tab-note">Opens in a new tab</span>
+          </Link>
         </div>
 
         <div className="metadata-grid">
-          <label htmlFor="cp-title">Title <span className="required">*</span>
+          <label htmlFor="cp-title"><span className="label-copy">Title <span className="required">*</span></span>
             <input
               id="cp-title"
               type="text"
@@ -216,7 +222,6 @@ export default function CreatePathForm({ onCancel }: Props) {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. AWS Solutions Architect"
               required
-              autoFocus
               maxLength={120}
             />
           </label>
@@ -233,7 +238,7 @@ export default function CreatePathForm({ onCancel }: Props) {
           />
         </label>
 
-        <label htmlFor="cp-tags">Tags <span className="hint">(comma-separated)</span>
+        <label htmlFor="cp-tags"><span className="label-copy">Tags <span className="hint">(comma-separated)</span></span>
           <input
             id="cp-tags"
             type="text"
@@ -249,7 +254,19 @@ export default function CreatePathForm({ onCancel }: Props) {
         <div className="section-header">
           <div>
             <p className="section-kicker">Curriculum</p>
-            <h3>Learning plan structure</h3>
+            <div className="section-title-line">
+              <h3 id="learning-plan-heading">Learning plan structure</h3>
+              <Link
+                className="section-help"
+                href="/docs/create-a-learning-space#build-the-learning-plan-9"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Guidance for phases, days, and resources (opens in a new tab)"
+              >
+                Phases, days &amp; resources <span aria-hidden="true">↗</span>
+                <span className="new-tab-note">Opens in a new tab</span>
+              </Link>
+            </div>
           </div>
           <button type="button" className="button-secondary" onClick={addPhase}>+ Add phase</button>
         </div>
@@ -354,20 +371,15 @@ export default function CreatePathForm({ onCancel }: Props) {
         .create-path-form {
           display: flex;
           flex-direction: column;
-          gap: 1.2rem;
-          width: 100%;
-          max-width: 760px;
-          padding: 1.5rem;
-          background: var(--bg-secondary);
-          border: 1px solid var(--border-color);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-sm);
-        }
-        .form-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
           gap: 1rem;
+          width: 100%;
+          min-width: 0;
+          max-width: none;
+          padding: 0;
+          background: transparent;
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
         }
         .eyebrow, .section-kicker {
           margin: 0 0 .5rem;
@@ -377,36 +389,63 @@ export default function CreatePathForm({ onCancel }: Props) {
           letter-spacing: .08em;
           text-transform: uppercase;
         }
-        .form-header h2, .section-title h3, .section-header h3 {
+        .section-title h3, .section-header h3 {
           margin: 0;
           font-size: 1.35rem;
         }
+        .section-title, .section-title-line {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: .75rem 1rem;
+          min-width: 0;
+        }
+        .section-title > div:first-child, .section-header > div { min-width: 0; }
+        .section-header > div { flex: 1 1 0; }
+        .section-title-line h3 { min-width: 0; }
+        .section-help {
+          display: inline-flex;
+          flex-wrap: wrap;
+          align-items: baseline;
+          gap: .25rem;
+          font-size: .82rem;
+          font-weight: 700;
+        }
+        .new-tab-note { color: var(--text-secondary); font-size: .75rem; font-weight: 500; }
         .settings-section {
           display: flex;
           flex-direction: column;
           gap: 1rem;
+          width: 100%;
+          min-width: 0;
           border: 1px solid var(--border-color);
-          border-radius: var(--radius-md);
-          background: var(--bg-primary);
-          padding: 1.25rem;
+          border-radius: var(--radius-lg);
+          background: var(--surface-card);
+          padding: 1rem;
         }
         .metadata-grid, .row-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
           gap: 0.75rem;
         }
         .create-path-form label {
           display: flex;
           flex-direction: column;
           gap: 0.45rem;
+          min-width: 0;
+          overflow-wrap: anywhere;
           font-size: 0.875rem;
           font-weight: 600;
           color: var(--text-secondary);
         }
+        .label-copy { max-width: 100%; overflow-wrap: anywhere; }
         .create-path-form input,
         .create-path-form textarea,
         .create-path-form select {
           width: 100%;
+          min-width: 0;
+          max-width: 100%;
           box-sizing: border-box;
         }
         .required { color: var(--accent-danger); }
@@ -416,15 +455,19 @@ export default function CreatePathForm({ onCancel }: Props) {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          flex-wrap: wrap;
           gap: 0.75rem;
+          min-width: 0;
         }
         .phase-card, .day-card, .item-card {
           display: flex;
           flex-direction: column;
+          width: 100%;
+          min-width: 0;
           gap: 0.9rem;
-          padding: 1rem;
+          padding: 0.8rem;
           border: 1px solid var(--border-color);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-lg);
           background: var(--bg-secondary);
         }
         .phase-card {
@@ -447,16 +490,17 @@ export default function CreatePathForm({ onCancel }: Props) {
           color: var(--accent-danger);
           font-size: 0.875rem;
           margin: 0;
+          overflow-wrap: anywhere;
         }
+        .draft-status { margin: 0; overflow-wrap: anywhere; }
         .form-actions {
           display: flex;
           flex-wrap: wrap;
           gap: 0.75rem;
         }
         @media (max-width: 700px) {
-          .create-path-form {
-            padding: 1.25rem;
-          }
+          .settings-section { padding: .8rem; }
+          .phase-card, .day-card, .item-card { padding: .65rem; }
           .form-actions {
             flex-direction: column;
           }

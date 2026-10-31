@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { apiFetch } from '@/lib/api';
@@ -41,6 +41,31 @@ export default function JourneyDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
+  const createDialogRef = useRef<HTMLDialogElement>(null);
+  const createCloseRef = useRef<HTMLButtonElement>(null);
+  const createOpenerRef = useRef<HTMLButtonElement | null>(null);
+
+  const openCreate = (event: MouseEvent<HTMLButtonElement>) => {
+    createOpenerRef.current = event.currentTarget;
+    setShowCreate(true);
+  };
+
+  const closeCreate = () => setShowCreate(false);
+
+  useEffect(() => {
+    const dialog = createDialogRef.current;
+    if (showCreate && dialog && !dialog.open) {
+      dialog.showModal();
+      createCloseRef.current?.focus();
+    } else if (!showCreate && dialog?.open) {
+      dialog.close();
+    }
+  }, [showCreate]);
+
+  const handleCreateDialogClose = () => {
+    setShowCreate(false);
+    window.requestAnimationFrame(() => createOpenerRef.current?.focus());
+  };
 
   useEffect(() => {
     let active = true;
@@ -123,23 +148,56 @@ export default function JourneyDashboard() {
     <main className="journey-page">
       <header className="journey-header">
         <div>
-          <p className="eyebrow">My Journey</p>
-          <h1>My Journey</h1>
+          <h1 id="journey-heading" className="heading-gradient-hover">My Journey</h1>
           <p>Return here to continue learning, track progress, and take the next useful action in your Learning Paths.</p>
         </div>
         <div className="header-actions">
           <Link className="button-secondary" href="/explore">Find a Learning Path</Link>
-          <button type="button" className="button-primary" onClick={() => setShowCreate((current) => !current)}>
-            {showCreate ? 'Close creator form' : 'Create a Learning Path'}
+          <button type="button" className="button-primary" onClick={openCreate}>
+            Create a Learning Path
           </button>
         </div>
       </header>
 
-      {showCreate && (
-        <section className="create-section" aria-label="Create a Learning Path">
-          <CreatePathForm onCancel={() => setShowCreate(false)} />
-        </section>
-      )}
+      <dialog
+        ref={createDialogRef}
+        className="create-path-dialog"
+        aria-labelledby="create-path-dialog-title"
+        aria-describedby="create-path-dialog-intro"
+        onCancel={(event) => {
+          event.preventDefault();
+          closeCreate();
+        }}
+        onClose={handleCreateDialogClose}
+      >
+        <header className="create-path-dialog-header">
+          <div>
+            <h2 id="create-path-dialog-title">Create a Learning Path</h2>
+            <p id="create-path-dialog-intro">Shape a clear learning journey for yourself or your community.</p>
+            <Link
+              className="create-path-help"
+              href="/docs/create-a-learning-space#create-your-path-5"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="How to create a Learning Path (opens in a new tab)"
+            >
+              How to create a Learning Path <span aria-hidden="true">↗</span>
+              <span className="new-tab-note">Opens in a new tab</span>
+            </Link>
+          </div>
+          <button
+            ref={createCloseRef}
+            type="button"
+            className="button-secondary create-path-close"
+            onClick={closeCreate}
+          >
+            Close
+          </button>
+        </header>
+        <div className="create-path-dialog-scroll">
+          <CreatePathForm onCancel={closeCreate} />
+        </div>
+      </dialog>
 
       <section className="journey-overview" aria-label="Journey overview">
         <div>
@@ -195,7 +253,7 @@ export default function JourneyDashboard() {
           <p>Your next useful step begins when you join a path or create a Learning Path for your own community.</p>
           <div className="empty-journey-actions">
             <Link className="button-primary" href="/explore">Explore Learning Paths</Link>
-            <button type="button" className="button-secondary" onClick={() => setShowCreate(true)}>Create a Learning Path</button>
+            <button type="button" className="button-secondary" onClick={openCreate}>Create a Learning Path</button>
           </div>
         </section>
       )}
@@ -214,13 +272,23 @@ export default function JourneyDashboard() {
       )}
 
       <style jsx>{`
-        .journey-page { max-width: 1080px; margin: 0 auto; padding: 3.5rem 1.25rem 5rem; }
-        .journey-header { display: flex; align-items: end; justify-content: space-between; gap: 2rem; padding-bottom: 2.5rem; border-bottom: 1px solid var(--border-color); }
+        .journey-page { max-width: 1160px; margin: 0 auto; padding: 3.5rem 1.25rem 5rem; }
+        .journey-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--surface-card); box-shadow: var(--shadow-sm); }
+        .journey-header h1 { max-width: 680px; margin: 0; font-size: 2.8rem; line-height: 1.05; letter-spacing: 0; transition: color 180ms ease; }
+        .journey-header p { max-width: 640px; margin: 1rem 0 0; color: var(--text-secondary); font-size: 1.05rem; }
         .header-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .header-actions > * { white-space: nowrap; }
         .eyebrow, .section-kicker { margin: 0 0 .6rem; color: var(--accent-primary); font-size: .75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-        .journey-header h1 { max-width: 680px; margin: 0; font-size: clamp(2.4rem, 4vw, 3.8rem); line-height: 1; }
-        .journey-header p:not(.eyebrow) { max-width: 640px; margin: 1rem 0 0; color: var(--text-secondary); font-size: 1.05rem; }
-        .create-section { margin-top: 2rem; max-width: 760px; }
+        .create-path-dialog { position: fixed; inset: 0; width: min(calc(100vw - 3rem), 1160px); max-width: calc(100vw - 3rem); height: min(calc(100dvh - 3rem), 900px); max-height: calc(100dvh - 3rem); margin: auto; padding: 0; overflow: hidden; color: var(--text-primary); background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); }
+        .create-path-dialog[open] { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+        .create-path-dialog::backdrop { background: rgba(8, 8, 15, .66); backdrop-filter: blur(3px); }
+        .create-path-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; padding: 1.4rem 1.6rem; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); }
+        .create-path-dialog-header h2 { margin: 0; font-size: 1.5rem; line-height: 1.2; }
+        .create-path-dialog-header p { margin: .45rem 0 .65rem; color: var(--text-secondary); }
+        .create-path-help { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: .3rem; font-size: .88rem; font-weight: 700; }
+        .new-tab-note { color: var(--text-secondary); font-size: .78rem; font-weight: 500; }
+        .create-path-close { flex: 0 0 auto; }
+        .create-path-dialog-scroll { min-width: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; padding: 1.5rem; }
         .journey-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 2rem 0 3rem; border: 1px solid var(--border-color); background: var(--border-color); }
         .journey-overview > div { display: flex; flex-direction: column; gap: .4rem; padding: 1.1rem; background: var(--bg-secondary); }
         .overview-label { color: var(--text-secondary); font-size: .8rem; }
@@ -236,7 +304,7 @@ export default function JourneyDashboard() {
         .pending-section { margin-top: 3rem; }
         .pending-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 0.8rem; padding: 0.9rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-secondary); }
         .pending-row span { color: var(--text-secondary); font-size: 0.9rem; }
-        @media (max-width: 700px) { .journey-page { padding: 2.5rem 1rem 4rem; } .journey-header { align-items: flex-start; flex-direction: column; } .header-actions { width: 100%; } .header-actions > * { flex: 1; } .journey-overview { grid-template-columns: 1fr; } .pending-row { align-items: flex-start; flex-direction: column; gap: .25rem; } .empty-journey-actions { width: 100%; flex-direction: column; } .empty-journey-actions > * { width: 100%; } }
+        @media (max-width: 700px) { .journey-page { padding: 2.5rem 1rem 4rem; } .journey-header { align-items: flex-start; flex-direction: column; padding: 1rem; } .journey-header h1 { font-size: 2.25rem; } .header-actions { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr); } .header-actions > * { min-width: 0; width: 100%; white-space: normal; } .journey-overview { grid-template-columns: 1fr; } .pending-row { align-items: flex-start; flex-direction: column; gap: .25rem; } .empty-journey-actions { width: 100%; flex-direction: column; } .empty-journey-actions > * { width: 100%; } .create-path-dialog { width: calc(100vw - 1rem); max-width: calc(100vw - 1rem); height: calc(100dvh - 1rem); max-height: calc(100dvh - 1rem); border-radius: var(--radius-md); } .create-path-dialog-header { gap: .75rem; padding: 1rem; } .create-path-dialog-header h2 { font-size: 1.25rem; } .create-path-dialog-header p { font-size: .9rem; } .create-path-dialog-scroll { padding: 1rem; } .create-path-close { padding: .6rem .75rem; } }
       `}</style>
     </main>
   );

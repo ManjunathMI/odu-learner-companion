@@ -46,7 +46,7 @@ export default function DiscoveryExperience({ homepage = false }: { homepage?: b
       <section className="discovery-hero" aria-labelledby="discovery-heading">
         <div className="hero-copy">
           <p className="eyebrow">ODU Learner Companion</p>
-          <h1 id="discovery-heading">Learn anything. Together.</h1>
+          <h1 id="discovery-heading" className="heading-gradient-text">Learn anything. Together.</h1>
           <p className="hero-intro">Find a clear path, learn with people who share your goal, and keep your next useful step in view.</p>
           <div className="hero-actions">
             <a className="button-primary" href="#learning-paths">Explore learning paths</a>

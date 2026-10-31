@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="840" viewBox="0 0 840 840">
+  <g fill="none" stroke="#000" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(145 105) rotate(-17)">
+      <path d="M-7 -38L7 -38L8 27L0 40L-8 27Z"/>
+      <path d="M-7 -28H8M-8 22H8M-4 27H4"/>
+      <path d="M-3 -38V-44H3V-38"/>
+    </g>
+    <g transform="translate(309 91) rotate(12)">
+      <rect x="-20" y="-11" width="40" height="22" rx="4"/>
+      <path d="M-5 -11V11"/>
+    </g>
+    <g transform="translate(445 109) rotate(-8)">
+      <path d="M-7 -31V-7L-22 20Q-24 25 -18 25H18Q24 25 22 20L7 -7V-31"/>
+      <path d="M-11 -31H11M-15 12Q-7 8 0 12T15 12"/>
+    </g>
+    <g transform="translate(628 137) rotate(7)">
+      <rect x="-42" y="-20" width="84" height="40" rx="5"/>
+      <path d="M-31 -11H-24M-16 -11H-9M-1 -11H6M14 -11H21M29 -11H34M-31 0H-24M-16 0H-9M-1 0H6M14 0H21M29 0H34M-25 11H-18M-10 11H-3M5 11H12M20 11H27"/>
+      <path d="M-30 27H30"/>
+    </g>
+    <g transform="translate(735 93) rotate(-5)" fill="#000" stroke="none">
+      <text text-anchor="middle" dominant-baseline="central" font-size="25" font-weight="600" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">ODU</text>
+    </g>
+    <g transform="translate(209 201) rotate(5)">
+      <path d="M-35 -22Q-18 -29 0 -18Q18 -29 35 -22V27Q17 19 0 28Q-17 19 -35 27Z"/>
+      <path d="M0 -18V28M-27 -12Q-14 -16 -5 -10M7 -10Q17 -16 27 -12M-27 0Q-15 -4 -5 2M7 2Q17 -4 27 0"/>
+    </g>
+    <g transform="translate(374 202) rotate(-12)">
+      <path d="M-36 -16H36V16H-36Z"/>
+      <path d="M-28 -8H-20M-14 -8H-6M0 -8H8M14 -8H22M-28 0H-20M-14 0H-6M0 0H8M14 0H22M-20 8H20"/>
+      <path d="M-28 -16V-21M-16 -16V-21M-4 -16V-21M8 -16V-21M20 -16V-21M-28 16V21M-16 16V21M-4 16V21M8 16V21M20 16V21"/>
+    </g>
+    <g transform="translate(345 98) rotate(-12)">
+      <path d="M-10 -28H8L15 -19L4 -8L-11 -22M3 -9L-8 7Q-14 16 -4 23Q5 29 13 20L20 12M-2 8L10 17M-25 28H28M-14 20V28M15 20V28"/>
+      <path d="M-13 -31H-6M12 -22L18 -16"/>
+      <circle cx="1" cy="4" r="4"/>
+    </g>
+    <g transform="translate(536 210) rotate(17)">
+      <path d="M-28 -14V5A28 28 0 0 0 28 5V-14M-15 -14V5A15 15 0 0 0 15 5V-14M-28 -14H-15M15 -14H28M-28 -5H-15M15 -5H28"/>
+    </g>
+    <g transform="translate(720 245) rotate(11)">
+      <ellipse rx="34" ry="12"/>
+      <ellipse rx="34" ry="12" transform="rotate(60)"/>
+      <ellipse rx="34" ry="12" transform="rotate(120)"/>
+      <circle r="4"/>
+    </g>
+    <g transform="translate(102 351) rotate(-9)">
+      <path d="M-27 -28V4A27 27 0 0 0 27 4V-28M-14 -28V4A14 14 0 0 0 14 4V-28M-34 -28H-7M7 -28H34"/>
+    </g>
+    <g transform="translate(277 346) rotate(23)">
+      <path d="M-38 -5H38M-31 -10V10M-22 -5V5M-13 -10V10M-4 -5V5M5 -10V10M14 -5V5M23 -10V10M32 -5V5"/>
+      <path d="M-38 -14V14M38 -14V14"/>
+    </g>
+    <g transform="translate(469 344) rotate(-4)">
+      <path d="M-6 -38V-15L-28 22Q-31 28 -23 28H23Q31 28 28 22L6 -15V-38M-12 -38H12"/>
+      <path d="M-22 10Q-12 4 0 10T22 10M-17 20H17"/>
+    </g>
+    <g transform="translate(670 359) rotate(13)">
+      <circle r="34"/>
+      <path d="M0 -33V33M-33 0H33M-23 -23Q0 -7 23 -23M-23 23Q0 7 23 23"/>
+      <path d="M0 -34Q-17 -18 -17 0T0 34M0 -34Q17 -18 17 0T0 34"/>
+    </g>
+    <g transform="translate(199 481) rotate(-19)">
+      <path d="M-30 -30H30M-17 -30V-8L-35 22Q-38 29 -29 29H29Q38 29 35 22L17 -8V-30M-21 -30H21"/>
+      <path d="M-29 12Q-15 5 0 12T29 12"/>
+    </g>
+    <g transform="translate(397 477) rotate(9)">
+      <path d="M-32 -22L32 22M-32 0L32 0M-32 22L32 -22M-32 -22L0 0L32 22M-32 22L0 0L32 -22"/>
+      <circle cx="-32" cy="-22" r="4"/><circle cx="-32" r="4"/><circle cx="-32" cy="22" r="4"/>
+      <circle cx="0" cy="-22" r="4"/><circle cx="0" cy="22" r="4"/><circle cx="32" r="4"/>
+    </g>
+    <g transform="translate(601 492) rotate(-10)">
+      <path d="M-26 -21V-5A26 26 0 0 0 26 -5V-21M-13 -21V-5A13 13 0 0 0 13 -5V-21M-26 -21H-13M13 -21H26"/>
+      <path d="M-21 7H-8L0 20L9 7H22"/>
+    </g>
+    <g transform="translate(500 517) rotate(4)">
+      <path d="M-28 -29H28M0 -29V17"/>
+      <circle cx="0" cy="24" r="8"/>
+      <path d="M-20 -29V-24M20 -29V-24"/>
+    </g>
+    <g transform="translate(725 505) rotate(18)">
+      <circle r="33"/>
+      <circle r="25"/>
+      <path d="M0 -29L6 -5L0 0L-6 -5Z"/>
+      <path d="M0 -39V-33M39 0H33M0 39V33M-39 0H-33"/>
+    </g>
+    <g transform="translate(92 578) rotate(12)">
+      <path d="M-34 -7L20 -20L31 -9L-23 5Z"/>
+      <path d="M-23 5L-29 17L-34 -7M20 -20L24 -29L31 -9M-10 2L-4 24M8 -2L14 19M-22 27H25"/>
+    </g>
+    <g transform="translate(289 602) rotate(-13)">
+      <rect x="-27" y="-38" width="54" height="76" rx="7"/>
+      <rect x="-18" y="-28" width="36" height="17" rx="2"/>
+      <circle cx="-15" cy="2" r="3"/><circle cy="2" r="3"/><circle cx="15" cy="2" r="3"/>
+      <circle cx="-15" cy="17" r="3"/><circle cy="17" r="3"/><circle cx="15" cy="17" r="3"/>
+    </g>
+    <g transform="translate(482 596) rotate(12)">
+      <circle r="35"/>
+      <path d="M-35 0H35M0 -35V35M-25 -25Q0 -7 25 -25M-25 25Q0 7 25 25"/>
+      <path d="M-15 -31Q-3 -16 -3 0T-15 31M15 -31Q3 -16 3 0T15 31"/>
+    </g>
+    <g transform="translate(699 620) rotate(-7)">
+      <rect x="-25" y="-27" width="50" height="54" rx="4"/>
+      <rect x="-7" y="-9" width="14" height="18" rx="2"/>
+      <path d="M-16 -27V-37M-5 -27V-37M6 -27V-37M17 -27V-37M-16 27V37M-5 27V37M6 27V37M17 27V37M-25 -16H-35M-25 -5H-35M-25 6H-35M-25 17H-35M25 -16H35M25 -5H35M25 6H35M25 17H35"/>
+    </g>
+    <g transform="translate(179 731) rotate(7)" fill="#000" stroke="none">
+      <text text-anchor="middle" dominant-baseline="central" font-size="25" font-weight="500" font-family="Noto Serif Devanagari, Nirmala UI, serif">पढ़ो</text>
+    </g>
+    <g transform="translate(405 738) rotate(-6)" fill="#000" stroke="none">
+      <text text-anchor="middle" dominant-baseline="central" font-size="25" font-weight="500" font-family="Noto Serif JP, Yu Mincho, serif" xml:lang="ja">読む</text>
+    </g>
+    <g transform="translate(594 728) rotate(5)" fill="#000" stroke="none">
+      <text text-anchor="middle" dominant-baseline="central" font-size="25" font-weight="500" font-family="Noto Serif Tamil, Latha, sans-serif" xml:lang="ta">படி</text>
+    </g>
+    <g transform="translate(735 740) rotate(-7)" fill="#000" stroke="none">
+      <text text-anchor="middle" dominant-baseline="central" font-size="24" font-weight="500" font-family="Noto Serif Kannada, Nirmala UI, sans-serif" xml:lang="kn">ಓದು</text>
+    </g>
+    <g transform="translate(82 206) rotate(-9)" fill="#000" stroke="none">
+      <text text-anchor="middle" dominant-baseline="central" font-size="23" font-weight="500" font-family="Noto Serif SC, Songti SC, serif" xml:lang="zh">阅读</text>
+    </g>
+    <g transform="translate(88 466) rotate(8)" fill="#000" stroke="none">
+      <text text-anchor="middle" dominant-baseline="central" font-size="24" font-weight="500" font-family="Noto Naskh Arabic, Geeza Pro, serif" direction="rtl" unicode-bidi="plaintext" xml:lang="ar">اقرأ</text>
+    </g>
+    <g transform="translate(423 790) rotate(3)" fill="#000" stroke="none">
+      <text text-anchor="middle" dominant-baseline="central" font-size="23" font-weight="500" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">Leer</text>
+    </g>
+    <g transform="translate(536 268) rotate(-4)" fill="#000" stroke="none">
+      <text text-anchor="middle" dominant-baseline="central" font-size="22" font-weight="500" font-family="serif">Читать</text>
+    </g>
+    <g transform="translate(744 160) rotate(-17)">
+      <path d="M-12 -30H12V-8L30 20Q33 26 25 26H-25Q-33 26 -30 20L-12 -8Z"/>
+      <path d="M-10 -30H10M-22 12Q-12 6 0 12T22 12"/>
+    </g>
+    <g transform="translate(428 425) rotate(16)">
+      <path d="M-27 -18V-3A27 27 0 0 0 27 -3V-18M-15 -18V-3A15 15 0 0 0 15 -3V-18M-27 -18H-15M15 -18H27"/>
+      <path d="M-35 -18H-27M27 -18H35"/>
+    </g>
+    <g transform="translate(337 780) rotate(-4)">
+      <path d="M-25 -9Q-14 -19 -3 -9T19 -9M-25 9Q-14 -1 -3 9T19 9"/>
+      <path d="M-20 -13L-20 13M-10 -13L-10 13M0 -13V13M10 -13V13M20 -13V13"/>
+    </g>
+    <g transform="translate(88 760) rotate(9)">
+      <path d="M-13 -38H13M-7 -38V-8L-31 27Q-34 33 -26 33H26Q34 33 31 27L7 -8V-38M-12 -38H12"/>
+      <path d="M-23 16Q-12 9 0 16T23 16"/>
+    </g>
+    <g transform="translate(745 424) rotate(9)">
+      <path d="M-33 -16H-12L0 0L14 -23H32M-33 17H-16L-4 4L9 21H33M-12 -16V-30M14 -23V-36"/>
+      <circle cx="-36" cy="-16" r="3"/><circle cx="-36" cy="17" r="3"/><circle cx="35" cy="-16" r="3"/><circle cx="36" cy="17" r="3"/><circle cx="-12" cy="-30" r="3"/><circle cx="14" cy="-36" r="3"/>
+    </g>
+  </g>
+</svg>

@@ -1,65 +1,34 @@
-/* Dark Theme
-   Mirrors light-theme.css structure exactly — same token names, same
-   shape, only values differ. This is what gives your sun/moon toggle
-   something to actually switch to, and is the single biggest visual
-   step toward the roadmap.sh / dark dev-tool aesthetic. */
-
 :root[data-theme="dark"] {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #1c2128;
-  --text-primary: #e6edf3;
-  --text-secondary: #9ba7b4;
-  --text-tertiary: #6e7781;
-  --border-color: #2d333b;
-  --border-light: #21262d;
-  /* Same accent as light theme — keeping one accent identity across
-     themes is what makes the switch feel like a mode change, not a
-     different product */
-  --accent-primary: #3b82f6;
-  --accent-secondary: #10b981;
-  --accent-danger: #f87171;
-  --accent-warning: #fbbf24;
-  --accent-info: #38bdf8;
-  /* Shadows barely visible on dark backgrounds anyway — kept minimal,
-     borders do almost all the elevation work here */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 2px 6px 0 rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 8px 16px -2px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 16px 28px -4px rgba(0, 0, 0, 0.45);
-}
-
-[data-theme="dark"] {
   color-scheme: dark;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-[data-theme="dark"] body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-/* Badge color variants — dark-appropriate versions of the pastel light
-   variants; desaturated fills with light text read correctly on dark bg */
-[data-theme="dark"] .badge-success {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-}
-
-[data-theme="dark"] .badge-warning {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-}
-
-[data-theme="dark"] .badge-danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-}
-
-/* Code blocks need slightly more contrast against the near-black bg */
-[data-theme="dark"] code,
-[data-theme="dark"] pre {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
+  --bg-primary: #08080f;
+  --bg-secondary: #10111d;
+  --bg-tertiary: #191a2a;
+  --surface-card: #10111d;
+  --surface-input: #10111d;
+  --text-primary: #f3f2fa;
+  --text-secondary: #b9b8cb;
+  --text-tertiary: #9694aa;
+  --border-color: #29293c;
+  --border-light: #1d1e2d;
+  --accent-primary: #8db9ff;
+  --accent-violet: #bca4ff;
+  --accent-blue: #3b82f6;
+  --accent-violet-bright: #8b5cf6;
+  --accent-gradient: linear-gradient(110deg, #8b5cf6 0%, #3b82f6 100%);
+  --button-gradient: linear-gradient(110deg, #7040d0 0%, #225dbf 100%);
+  --text-on-accent: #08080f;
+  --accent-secondary: #4adea0;
+  --accent-danger: #ff7587;
+  --accent-warning: #f6c453;
+  --accent-info: #72aaff;
+  --surface-accent: rgba(139, 92, 246, 0.17);
+  --surface-success: rgba(74, 222, 160, 0.13);
+  --surface-warning: rgba(246, 196, 83, 0.14);
+  --surface-danger: rgba(255, 117, 135, 0.14);
+  --focus-ring: rgba(167, 139, 250, 0.72);
+  --focus-shadow: 0 0 0 3px rgba(139, 92, 246, 0.27);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.36);
+  --shadow-xl: 0 22px 50px rgba(0, 0, 0, 0.46);
 }

@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import './globals.css';
 import '../styles/light-theme.css';
 import '../styles/dark-theme.css';
-import '../styles/neon-theme.css';
-import '../styles/system-theme.css';
 
 const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000').trim().replace(/\/+$/, '');
 
@@ -98,12 +97,26 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="system">
+    <html lang="en" data-theme="light" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body>
+        <Script
+          id="theme-preference"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(() => {
+              const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+              let storedTheme = null;
+              try { storedTheme = window.localStorage.getItem('theme'); } catch {}
+              const theme = storedTheme === 'light' ? 'light' : storedTheme === 'dark' || storedTheme === 'neon' ? 'dark' : prefersDark ? 'dark' : 'light';
+              document.documentElement.dataset.theme = theme;
+              try { if (storedTheme !== theme) window.localStorage.setItem('theme', theme); } catch {}
+            })();`,
+          }}
+        />
         <div className="layout-wrapper">
           <Header />
           <a className="skip-link" href="#main-content">Skip to content</a>

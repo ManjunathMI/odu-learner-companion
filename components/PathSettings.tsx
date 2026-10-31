@@ -375,13 +375,11 @@ export default function PathSettings({ pathId }: Props) {
       .member-summary { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
       .member-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
       .role-badge, .status-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: .2rem .55rem; font-size: .7rem; font-weight: 700; text-transform: uppercase; }
-      .role-badge.admin { background: rgba(59,130,246,.12); color: var(--accent-primary); }
-      .role-badge.moderator { background: rgba(168,85,247,.12); color: #a855f7; }
-      .role-badge.learner { background: rgba(16,185,129,.12); color: #059669; }
-      .status-badge.approved { background: rgba(16,185,129,.12); color: #059669; }
-      .status-badge.pending { background: rgba(234,179,8,.12); color: #b45309; }
-      .status-badge.rejected { background: rgba(239,68,68,.12); color: #b91c1c; }
-      .button-danger { background: rgba(239,68,68,.12); color: var(--accent-danger); border: 1px solid rgba(239,68,68,.25); border-radius: var(--radius-md); padding: .55rem .9rem; cursor: pointer; }
+      .role-badge.admin { background: var(--surface-accent); color: var(--accent-primary); }
+      .role-badge.moderator { background: var(--surface-accent); color: var(--accent-violet); }
+      .role-badge.learner, .status-badge.approved { background: var(--surface-success); color: var(--accent-secondary); }
+      .status-badge.pending { background: var(--surface-warning); color: var(--accent-warning); }
+      .status-badge.rejected { background: var(--surface-danger); color: var(--accent-danger); }
       .empty-state { color: var(--text-secondary); } @media(max-width:640px) { .settings-page { padding:2.5rem 1rem 4rem; }.settings-header { align-items:flex-start; flex-direction:column; }.settings-page h1 { font-size:2.1rem; }.metadata-grid { grid-template-columns:1fr; }.save-bar { align-items:flex-start; flex-direction:column; }.member-row { align-items:flex-start; flex-direction:column; } }
     `}</style>
   </div>;

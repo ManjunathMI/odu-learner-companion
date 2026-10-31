@@ -203,7 +203,7 @@ export default function CreatePathForm({ onCancel }: Props) {
           </div>
           <Link
             className="section-help"
-            href="/docs/create-a-learning-space#create-your-path-5"
+            href="/docs/create-a-learning-space#2-add-the-overview-13"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Path details help (opens in a new tab)"
@@ -258,7 +258,7 @@ export default function CreatePathForm({ onCancel }: Props) {
               <h3 id="learning-plan-heading">Learning plan structure</h3>
               <Link
                 className="section-help"
-                href="/docs/create-a-learning-space#build-the-learning-plan-9"
+                href="/docs/create-a-learning-space#3-build-the-learning-plan-17"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Guidance for phases, days, and resources (opens in a new tab)"

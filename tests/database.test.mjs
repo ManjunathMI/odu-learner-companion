@@ -7,6 +7,7 @@ const schema = (await readFile(new URL('../docs/DB-schema.sql', import.meta.url)
   .replace('create extension if not exists "uuid-ossp";', () => 'create function uuid_generate_v4() returns uuid language sql as $$ select gen_random_uuid() $$;');
 const conflictMigration = await readFile(new URL('../supabase/migrations/20261028141705_curriculum_conflict_response.sql', import.meta.url), 'utf8');
 const migration = await readFile(new URL('../supabase/migrations/20261028140510_launch_data_safety.sql', import.meta.url), 'utf8');
+const feedbackMigration = await readFile(new URL('../supabase/migrations/20261031123616_feedback_requests.sql', import.meta.url), 'utf8');
 
 for (const mode of ['fresh installation','upgrade from baseline']) test(`${mode} protects learner data and direct database boundaries`, async (t) => {
   const db = new PGlite();
@@ -34,6 +35,7 @@ for (const mode of ['fresh installation','upgrade from baseline']) test(`${mode}
     const material = await readFile(new URL('../supabase/migrations/20261029182558_learning_material.sql',import.meta.url),'utf8');
     await db.exec(material);
     await db.exec(material);
+    await db.exec(feedbackMigration);
   }
   const [admin, learner, other, moderator, outsider, platform] = Array.from({length:6}, (_, i) => `00000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`);
   for (const id of [admin,learner,other,moderator,outsider,platform]) await db.query('insert into auth.users values ($1)',[id]);
@@ -101,6 +103,21 @@ for (const mode of ['fresh installation','upgrade from baseline']) test(`${mode}
       await assert.rejects(db.query('select create_learning_path_with_entitlement($1,null,null,$2)', ['Anonymous',admin]), /permission denied/);
     });
   });
+  await t.test('feedback requests are service-only and cap open requests per normalized email', async () => {
+    assert.equal((await db.query("select has_table_privilege('anon','public.feedback_requests','select,insert,update') as allowed")).rows[0].allowed,false);
+    assert.equal((await db.query("select has_table_privilege('authenticated','public.feedback_requests','select,insert,update') as allowed")).rows[0].allowed,false);
+    assert.equal((await db.query("select has_function_privilege('anon','public.submit_feedback_request(text,text,text,text,text,uuid)','execute') as allowed")).rows[0].allowed,false);
+    assert.equal((await db.query("select relrowsecurity from pg_class where oid='public.feedback_requests'::regclass")).rows[0].relrowsecurity,true);
+
+    const submit = (email,message='Please help me with this request.') => as('service_role',platform,async()=>
+      (await db.query('select public.submit_feedback_request($1,$2,$3,$4,$5,$6) as id',['Learner',email,null,'query',message,platform])).rows[0].id);
+    const first=await submit('Learner@Example.com');
+    await submit('learner@example.com','I have another question for the team.');
+    await assert.rejects(submit('LEARNER@example.com'),error=>error.code==='P0001'&&/feedback_open_request_limit/.test(error.message));
+    await as('service_role',platform,()=>db.query("update feedback_requests set status='answered',response_text='I sent a reply.',responded_by=$1,responded_at=now() where id=$2",[platform,first]));
+    await submit('learner@example.com','A follow-up after the first reply.');
+    await assert.rejects(submit('another@example.com','<script>alert(1)</script>'),error=>error.code==='22023');
+  });
   await t.test('notes are visible only to their owner, including against path and platform admins', async () => {
     for (const id of [admin,other,moderator,outsider,platform]) {
       const rows=await as('authenticated',id,async () => (await db.query('select * from notes')).rows);
@@ -149,6 +166,16 @@ for (const mode of ['fresh installation','upgrade from baseline']) test(`${mode}
     const after=await snapshot();assert.equal(after.rows[0].progress,untouched.rows[0].progress-1);assert.equal(after.rows[0].notes,untouched.rows[0].notes-1);
   });
 
+});
+
+test('feedback form validation normalizes contact data and rejects markup and malformed input',async()=>{
+ const {validateFeedbackSubmission,validateFeedbackResponse}=await import('../lib/feedback-validation.ts');
+ const valid=validateFeedbackSubmission({name:' Learner ',email:' Learner@Example.com ',phone:' +1 (555) 010-2020 ',requestType:'bug',message:' The save button does not respond. '});
+ assert.deepEqual(valid,{value:{name:'Learner',email:'learner@example.com',phone:'+1 (555) 010-2020',requestType:'bug',message:'The save button does not respond.'}});
+ for(const input of [null,{}, {name:'<b>Bad</b>',email:'a@example.com',requestType:'query',message:'Need help with this.'},{name:'A',email:'not-an-email',requestType:'query',message:'Need help with this.'},{name:'A',email:'a@example.com',requestType:'query',message:'<script>alert(1)</script>'},{name:'A',email:'a@example.com',phone:'letters',requestType:'query',message:'Need help with this.'},{name:'A',email:'a@example.com',requestType:'invalid',message:'Need help with this.'}]) assert.ok(validateFeedbackSubmission(input).error);
+ assert.equal(validateFeedbackResponse('  I sent a plain text reply.  '),'I sent a plain text reply.');
+ assert.equal(validateFeedbackResponse('<script>bad</script>'),null);
+ assert.equal(validateFeedbackResponse(''),null);
 });
 
 // Curated-course regression coverage is retained in the existing suite.

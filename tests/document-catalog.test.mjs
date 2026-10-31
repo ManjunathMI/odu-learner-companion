@@ -36,12 +36,15 @@ test('Journey creator stays mounted in an accessible native dialog with public h
  assert.match(dialog,/<CreatePathForm onCancel=\{closeCreate\} \/>/);
  assert.doesNotMatch(journey,/showCreate\s*&&\s*\(?\s*<CreatePathForm/);
  assert.match(journey,/requestAnimationFrame\(\(\)\s*=>\s*createOpenerRef\.current\?\.focus\(\)\)/);
- assert.match(journey,/href="\/docs\/create-a-learning-space#create-your-path-5"[\s\S]*target="_blank"[\s\S]*noopener noreferrer/);
- assert.match(form,/href="\/docs\/create-a-learning-space#build-the-learning-plan-9"[\s\S]*target="_blank"[\s\S]*noopener noreferrer/);
- assert.match(guide,/^## Create your path$/m);
- assert.match(guide,/^## Build the learning plan$/m);
- assert.equal(headingId('Create your path',5),'create-your-path-5');
- assert.equal(headingId('Build the learning plan',9),'build-the-learning-plan-9');
+ assert.match(journey,/href="\/docs\/create-a-learning-space#1-open-the-creator-9"[\s\S]*target="_blank"[\s\S]*noopener noreferrer/);
+ assert.match(form,/href="\/docs\/create-a-learning-space#2-add-the-overview-13"[\s\S]*target="_blank"[\s\S]*noopener noreferrer/);
+ assert.match(form,/href="\/docs\/create-a-learning-space#3-build-the-learning-plan-17"[\s\S]*target="_blank"[\s\S]*noopener noreferrer/);
+ assert.match(guide,/^## 1\. Open the creator$/m);
+ assert.match(guide,/^## 2\. Add the overview$/m);
+ assert.match(guide,/^## 3\. Build the learning plan$/m);
+ assert.equal(headingId('1. Open the creator',9),'1-open-the-creator-9');
+ assert.equal(headingId('2. Add the overview',13),'2-add-the-overview-13');
+ assert.equal(headingId('3. Build the learning plan',17),'3-build-the-learning-plan-17');
 });
 test('manifest scans only Markdown article trees and rejects duplicate slugs',async()=>{
  const root=await mkdtemp(path.join(os.tmpdir(),'odu-docs-'));
@@ -74,9 +77,27 @@ test('catalogue migration denies browser roles and insert-only sync preserves ow
 });
 
 test('navigation groups only supplied readable documents and follows Git subfolders',async()=>{
- const {navigationGroups,documentGroup}=await import('../lib/documents/navigation.ts');
+ const {navigationGroups,documentGroup,orderDocuments}=await import('../lib/documents/navigation.ts');
  const publicEntries=[{title:'Start',description:'Start learning',section:'help',url:'/docs/how-to-use',group:''}];
  assert.deepEqual(navigationGroups(publicEntries).map(group=>group.key),['help']);
+ const ordered=navigationGroups([
+  {title:'Account',description:'Access',section:'help',url:'/docs/account-and-access',group:''},
+  {title:'Blog',description:'Learning',section:'blog',url:'/blog/learning-together',group:''},
+  {title:'Technical guide',description:'Architecture',section:'technical',url:'/docs/architecture',group:'engineering'},
+  {title:'Get started',description:'Begin',section:'help',url:'/docs/how-to-use',group:''},
+ ]);
+ assert.deepEqual(ordered.map(group=>group.key),['help','blog','technical']);
+ assert.equal(ordered[0].groups[0].articles[0].url,'/docs/how-to-use');
+ assert.equal(ordered[1].label,'Blog');
+ assert.equal(ordered[2].label,'Technical Guide');
+ const articleOrder=orderDocuments([
+  {title:'About',description:'About',section:'about',url:'/about',group:''},
+  {title:'Account',description:'Account',section:'help',url:'/docs/account-and-access',group:''},
+  {title:'Blog',description:'Blog',section:'blog',url:'/blog/learning-together',group:''},
+  {title:'Start',description:'Start',section:'help',url:'/docs/how-to-use',group:''},
+  {title:'Technical',description:'Technical',section:'technical',url:'/docs/architecture',group:'engineering'},
+ ]);
+ assert.deepEqual(articleOrder.map(item=>item.url),['/docs/how-to-use','/docs/account-and-access','/about','/blog/learning-together','/docs/architecture']);
  assert.equal(documentGroup('docs/engineering/architecture.md','technical'),'engineering');
  const entries=[...publicEntries,{title:'Architecture',description:'Design',section:'technical',url:'/docs/architecture',group:'engineering'}];
  const groups=navigationGroups(entries);

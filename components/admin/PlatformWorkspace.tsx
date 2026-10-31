@@ -156,6 +156,23 @@ export default function PlatformWorkspace() {
       <QaAccounts />
 
       <style jsx>{`
+        .admin-page .page-header {
+          margin-bottom: 2rem;
+          padding: 1.5rem;
+          background: var(--surface-card);
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-sm);
+        }
+        .admin-page .section-heading {
+          padding: .9rem 1rem;
+          background: var(--surface-card);
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-sm);
+        }
+      `}</style>
+      <style jsx>{`
         .admin-page { max-width: 980px; margin: 0 auto; padding: 3.5rem 1.25rem 5rem; }.page-header { margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border-color); }.eyebrow,.section-kicker { margin: 0 0 .4rem; text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; font-weight: 800; color: var(--accent-primary); }.page-header h1 { margin: 0; font-size: clamp(2rem,4vw,3rem); }.page-header p:not(.eyebrow) { color:var(--text-secondary); margin:.7rem 0 0; max-width:650px; }.workspace-section { margin-top:2.5rem; }.section-heading { display:flex; align-items:end; justify-content:space-between; gap:1rem; margin-bottom:1rem; }.section-heading h2 { margin:0; font-size:1.3rem; }.section-heading > span { color:var(--text-secondary); font-size:.85rem; }
         .empty-state {
           background: var(--bg-secondary);

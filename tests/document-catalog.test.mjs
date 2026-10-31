@@ -20,6 +20,29 @@ test('article access fails closed for drafts, archived material and private sour
  assert.equal(validPublication({status:'draft',visibility:'platform_admin'}),true);
  assert.notEqual(headingId('Same heading',1),headingId('Same heading',5));
 });
+test('Journey creator stays mounted in an accessible native dialog with public help links',async()=>{
+ const [journey,form,manifestText,guide]=await Promise.all([
+  readFile(new URL('../components/journey/JourneyDashboard.tsx',import.meta.url),'utf8'),
+  readFile(new URL('../components/CreatePathForm.tsx',import.meta.url),'utf8'),
+  readFile(new URL('../lib/documents/manifest.json',import.meta.url),'utf8'),
+  readFile(new URL('../content/help/create-a-learning-space.md',import.meta.url),'utf8'),
+ ]);
+ const dialog=journey.slice(journey.indexOf('<dialog'),journey.indexOf('</dialog>'));
+ const guideEntry=JSON.parse(manifestText).find(item=>item.slug==='create-a-learning-space');
+ assert.equal(guideEntry?.section,'help');
+ assert.match(journey,/aria-labelledby="create-path-dialog-title"/);
+ assert.match(journey,/dialog\.showModal\(\)/);
+ assert.match(dialog,/onCancel=\{\(event\)\s*=>\s*\{\s*event\.preventDefault\(\);\s*closeCreate\(\);/);
+ assert.match(dialog,/<CreatePathForm onCancel=\{closeCreate\} \/>/);
+ assert.doesNotMatch(journey,/showCreate\s*&&\s*\(?\s*<CreatePathForm/);
+ assert.match(journey,/requestAnimationFrame\(\(\)\s*=>\s*createOpenerRef\.current\?\.focus\(\)\)/);
+ assert.match(journey,/href="\/docs\/create-a-learning-space#create-your-path-5"[\s\S]*target="_blank"[\s\S]*noopener noreferrer/);
+ assert.match(form,/href="\/docs\/create-a-learning-space#build-the-learning-plan-9"[\s\S]*target="_blank"[\s\S]*noopener noreferrer/);
+ assert.match(guide,/^## Create your path$/m);
+ assert.match(guide,/^## Build the learning plan$/m);
+ assert.equal(headingId('Create your path',5),'create-your-path-5');
+ assert.equal(headingId('Build the learning plan',9),'build-the-learning-plan-9');
+});
 test('manifest scans only Markdown article trees and rejects duplicate slugs',async()=>{
  const root=await mkdtemp(path.join(os.tmpdir(),'odu-docs-'));
  try{

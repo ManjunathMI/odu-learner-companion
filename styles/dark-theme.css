@@ -31,4 +31,13 @@
   --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.28);
   --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.36);
   --shadow-xl: 0 22px 50px rgba(0, 0, 0, 0.46);
+  --wallpaper-violet: #7d718f;
+  --wallpaper-blue: #657b98;
+  --wallpaper-opacity: 0.17;
+  --wallpaper-size: 840px;
+  --wallpaper-shift: 5px;
+}
+
+@media (max-width: 768px) {
+  :root[data-theme="dark"] { --wallpaper-size: 620px; }
 }

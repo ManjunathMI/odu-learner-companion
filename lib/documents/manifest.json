@@ -19,33 +19,33 @@
     "source_path": "content/help/account-and-access.md",
     "slug": "account-and-access",
     "title": "Account and sign-in help",
-    "description": "Use your email to sign in, and keep your learning profile up to date.",
+    "description": "ODU uses email sign-in, so there is no password to remember. Your account menu also gives you access to your profile and account details.",
     "section": "help",
-    "hash": "124bc0c8f3cb761a962290897a742618b0e9422f3940675d3baf527bb568a0e3"
+    "hash": "3e227c199515ae9dde7fdc060bc6446bb7ffcf6c48948a4938980be3aec2674d"
   },
   {
     "source_path": "content/help/create-a-learning-space.md",
     "slug": "create-a-learning-space",
-    "title": "Create and manage a Learning Space",
-    "description": "Create a Learning Path when you want to organize learning for yourself or a group.",
+    "title": "Create a Learning Path",
+    "description": "A **Learning Path** is a plan made of phases, days, lessons, and resources. When you create one, you become its Space Creator and can manage that path. The path is private by defau",
     "section": "help",
-    "hash": "317f67837a9dc674ce3006d79bad41558f8aff62cf9d2b1db15962b001bde270"
+    "hash": "8256f2080dafd9fb7af5e9c20450cd537c5de5f23bd7399e7af35b37331ebcff"
   },
   {
     "source_path": "content/help/how-to-use.md",
     "slug": "how-to-use",
-    "title": "Get started with ODU",
-    "description": "Choose something you want to learn, find a Learning Path, and take your first step.",
+    "title": "Start your first learning journey",
+    "description": "Welcome to ODU. Start with something you would like to learn. You can look around first and sign in when you are ready to join a learning community or save your progress.",
     "section": "help",
-    "hash": "84176012857f9e7517314d4401bc91550001e230a73bc5544dc4a4a4f5e73642"
+    "hash": "37369022d5069dd316951de20e697c7ea597243940683863ae0cb01a31707091"
   },
   {
     "source_path": "content/help/learning-and-notes.md",
     "slug": "learning-and-notes",
-    "title": "Learning and Personal Notes",
-    "description": "Use your Learning Space to follow a plan, record progress, and capture what you learn.",
+    "title": "Learn, track progress, and take notes",
+    "description": "Once you have joined a Learning Space, its plan helps you know what to work on next. You can study at your own pace and return to pick up where you left off.",
     "section": "help",
-    "hash": "66656a43161637afb4d5f0b198d12147affa64f5b592d34d2807e4cf249c761f"
+    "hash": "780a5760e27bc5ea0e312f3597e97194bc9e6e462f8a3256c446be9d22dfb957"
   },
   {
     "source_path": "docs/api/handbook.md",

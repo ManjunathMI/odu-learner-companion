@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
 import Documents from '@/components/admin/Documents';
 import QaAccounts from '@/components/admin/QaAccounts';
+import FeedbackInbox from '@/components/admin/FeedbackInbox';
 import MultilingualLoader from '@/components/MultilingualLoader';
 
 interface PendingPath {
@@ -152,7 +153,8 @@ export default function PlatformWorkspace() {
         {paths.map((path) => <article key={path.id} className="directory-row"><div><strong>{path.title}</strong><span>{path.visibility} path · {path.wall_status.replace('_', ' ')}</span></div><Link className="button-secondary" href={`/paths/${path.id}/settings`}>Manage</Link></article>)}
       </div></section>}
 
-      <Documents />
+      <FeedbackInbox />
+        <Documents />
       <QaAccounts />
 
       <style jsx>{`

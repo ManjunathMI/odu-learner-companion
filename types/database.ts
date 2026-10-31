@@ -84,6 +84,12 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      feedback_requests: {
+        Row: { id: string; user_id: string | null; name: string; email: string; phone: string | null; request_type: 'query' | 'feedback' | 'bug' | 'business_enquiry'; message: string; status: 'open' | 'in_progress' | 'answered' | 'closed'; response_text: string | null; responded_by: string | null; responded_at: string | null; created_at: string; updated_at: string };
+        Insert: { user_id?: string | null; name: string; email: string; phone?: string | null; request_type: 'query' | 'feedback' | 'bug' | 'business_enquiry'; message: string; status?: 'open' | 'in_progress' | 'answered' | 'closed'; response_text?: string | null; responded_by?: string | null; responded_at?: string | null; updated_at?: string };
+        Update: { status?: 'open' | 'in_progress' | 'answered' | 'closed'; response_text?: string | null; responded_by?: string | null; responded_at?: string | null; updated_at?: string };
+        Relationships: [];
+      };
       badge_definitions: {
         Row: { id: string; path_id: string | null; name: string; description: string | null; icon: string | null; criteria_type: 'automatic' | 'manual'; automatic_rule: Json | null };
         Insert: { path_id?: string | null; name: string; description?: string | null; icon?: string | null; criteria_type: 'automatic' | 'manual'; automatic_rule?: Json | null };
@@ -109,6 +115,7 @@ export interface Database {
       path_is_public: { Args: { p_path_id: string }; Returns: boolean };
       create_learning_path_with_entitlement: { Args: { p_title: string; p_description: string | null; p_tags: string[]; p_created_by: string }; Returns: { id: string; title: string; visibility: string; wall_status: string }[] };
       review_quota_request: { Args: { p_request_id: string; p_decision: string; p_reviewer: string }; Returns: { id: string; user_id: string; current_limit: number; requested_limit: number; reason: string | null; status: string; reviewed_by: string | null; reviewed_at: string | null; created_at: string; updated_at: string } };
+      submit_feedback_request: { Args: { p_name: string; p_email: string; p_phone: string | null; p_request_type: string; p_message: string; p_user_id?: string | null }; Returns: string };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

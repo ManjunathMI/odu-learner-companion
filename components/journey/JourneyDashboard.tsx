@@ -176,7 +176,7 @@ export default function JourneyDashboard() {
             <p id="create-path-dialog-intro">Shape a clear learning journey for yourself or your community.</p>
             <Link
               className="create-path-help"
-              href="/docs/create-a-learning-space#create-your-path-5"
+              href="/docs/create-a-learning-space#1-open-the-creator-9"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="How to create a Learning Path (opens in a new tab)"

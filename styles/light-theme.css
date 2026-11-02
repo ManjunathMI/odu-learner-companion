@@ -33,11 +33,15 @@
   --shadow-xl: 0 20px 46px rgba(39, 31, 74, 0.16);
   --wallpaper-violet: #b8a6df;
   --wallpaper-blue: #9ab5dc;
-  --wallpaper-opacity: 0.18;
+  --wallpaper-opacity: 0.22;
   --wallpaper-size: 840px;
   --wallpaper-shift: 5px;
+  --footer-wallpaper-violet: #a58bd4;
+  --footer-wallpaper-blue: #83a4d3;
+  --footer-wallpaper-opacity: 0.2;
+  --footer-wallpaper-size: 960px 320px;
 }
 
 @media (max-width: 768px) {
-  :root[data-theme="light"] { --wallpaper-size: 620px; }
+  :root[data-theme="light"] { --wallpaper-size: 620px; --footer-wallpaper-size: 720px 240px; }
 }

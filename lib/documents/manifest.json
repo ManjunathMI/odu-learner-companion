@@ -29,7 +29,7 @@
     "title": "Create a Learning Path",
     "description": "A **Learning Path** is a plan made of phases, days, lessons, and resources. When you create one, you become its Space Creator and can manage that path. The path is private by defau",
     "section": "help",
-    "hash": "8256f2080dafd9fb7af5e9c20450cd537c5de5f23bd7399e7af35b37331ebcff"
+    "hash": "9451f15c90b4809f7e132836b0881186bd523b8c0ee57f9c829e450ee532ddbf"
   },
   {
     "source_path": "content/help/how-to-use.md",
@@ -37,7 +37,7 @@
     "title": "Start your first learning journey",
     "description": "Welcome to ODU. Start with something you would like to learn. You can look around first and sign in when you are ready to join a learning community or save your progress.",
     "section": "help",
-    "hash": "37369022d5069dd316951de20e697c7ea597243940683863ae0cb01a31707091"
+    "hash": "eab37842ee3e8279039b0f5c829538620ca59688bbe28d431ad74010b23d62fc"
   },
   {
     "source_path": "content/help/learning-and-notes.md",

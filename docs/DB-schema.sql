@@ -769,7 +769,7 @@ grant execute on function public.save_learning_plan(uuid,uuid,jsonb,integer,bool
 -- FEEDBACK REQUESTS
 -- Public support submissions are written only through the server API.
 create table public.feedback_requests (
-  id uuid primary key default public.uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null,
   name text not null check (length(btrim(name)) between 1 and 100),
   email text not null check (

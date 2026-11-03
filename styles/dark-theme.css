@@ -36,8 +36,12 @@
   --wallpaper-opacity: 0.17;
   --wallpaper-size: 840px;
   --wallpaper-shift: 5px;
+  --footer-wallpaper-violet: #9b8cb2;
+  --footer-wallpaper-blue: #7f99bb;
+  --footer-wallpaper-opacity: 0.22;
+  --footer-wallpaper-size: 960px 320px;
 }
 
 @media (max-width: 768px) {
-  :root[data-theme="dark"] { --wallpaper-size: 620px; }
+  :root[data-theme="dark"] { --wallpaper-size: 620px; --footer-wallpaper-size: 720px 240px; }
 }

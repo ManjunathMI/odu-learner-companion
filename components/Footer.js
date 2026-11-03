@@ -51,6 +51,9 @@ const Footer = () => {
 
       <style jsx>{`
         .footer-container {
+          position: relative;
+          isolation: isolate;
+          overflow: hidden;
           background: var(--bg-secondary);
           border-top: 1px solid var(--border-color);
           color: var(--text-secondary);
@@ -58,7 +61,27 @@ const Footer = () => {
           margin-top: auto;
         }
 
+        .footer-container::before {
+          content: "";
+          position: absolute;
+          inset: -2px;
+          z-index: 0;
+          pointer-events: none;
+          opacity: var(--footer-wallpaper-opacity);
+          background-image: linear-gradient(125deg, var(--footer-wallpaper-violet), var(--footer-wallpaper-blue));
+          -webkit-mask-image: url('/docs/educational-footer-wallpaper.svg');
+          mask-image: url('/docs/educational-footer-wallpaper.svg');
+          -webkit-mask-repeat: repeat;
+          mask-repeat: repeat;
+          -webkit-mask-position: center;
+          mask-position: center;
+          -webkit-mask-size: var(--footer-wallpaper-size);
+          mask-size: var(--footer-wallpaper-size);
+        }
+
         .footer-content {
+          position: relative;
+          z-index: 1;
           max-width: 1120px;
           margin: 0 auto;
           display: grid;
@@ -113,6 +136,8 @@ const Footer = () => {
         }
 
         .footer-bottom {
+          position: relative;
+          z-index: 1;
           max-width: 1400px;
           margin: 0 auto;
           border-top: 1px solid var(--border-color);

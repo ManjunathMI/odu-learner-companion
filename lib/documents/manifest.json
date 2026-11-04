@@ -77,7 +77,7 @@
     "title": "Development Guide",
     "description": "npm install",
     "section": "technical",
-    "hash": "d1b6e695936866dbf9d5b620986908a4ceea87209a076cf6122fa9acf6fa4557"
+    "hash": "3e858e5c9fb0e9c3cf6bb349aed64c29aa150fdb4720e4c06489b71204d8b709"
   },
   {
     "source_path": "docs/operations/database.md",
@@ -85,7 +85,7 @@
     "title": "Database Operations",
     "description": "This file records the SQL operations used during local setup and testing. It intentionally contains no credentials or service-role keys.",
     "section": "technical",
-    "hash": "3a9cb311bf8c4d4943fc7ada2b2ae40861061faaf1a76927a84fac9b4553cd72"
+    "hash": "cadea28c286e40e53bb419340e2ef7a66ec577b9cbc67024bb872f46776db9b0"
   },
   {
     "source_path": "docs/operations/deployment.md",
@@ -101,7 +101,7 @@
     "title": "Recreate ODU for a new installation",
     "description": "The repository includes the application database definition, incremental upgrades, and a repeatable owner-bootstrap script. Article text stays in Git. Supabase Auth configuration a",
     "section": "technical",
-    "hash": "5723985c9c4130c40f9f8bd8080bb030ec603bcbdb6178af0d596b989104c563"
+    "hash": "f50307dd13a839e82b87ad5c41fd31bfe8eeed1ea8c5553afbe6fcca3457f2d9"
   },
   {
     "source_path": "docs/operations/release-checklist.md",
@@ -133,6 +133,6 @@
     "title": "Product Roadmap",
     "description": "This roadmap is the canonical planning document for ODU Learner Companion. It evolves the existing learning-tracker foundation into a collaborative learning companion for students,",
     "section": "technical",
-    "hash": "98f399b848d8c52b4b40f0c98984003ab863a64fd36dd0a146e81018b16744f4"
+    "hash": "ec271406d331ac526071c22bb9d230b1660b21ea330bb766bd30a52c7d0e7669"
   }
 ]

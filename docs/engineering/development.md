@@ -195,14 +195,14 @@ The retained `scripts/check-documents.mjs` checks public articles and sitemap, r
 
 **Current status:** see the AI 101 handoff in [the roadmap](../product/roadmap.md). Initial offline-only and deployment-pending statements below record earlier stages. The owner subsequently authorized and ran the production SQL, and reported production path verification on 30 October 2026. Remaining end-to-end learner checks and build/history reconciliation are listed in the handoff.
 
-The first curated course is defined in curricula/ai-101-beginners/course.json. It contains the original supplied teaching explanations, objectives, practice activities, outcomes, attribution links and optional references. Seven existing phases each contain one day and one required lesson completion item. Path identity and all 21 child IDs are deterministic UUIDs; the descriptive slug stays in Git metadata, while existing /paths/UUID routes and API contracts are unchanged.
+The first curated course is preserved in supabase/seeds/ai101.sql. It contains the original supplied teaching explanations, objectives, practice activities, outcomes, attribution links and optional references. Seven existing phases each contain one day and one required lesson completion item. Path identity and all 21 child IDs are deterministic UUIDs; the descriptive slug stays in Git metadata, while existing /paths/UUID routes and API contracts are unchanged.
 
 ### Architecture assessment and reuse
 
 | Capability | Existing maturity | Implementation |
 |---|---|---|
 | Learning-path creation | Existing | learning_paths, creator trigger, quota RPC and CreatePathForm. |
-| Structured course ingestion | Missing reusable importer | A bounded offline SQL generator; no framework or hosted ingestion service. |
+| Structured course ingestion | Missing reusable importer | Optional SQL seeds (the original offline generator is retired); no hosted ingestion service. |
 | Video resources | Existing URL links; partial rich organization | Existing lesson URLs plus inline Watch links crediting original creators; no video hosting. |
 | Reading/reference resources | Existing URL links; partial rich organization | Authoring content is imported into days.content_markdown with Read, Practice and optional References groups. |
 | Enrollment | Existing | POST /api/paths/:pathId/join requests pending learner membership; existing moderator approval grants access. |
@@ -212,44 +212,27 @@ The first curated course is defined in curricula/ai-101-beginners/course.json. I
 
 Quick wins reuse PathBoard, JourneyDashboard, the join/approval/progress/leaderboard routes, path_memberships, progress and notes. Bounded changes add a generic LearningContent renderer, optional Markdown fields in Path Settings and the path APIs, and the offline generator/test utilities. New assessment systems, RAG/agents services, scoring, certificates and a general ingestion framework are deferred. The application does not import the course JSON at runtime or special-case the AI 101 UUID.
 
-The existing path-creation RPC does not accept a stable path ID. The trusted development seed therefore checks the same creator lock/quota rule, inserts the fixed-ID path once, reuses the creator membership trigger, and calls save_learning_plan for validated atomic content updates. It locks the path, preserves IDs, skips unchanged curriculum updates, refuses foreign-ID collisions and refuses unconfirmed removals. Only an explicitly selected development platform administrator may publish via --publish. Repeat imports do not rewrite membership, progress or notes. Private re-imports preserve existing publication settings.
+The existing path-creation RPC does not accept a stable path ID. The trusted development seed therefore checks the same creator lock/quota rule, inserts the fixed-ID path once, reuses the creator membership trigger, and calls save_learning_plan for validated atomic content updates. It locks the path, preserves IDs, skips unchanged curriculum updates, refuses foreign-ID collisions and refuses unconfirmed removals. Reusable seeds require a verified Auth owner and leave new courses private/pending review; publication uses the application. Repeat imports do not rewrite membership, progress or notes. Private re-imports preserve existing publication settings.
 
-### Generate a development import
+### Course-generation tooling retired — 3 November 2026
 
-The agreed scope is offline preparation only. The currently configured hosted project is production; no course was inserted there. The generator never reads credentials or connects to a database.
+The owner reports AI 101 and Python are imported and loading in production. Course-specific JavaScript generators and their npm commands have been retired; no replacement framework was added. The runtime reads database records, not repository seed files. Recovery SQL is now preserved under supabase/seeds; see its README for provenance and installation instructions. Do not regenerate or rerun an import merely to deploy the application.
 
-```bash
-npm run course:ai101
-npm run course:ai101 -- --owner-id YOUR_DEVELOPMENT_AUTH_UUID --output /tmp/ai101-development.sql --publish
-```
-
-Use the confirmed Auth UUID from a separate development project, not a copied production UUID. Omit --publish to create a private pending-review path. The generator refuses to overwrite an existing output file. Review the SQL, then run it only against the isolated development database. In the same SQL session first set:
-
-```sql
-set odu.allow_development_seed = 'ai101-local-only';
-```
-
-For an explicitly configured development connection, the equivalent operator command is:
-
-```bash
-psql "$ODU_DEV_DATABASE_URL" --set ON_ERROR_STOP=1 --command "set odu.allow_development_seed='ai101-local-only'" --file /tmp/ai101-development.sql
-```
-
-The confirmation setting is an operator safeguard, not a way for SQL to identify whether a server is production. Never point this command at production. No Auth users or roles are created by the seed; the intended development owner must already exist and have platform-admin membership when publishing.
+The historical import used explicit session confirmation, owner verification, creator quota/locks, stable IDs and the existing safe-save RPC. Those historical safeguards are not a new execution instruction. Future course delivery follows the owner's separately maintained SQL-only publishing procedure.
 
 ### Content and completion
 
-Seven modules total 470 minutes (7 hours 50 minutes), within the 7–9 hour estimate. There are 12 core resource links, two optional developer references and six optional library references: 20 distinct URLs, including three videos. All returned HTTP 200 during the recorded check; video titles/authors were also confirmed through public metadata. Reachability is not proof of playback, free access or content suitability. The exact report is curricula/ai-101-beginners/link-checks.json; rerun node scripts/check-ai101-links.mjs --write-results for HTTP reachability checks.
+Seven modules total 470 minutes (7 hours 50 minutes), within the 7–9 hour estimate. There are 12 core resource links, two optional developer references and six optional library references: 20 distinct URLs, including three videos. All returned HTTP 200 during the recorded check; video titles/authors were also confirmed through public metadata. Reachability is not proof of playback, free access or content suitability. The historical reachability report and its generator were retired; these counts preserve the audit summary, not current link verification.
 
 The learner's required action is to work through a day's activities and mark its existing lesson item complete. Current formula: completed items / total items; one day is 1/7, rounded to 14%. Optional resources are not separate lesson items and do not inflate the denominator. Community Progress remains sorted by doneCount. Completing activities is self-reported participation, not verified mastery. External AI-generated practice questions in Day 7 belong to the learner's own prototype; ODU has no new quiz, grading or AI endpoint.
 
 ### Offline validation and remaining manual journey
 
-The retained AI 101 tests load the full current schema into PGlite, import twice, exercise pending/duplicate/approved membership, save progress and a note, calculate path-scoped completed-item counts, update content while retaining activity, and reject unintended removals. A separate existing path's curriculum, progress and notes remain unchanged. They also test quota and publication guards. These are offline database-contract tests, not hosted Auth/PostgREST or complete browser acceptance.
+Before tooling retirement, AI 101 tests loaded the full current schema into PGlite, import twice, exercise pending/duplicate/approved membership, save progress and a note, calculate path-scoped completed-item counts, update content while retaining activity, and reject unintended removals. A separate existing path's curriculum, progress and notes remain unchanged. They also test quota and publication guards. Those were offline database-contract checks, not hosted Auth/PostgREST or complete browser acceptance. Importer-only tests were retired with the tools; generic schema, authorization, progress/notes, revision-safety and Markdown tests remain in the existing suite.
 
 ### Approved optional content fields
 
-Migration `20261029182558_learning_material.sql` adds nullable `learning_paths.overview_markdown` and `days.content_markdown`. The full installer `docs/DB-schema.sql` includes the same changes for a fresh installation. Apply the migration to an isolated development database before testing these application changes. It has NOT been applied to production. Deploying this code requires that migration first; the metadata API selects the new overview field.
+Migration `20261029182558_learning_material.sql` adds nullable `learning_paths.overview_markdown` and `days.content_markdown`. The full installer `docs/DB-schema.sql` includes the same changes for a fresh installation. Apply the migration to an isolated development database before testing these application changes. It was subsequently installed by the owner as recorded in the production handoff below. Deploying this code requires that migration first; the metadata API selects the new overview field.
 
 The metadata API returns/saves overviewMarkdown; read_learning_plan and save_learning_plan return/save each day's contentMarkdown. The existing admin authorization, revision check, atomic transaction and removal confirmation remain in force. Older curriculum payloads that omit the new day key preserve stored material; explicit null or an empty string clears it. Both editing fields are limited to 100,000 characters and the existing 1 MiB curriculum request limit still applies.
 
@@ -261,13 +244,9 @@ After a safe development import, verify Explore → AI 101 → Request to join �
 
 The owner explicitly approved using production because a separate database is unavailable. The earlier development-only restriction is superseded for this AI 101 installation. Supabase MCP currently fails OAuth refresh, so no production preflight, migration or import has been performed by the agent.
 
-The generator now supports an explicit production mode. It verifies the specified UUID, confirmed Auth email and platform-admin membership before DDL. It wraps the approved optional-field migration, curriculum import, publication and seven-day verification in one transaction. Identity, quota, collision or validation failure rolls back the transaction. Repeated successful imports retain the existing IDs and skip unchanged curriculum saves; existing learner activity remains untouched. It does not grant roles, reset passwords or increase quotas.
+The retired generator supported an explicit production mode. It verifies the specified UUID, confirmed Auth email and platform-admin membership before DDL. It wraps the approved optional-field migration, curriculum import, publication and seven-day verification in one transaction. Identity, quota, collision or validation failure rolls back the transaction. Repeated successful imports retain the existing IDs and skip unchanged curriculum saves; existing learner activity remains untouched. It does not grant roles, reset passwords or increase quotas.
 
-```bash
-npm run course:ai101 -- --production --owner-id YOUR_CONFIRMED_OWNER_UUID --owner-email YOUR_VERIFIED_OWNER_EMAIL --output /tmp/ai101-production.sql
-```
-
-Run the entire generated SQL file in the intended project's SQL Editor. Production mode includes public/approved publication; the separate development confirmation setting is not used. The generated output is an installation artifact, not an additional migration source. It uses the versioned migration and Git curriculum as sources. The repository full installer must not be run on an existing production database.
+The generated production SQL was executed by the owner, as recorded below. The generator is now retired. Preserve the executed artifact; do not replay the full installer against an existing production database.
 
 SQL Editor execution bypasses Supabase CLI migration history. After verifying success, reconcile version 20261029182558 as applied through the CLI migration repair workflow if maintaining remote CLI history; do not mark it applied before the SQL succeeds. The generator does not modify internal Supabase migration tables.
 
@@ -275,7 +254,7 @@ Deploy the matching API/UI changes to see detailed day material. Then verify the
 
 ### AI 101 production import review — 30 October 2026
 
-The owner ran the combined SQL installation. A read-only database audit confirmed public/approved publication, matching title/description/tags/overview, revision 1, and exact equality of all seven phases, days, completion items and per-day Markdown against the Git import source. The one-off read-only audit script was removed during pre-push cleanup; the comparison results are preserved here. Reusable import and data-preservation coverage is in tests/database.test.mjs.
+The owner ran the combined SQL installation. A read-only database audit confirmed public/approved publication, matching title/description/tags/overview, revision 1, and exact equality of all seven phases, days, completion items and per-day Markdown against the Git import source. The one-off read-only audit script was removed during pre-push cleanup; the comparison results are preserved here. Runtime data-preservation coverage remains in tests/database.test.mjs; importer-only coverage was retired with its generators.
 
 An explicitly authorized sign-in as the existing synthetic superadmin.test@odu.local account confirmed that its existing platform-admin override opens AI 101 without joining. The production UI shows the seven day titles/objectives, resource links, notes controls and 0/7 completion; Community Progress opens and shows the owner's 0/7 entry. No completion, notes, membership or curriculum writes were performed during review. Auth sign-in itself updates the QA account's session/sign-in metadata. The one-off production review-login script and its generated credential file were subsequently removed during cleanup. Existing reusable localhost QA tooling remains available; generated login links must never be logged or committed.
 
@@ -285,7 +264,7 @@ The deployed public metadata API still omits overviewMarkdown, and the signed-in
 
 The website now uses expandable day cards, opens the next unfinished day initially, and links the progress prompt to the day rather than directly to its completion checkbox. Matching one-day phase/day titles are not repeated. Durations are shown in minutes/hours instead of decimal hours. The course reference library has its own visible disclosure next to the overview. Each open day separates teaching/practice from titled external-resource links, with completion and personal notes below. This is a web presentation change only: no additional schema, tenant, authentication or scoring changes.
 
-Markdown is partitioned using its parsed heading nodes, preserving fenced examples, unknown lesson sections and reference-style link definitions. All stored source content remains available across the lesson/resource and overview/library views. The AI 101 regression tests were consolidated into the existing database suite; the standalone test file, one-off production audit/login scripts, stale preview, generated SQL artifact, screenshot and generated login files were removed. Curriculum JSON, resource verification report, repeatable SQL generator, reusable link checker, canonical installation schema and migration remain versioned for recreation.
+Markdown is partitioned using its parsed heading nodes, preserving fenced examples, unknown lesson sections and reference-style link definitions. All stored source content remains available across the lesson/resource and overview/library views. The AI 101 regression tests were consolidated into the existing database suite; the standalone test file, one-off production audit/login scripts, stale preview, generated SQL artifact, screenshot and generated login files were removed. Canonical installation schema and migrations remain retained; course SQL now replaces the redundant JSON and resource reports. The generator and link checker were subsequently retired on 3 November 2026.
 
 Web preview verification: signed in with the existing QA super-admin account on localhost. All 14 daily resource links across Days 1–6 matched the source, all six optional library links were visible, and Day 7 retained its supporting link. Checked accordion navigation, the next-day link and website layouts at 1280px and 390px with no horizontal overflow. Progress remained 0/7; no completion or notes writes were made. Lint, 34 automated checks and TypeScript pass. The production build was not rerun in this cleanup round because its execution permission was declined; earlier build success predates these latest UI edits.
 
@@ -299,7 +278,7 @@ Existing paths now render the same course overview/reference library and per-day
 
 Settings now provides back links before and below the form and a View updated learning path link after a successful save. Tags can be edited there. CreatePathForm and PathSettings reuse PathMaterialField and pathMetadataFields: optional overview/reference Markdown, per-day lesson Markdown and normalized/deduplicated tags are authored consistently. References remain inside overview_markdown under `## Optional reference library`, not a new database column. Creation reuses the existing POST path, PUT metadata and PUT plan endpoints, persists optional metadata before the plan, and reuses the draft on retry. No schema, RLS, auth, API-contract or architectural changes were required.
 
-The production public metadata endpoint was inspected read-only and confirmed AI 101's existing tags: artificial-intelligence, ai-101, beginner, seven-days. Five further topic tags are proposed, retained in the Git course source for recreation. The following optional SQL is for owner execution only; it was not applied by the agent:
+The production public metadata endpoint was inspected read-only and confirmed AI 101's existing tags: artificial-intelligence, ai-101, beginner, seven-days. Five further topic tags are proposed, retained in the optional SQL seed for recreation. The following optional SQL is for owner execution only; it was not applied by the agent:
 
 ```sql
 update public.learning_paths
@@ -329,3 +308,40 @@ PathMaterialField now owns its label/textarea layout so Next.js parent styled-js
 PathSettingsActions groups Save and the authorized Delete action in one sticky bar above the form, linked through the native form attribute so required-field validation still applies. It stays within the Settings page through the members/danger sections, and the bottom Delete section remains. Delete failures are visible in the sticky bar.
 
 Settings and Account path deletion share one themed ConfirmationDialog card using existing CSS variables/button classes. Native dialog supplies modal focus containment; Cancel has initial focus, Escape cancels, duplicate pending requests are ignored, and unmount cancels the pending confirmation. The existing deletion helper now awaits either synchronous or asynchronous confirmation; cancellation still sends no DELETE. No permission, API, database or architecture changes. The existing regression test covers asynchronous confirm/cancel. No additional app/server instance or manual-test script was created for this cosmetic follow-up; the owner will visually verify it.
+
+## Python Foundations curated import — 3 November 2026
+
+Status: owner reports production SQL ingestion completed and the course loads correctly. The agent performed only offline preparation/testing and the subsequent repository cleanup. Course UUID: `5f2daeac-e73f-5d25-adb5-e0f16ca78335`.
+
+The two reviewed Python JSON sources have been consolidated into `supabase/seeds/python-foundations.sql` after source-to-SQL content checks. Eight weekly phases contain five lessons each: 40 days and 40 completion items, with 89 stable UUIDs including the path. Guided time is 3,145 minutes (52 hours 25 minutes); the source's broader 48–64-hour estimate and weekly commitment are retained. All objectives, explanations, activities, outcomes, optional-resource labels, weekly projects and resource notes are preserved. The prepared Markdown groups links under Watch/Read/Practice and renames Hands-on activity to Practice activity so existing lesson/resource/practice tabs work. The overview includes a non-scoring reference library of all 36 unique URLs.
+
+The course preparation reused AI 101's transactional safeguards; all course-generation modules are now retired after owner-reported production success. SQL content and stable IDs remain available for audit. Markdown adaptation grouped Watch/Read/Practice links and renamed Hands-on activity to Practice activity without changing educational content. Existing runtime Markdown/revision support remains required.
+
+No new schema was required. Existing material fields and `read_learning_plan`/`save_learning_plan` from `20261029182558_learning_material.sql` must remain installed. Do not rerun AI 101's production installer or the full schema for this cleanup.
+
+### Production and archival status
+
+The original `/tmp/odu-python.sql` is archived byte-for-byte at `supabase/seeds/archive/python-foundations-original.sql`. AI 101's original executed SQL was not found; `supabase/seeds/ai101.sql` is explicitly a reconstruction from the committed course/importer. Reusable seeds accept a new installation owner and start new courses private/pending review. See [seed instructions](../../supabase/seeds/README.md). No production SQL was executed during archival.
+
+If publication is still pending, use the existing path Settings to select Public, then a platform admin's Publication queue to approve. No publication changes are made here. Python path: `/paths/5f2daeac-e73f-5d25-adb5-e0f16ca78335`.
+
+### Verification and resource maintenance
+
+Before retirement, offline tests covered source preservation, 8/40/40 structure, ID collisions, owner/confirmation/quota guards, repeat-import stability and activity/publication retention. Importer-specific tests were removed with their modules. Generic runtime/database regression tests remain, including older-client Markdown preservation and explicit clearing. One completed lesson is 1/40 (2.5%, displayed as 3% with current rounding).
+
+On 3 November 2026, all 36 unique URLs returned HTTP 200 in the historical report (now retired). This verifies HTTP reachability only, not playback, free access or educational relevance. The reviewed source explicitly flags the Helsinki 2026 course for rechecking in 2027. No source URLs were silently replaced.
+
+Historical pre-cleanup validation: full suite 49 tests passed; after adding collision coverage, all 32 database-suite tests passed again. Lint passed with the two pre-existing image warnings. The sandboxed production build stalled at compilation and was stopped; permission for a retry outside the sandbox was declined, so build verification remains pending. No extra app instance was started.
+
+### Cleanup verification — 3 November 2026
+
+Removed the AI 101/Python preparation commands, shared/course-specific offline import modules and unused link checker. Importer-only tests retired with them; generic Markdown compatibility, revision safety and path-scoped leaderboard/progress/note coverage remain in the existing suite. Runtime components/APIs, all five migrations and the canonical schema are unchanged. The known dummy-owner offline SQL scratch file was removed; `/tmp/odu-python.sql` and all source JSON/link reports were preserved.
+
+Final checks: 43 tests passed; lint passed with two existing image warnings. The default Turbopack build stalled and was stopped. `npm run build -- --webpack` passed compilation, TypeScript, page generation and deployment-trace checks. This is not verification of the default Turbopack build or of deployed production. No production connections, imports, schema changes, staging, commits, pushes or deployments occurred. Local `origin/main` is an older cached reference, not deployment evidence.
+
+
+### SQL recovery archive — 4 November 2026
+
+Optional SQL seeds now preserve both courses independently of retired JavaScript generators. Source comparison verified every lesson objective, explanation, activity, outcome, resource title/URL, stable identifier and overview detail before deleting redundant course JSON and link reports. The Python original is archived unchanged; AI 101 is reconstructed, not claimed as its original executed artifact. Existing database tests exercise both optional seeds, installation identity/confirmation guards, repeat-import stability and learner activity retention. Normal code redeployment does not require seed execution.
+
+Archive validation: 44 tests passed; lint passed with the two existing image warnings; `npm run build -- --webpack` passed including TypeScript and deployment traces. No production data/schema changes, commits or pushes were performed.

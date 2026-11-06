@@ -6,9 +6,9 @@ The repository includes the application database definition, incremental upgrade
 
 | Situation | Scripts to run |
 |---|---|
-| New, empty Supabase project | Run docs/DB-schema.sql once, top to bottom. It already contains current hardening, curriculum conflict handling and document_catalog. Do not then replay the catalogue migration. |
-| Existing installation at the pre-launch baseline | Apply the three tracked migrations below, in order, after reviewing migration history. |
-| Current hosted ODU project | These three changes are already applied. Verify history instead of blindly rerunning them. |
+| New, empty Supabase project | Run docs/DB-schema.sql once, top to bottom. It already contains all five tracked upgrades, including learning material and feedback. Do not then replay those migrations. |
+| Existing installation at the pre-launch baseline | Apply the five tracked migrations below, in order, after reviewing migration history. |
+| Current hosted ODU project | Verify installed features and migration history instead of blindly rerunning scripts. |
 
 The migration directory is an incremental upgrade set, not a complete Supabase CLI db-reset history. Do not use db reset expecting it to create core tables. The full installation entry point is docs/DB-schema.sql. A fresh Supabase project already supplies auth.users, auth.uid(), auth.role(), and built-in roles. This script is not a replacement for installing the Supabase platform on bare Postgres.
 
@@ -17,8 +17,10 @@ The migration directory is an incremental upgrade set, not a complete Supabase C
 1. supabase/migrations/20261028140510_launch_data_safety.sql: revisioned atomic curriculum writes, note privacy, browser-write restrictions and indexes.
 2. supabase/migrations/20261028141705_curriculum_conflict_response.sql: stale-write HTTP 409 semantics.
 3. supabase/migrations/20261029121526_document_catalog.sql: metadata-only article catalogue and initial reviewed publication settings.
+4. supabase/migrations/20261029182558_learning_material.sql: optional course/day Markdown and curriculum RPC support.
+5. supabase/migrations/20261031123616_feedback_requests.sql: feedback requests.
 
-The historical baseline already includes creator entitlements, quota requests, profiles, badges, membership policies and creator membership triggers. For an older or unknown database, inspect its actual structure and prepare a separate migration plan; do not treat these three files as a universal upgrade for any schema.
+The historical baseline already includes creator entitlements, quota requests, profiles, badges, membership policies and creator membership triggers. For an older or unknown database, inspect its actual structure and prepare a separate migration plan; do not treat these five files as a universal upgrade for any schema.
 
 ## Create the installation owner
 
@@ -49,3 +51,8 @@ QA Auth users are intentionally not copied from production by the installer. The
 npm test independently exercises the full installer without later migrations and the baseline-plus-upgrades path. Both cover stable lesson IDs, progress/notes preservation, rollback, HTTP 409 conflicts, private notes, quotas and role boundaries. Additional tests verify catalogue defaults, browser grants, source discovery and owner bootstrap. PGlite tests mock Supabase Auth roles/functions; they do not prove hosted SMTP, Auth settings or backup restore.
 
 Run npm run lint, npm test and npm run build. Then complete the signed-in learner and owner checks in the release checklist against the actual new project before publishing it.
+
+
+## Optional starter courses for a fresh or white-label installation
+
+After the schema and owner bootstrap, optionally install AI 101 and/or Python Foundations using [supabase/seeds/README.md](../../supabase/seeds/README.md). Set the new installation's verified owner identity and explicit course confirmation before executing each complete seed. New courses remain private/pending review until normal publication approval. These are content seeds, not automatic migrations. Normal application redeployment requires no course import. Never execute the archived original Python SQL against a different installation.

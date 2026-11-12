@@ -19,6 +19,7 @@ insert into public.document_catalog (source_path, visibility, status) values
   ('content/blog/learning-together.md', 'public', 'published'),
   ('content/help/account-and-access.md', 'public', 'published'),
   ('content/help/create-a-learning-space.md', 'public', 'published'),
+  ('content/help/disclaimer.md', 'public', 'published'),
   ('content/help/how-to-use.md', 'public', 'published'),
   ('content/help/learning-and-notes.md', 'public', 'published'),
   ('docs/api/handbook.md', 'platform_admin', 'published'),

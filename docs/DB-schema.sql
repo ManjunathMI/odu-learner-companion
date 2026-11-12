@@ -890,6 +890,7 @@ comment on table public.document_catalog is 'Git Markdown catalogue. Server-only
 -- Initial reviewed sources only; future files use draft/restricted defaults.
 insert into public.document_catalog (source_path, visibility, status) values
   ('content/about/about-odu.md', 'public', 'published'),
+  ('content/help/disclaimer.md', 'public', 'published'),
   ('content/blog/learning-together.md', 'public', 'published'),
   ('content/help/account-and-access.md', 'public', 'published'),
   ('content/help/create-a-learning-space.md', 'public', 'published'),

@@ -35,11 +35,15 @@ const Footer = () => {
           <ul>
             <li><Link href="/about">About ODU</Link></li>
             <li><Link href="/blog">Blog</Link></li>
+            
             <li>
-              <a href="https://www.linkedin.com/in/manjunath-islampure/" target="_blank" rel="noreferrer">Contact Us</a>
+              <Link href="/docs/disclaimer">Disclaimer</Link>
             </li>
             <li>
               <Link href="/docs">Help &amp; Guides</Link>
+            </li>
+            <li>
+              <a href="https://www.linkedin.com/in/manjunath-islampure/" target="_blank" rel="noreferrer">Contact Us</a>
             </li>
           </ul>
         </div>

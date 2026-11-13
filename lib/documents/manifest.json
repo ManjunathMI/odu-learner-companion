@@ -32,6 +32,14 @@
     "hash": "9451f15c90b4809f7e132836b0881186bd523b8c0ee57f9c829e450ee532ddbf"
   },
   {
+    "source_path": "content/help/disclaimer.md",
+    "slug": "disclaimer",
+    "title": "Disclaimer",
+    "description": "*Last updated: 12 November 2026*",
+    "section": "help",
+    "hash": "ea7dfaa570b3aa39609e6b4c912b32205e08fb65fdd63b44e1f0751a51a0326a"
+  },
+  {
     "source_path": "content/help/how-to-use.md",
     "slug": "how-to-use",
     "title": "Start your first learning journey",

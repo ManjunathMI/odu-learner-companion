@@ -1,7 +1,7 @@
 // components/Header.js
 'use client';
 
-import React, { useState, useEffect, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '../lib/supabase/client';
@@ -24,8 +24,19 @@ const Header = () => {
   const [isLoading, setIsLoading] = useState(true);
   const theme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
+  const profileTriggerRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) return;
+    const closeOutside = (event) => {
+      if (!profileMenuRef.current?.contains(event.target)) setIsProfileMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    return () => document.removeEventListener('pointerdown', closeOutside);
+  }, [isProfileMenuOpen]);
 
   const getPreferredName = (currentUser) => {
     if (!currentUser) return 'Learner';
@@ -152,10 +163,25 @@ const Header = () => {
           {!isLoading && (
             <div className="user-menu">
               {user ? (
-                <div className="profile-menu-wrap">
+                <div className="profile-menu-wrap" ref={profileMenuRef}
+                  onPointerLeave={(event) => {
+                    if (event.pointerType === 'mouse' && !event.currentTarget.matches(':has(:focus-visible)')) setIsProfileMenuOpen(false);
+                  }}
+                  onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget)) setIsProfileMenuOpen(false);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape' && isProfileMenuOpen) {
+                      event.preventDefault();
+                      setIsProfileMenuOpen(false);
+                      profileTriggerRef.current?.focus();
+                    }
+                  }}>
                   <button
                     type="button"
                     className="profile-menu-trigger"
+                    ref={profileTriggerRef}
+                    aria-controls="profile-menu-dropdown"
                     onClick={() => setIsProfileMenuOpen((current) => !current)}
                     aria-expanded={isProfileMenuOpen}
                   >
@@ -168,16 +194,15 @@ const Header = () => {
                     </span>
                   </button>
 
-                  {isProfileMenuOpen && (
-                    <div className="profile-dropdown">
-                      <button type="button" className="dropdown-item" onClick={() => { router.push('/profile'); setIsProfileMenuOpen(false); }}>
-                        Profile
-                      </button>
+                  <div id="profile-menu-dropdown" className="profile-dropdown" data-open={isProfileMenuOpen} inert={!isProfileMenuOpen}>
                       <button type="button" className="dropdown-item" onClick={() => { router.push('/journey'); setIsProfileMenuOpen(false); }}>
                         My Journey
                       </button>
                       <button type="button" className="dropdown-item" onClick={() => { router.push('/account'); setIsProfileMenuOpen(false); }}>
-                        Manage Account
+                        My Account
+                      </button>
+                      <button type="button" className="dropdown-item" onClick={() => { router.push('/account/path-members'); setIsProfileMenuOpen(false); }}>
+                        My Path Members
                       </button>
                       {isPlatformAdmin && (
                         <button type="button" className="dropdown-item" onClick={() => { router.push('/admin'); setIsProfileMenuOpen(false); }}>
@@ -187,8 +212,7 @@ const Header = () => {
                       <button type="button" className="dropdown-item danger" onClick={() => { handleLogout(); setIsProfileMenuOpen(false); }}>
                         Logout
                       </button>
-                    </div>
-                  )}
+                  </div>
                 </div>
               ) : (
                 <Link href="/auth" className="button-primary">
@@ -383,6 +407,31 @@ const Header = () => {
           display: flex;
           flex-direction: column;
           z-index: 60;
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+          transform: translateY(.45rem) scale(.98);
+          transform-origin: top right;
+          transition: opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms;
+        }
+
+        .profile-dropdown[data-open='true'] {
+          opacity: 1;
+          visibility: visible;
+          pointer-events: auto;
+          transform: translateY(0) scale(1);
+          transition-delay: 0s;
+        }
+
+        .profile-dropdown[data-open='true']::before {
+          content: '';
+          position: absolute;
+          inset: -.65rem 0 auto;
+          height: .65rem;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .profile-dropdown { transition: none; }
         }
 
         .dropdown-item {

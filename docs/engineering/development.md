@@ -40,7 +40,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-server-only-secret-key
 
 ## Database Setup
 
-For a new empty project, run the canonical `docs/DB-schema.sql` from top to bottom in Supabase SQL Editor. For an existing project, apply only reviewed additive migrations in supabase/migrations/. Do not run legacy single-room schemas or old setup documents.
+For a new empty project, run the canonical `docs/DB-schema.sql` from top to bottom in Supabase SQL Editor. For an existing project, apply only reviewed additive migrations in supabase/migrations/. Apply the account-suspension upgrade before testing signed-in routes against an existing database. The [installation guide](../operations/recreate-installation.md#tracked-upgrades) lists the migration order and verification steps.
 
 After signing up once, insert the first platform admin manually if needed:
 

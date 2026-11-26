@@ -190,24 +190,23 @@ The product should make creation visible in normal learner UX through clear acti
 
 Subscription and payment infrastructure is not part of the current implementation. The product model should nevertheless keep creator allowance entitlement-driven so a future tier can change `maxCreatedPaths` without redesigning roles, path tenancy, or publication authority.
 
-## Manage Account
+## My Account
 
-`/account` is the authenticated identity and capacity workspace. It is separate from My Journey: My Journey focuses on learning progress and next actions, while Manage Account explains the user's ODU identity, path-scoped roles, permissions, paths they lead, paths they participate in, and creator capacity.
+`/account` is the authenticated identity workspace. My Account shows the user’s ODU identity, path-scoped roles, permissions, and the paths they lead or participate in.
 
 The account workspace shows:
 
-- Profile display name, avatar, and a link to Profile.
+- Profile display name, avatar, and an Edit profile action.
 - Platform Admin status when applicable.
 - Approved Admin, Moderator, and Learner memberships grouped by path.
 - Learning Paths the user leads, with Manage and permanently destructive Delete actions.
 - Learning Paths the user participates in, with Open / Continue actions.
-- Current created-path usage, entitlement maximum, remaining capacity, and quota-request state.
 
 Deleting a path requires explicit confirmation and approved Path Admin authorization. It permanently removes the path and dependent path data according to the database's existing cascading relationships. It does not change role semantics or create a platform-level role.
 
 ## Quota Increase Requests
 
-When a creator reaches their entitlement, they can submit one pending request for a higher limit. The request records the current limit, requested limit, reason, status, reviewer, and timestamps. Only Platform Admins can approve or reject requests. Approval updates `user_entitlements.max_created_paths` and preserves the request as an audit record.
+My Journey shows created paths against the allowed limit. A creator can submit one pending request for a higher limit there. The request records the current limit, requested limit, reason, status, reviewer, and timestamps. Only Platform Admins can approve or reject requests. Approval updates `user_entitlements.max_created_paths` and preserves the request as an audit record. The platform owner can also set a user’s allowed limit in User Management. A lower limit preserves existing paths and prevents creation while usage is at or above the limit.
 
 Users cannot modify their own entitlement directly. Existing paths and memberships do not consume capacity merely because a user joins them; usage counts only paths currently created by that user.
 

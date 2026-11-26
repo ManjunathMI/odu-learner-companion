@@ -2,30 +2,36 @@ import 'server-only';
 import { isOwnerIdentity } from '@/lib/platform-owner';
 import { createClient, adminClient } from '@/lib/supabase/server';
 
-/**
- * Resolves the caller's session from two sources, in priority order:
- *   1. Bearer token in the Authorization header  (React Native / API clients)
- *   2. Supabase SSR cookie session               (Next.js web browser)
- *
- * Returning null means the caller is unauthenticated — route handlers should
- * respond with 401.
- */
-export async function getSession(req: Request) {
-  // ── 1. Bearer token (works for both web API calls and future React Native) ──
-  const authHeader = req.headers.get('Authorization');
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.slice(7);
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.getUser(token);
-    return !error && data.user ? data.user : null;
+export async function getAccountSuspension(userId: string) {
+  const { data, error } = await adminClient.from('account_suspension_events')
+    .select('suspended, reason, created_at').eq('user_id', userId).order('id', { ascending: false }).limit(1).maybeSingle();
+  if (error) throw new Error('Unable to verify account access');
+  return data;
+}
+
+export async function getSessionStatus(req: Request) {
+  const authorization = req.headers.get('Authorization');
+  const token = authorization?.startsWith('Bearer ') ? authorization.slice(7) : undefined;
+  if (token === '') return { status: 'unauthenticated' } as const;
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data.user) return { status: 'unauthenticated' } as const;
+
+  try {
+    if ((await getAccountSuspension(data.user.id))?.suspended) {
+      return { status: 'suspended' } as const;
+    }
+  } catch {
+    return { status: 'unavailable' } as const;
   }
 
-  // ── 2. Cookie session (server-rendered Next.js pages) ──
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (!error && data.user) return data.user;
+  return { status: 'active', user: data.user } as const;
+}
 
-  return null;
+// Existing API callers treat any session that cannot be authorized as absent.
+export async function getSession(req: Request) {
+  const session = await getSessionStatus(req);
+  return session.status === 'active' ? session.user : null;
 }
 
 /**

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import MultilingualLoader from '@/components/MultilingualLoader';
 import LearningPathCard from '@/components/LearningPathCard';
+import PathShare from '@/components/PathShare';
 
 interface WallPath {
   id: string;
@@ -79,6 +80,7 @@ export default function DiscoveryExperience({ homepage = false }: { homepage?: b
             title={path.title}
             description={path.description || 'A structured learning path shared by the community.'}
             topMeta={`${path.memberCount} member${path.memberCount === 1 ? '' : 's'}`}
+            secondaryAction={!homepage && <PathShare pathId={path.id} title={path.title} description={path.description} />}
             tags={path.tags?.length ? path.tags.join(' · ') : 'Community path'}
           />)}
           {!paths.length && <div className="state-block"><h3>New paths will appear here</h3><p>There are no approved public Learning Paths to explore yet.</p></div>}

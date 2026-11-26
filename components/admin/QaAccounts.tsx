@@ -1,16 +1,141 @@
 'use client';
-import {useEffect,useState} from 'react';
-import {apiFetch} from '@/lib/api';
-type Account={user_id:string;email:string;delivery_email:string;enabled:boolean};
-export default function QaAccounts(){
- const [rows,setRows]=useState<Account[]>([]),[error,setError]=useState(''),[busy,setBusy]=useState(false),[email,setEmail]=useState(''),[recipient,setRecipient]=useState('immanjunath@outlook.com');
- async function load(){try{setRows(await apiFetch<Account[]>('/admin/qa-accounts'));setError('');}catch(e){setError(e instanceof Error?e.message:'Unable to load QA accounts');}}
- useEffect(()=>{let active=true;void apiFetch<Account[]>('/admin/qa-accounts').then(data=>{if(active)setRows(data);}).catch(e=>{if(active)setError(e instanceof Error?e.message:'Unable to load QA accounts');});return()=>{active=false;};},[]);
- async function save(row:Account){setBusy(true);try{await apiFetch('/admin/qa-accounts',{method:'PATCH',body:row});await load();}catch(e){setError(e instanceof Error?e.message:'Unable to save');}finally{setBusy(false);}}
- async function add(e:React.FormEvent){e.preventDefault();setBusy(true);try{await apiFetch('/admin/qa-accounts',{method:'POST',body:{email,delivery_email:recipient}});setEmail('');await load();}catch(e){setError(e instanceof Error?e.message:'Unable to create account');}finally{setBusy(false);}}
- return <section aria-labelledby="qa-heading" className="qa-section"><h2 id="qa-heading">QA and developer accounts</h2><p>Manage synthetic test identities separately from real learners. Adding an existing address preserves its roles and password. New accounts start without platform privileges.</p><p>Delivery emails are configuration only until QA email forwarding is connected. Disabling blocks new sign-ins; existing sessions may remain valid until their tokens expire.</p>{error&&<p role="alert">{error} <button type="button" onClick={()=>void load()}>Retry</button></p>}
- <form onSubmit={add}><label>QA email<input type="email" required value={email} placeholder="learner.test@odu.local" onChange={e=>setEmail(e.target.value)} /></label><label>Deliver login links to<input type="email" required value={recipient} onChange={e=>setRecipient(e.target.value)} /></label><button type="submit" className="button-primary" disabled={busy}>Add QA account</button></form>
- <div className="table-scroll"><table><caption>Registered QA accounts</caption><thead><tr><th scope="col">Account</th><th scope="col">Delivery email</th><th scope="col">Access</th><th scope="col">Action</th></tr></thead><tbody>{rows.map(row=><tr key={row.user_id}><th scope="row">{row.email}</th><td><input aria-label={`Delivery email for ${row.email}`} type="email" value={row.delivery_email} onChange={e=>setRows(current=>current.map(item=>item.user_id===row.user_id?{...item,delivery_email:e.target.value}:item))}/></td><td>{row.enabled?'Enabled':'Disabled'}</td><td><button type="button" disabled={busy} onClick={()=>void save(row)}>Save email</button> <button type="button" disabled={busy} onClick={()=>void save({...row,enabled:!row.enabled})}>{row.enabled?'Disable':'Enable'}</button></td></tr>)}</tbody></table></div>{!rows.length&&!error&&<p>No QA accounts registered.</p>}
- <style jsx>{`.qa-section{margin-top:3rem;border-top:1px solid var(--border-color);padding-top:2rem}p{color:var(--text-secondary)}form{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:1.5rem 0}label{display:grid;gap:.5rem;flex:1;min-width:200px}input{padding:.7rem;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-primary);color:var(--text-primary);max-width:100%;box-sizing:border-box}.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;text-align:left}caption{text-align:left;padding:.7rem 0}th,td{padding:.75rem;border-bottom:1px solid var(--border-color)}button{cursor:pointer}button:disabled{cursor:wait;opacity:.6}[role=alert]{color:var(--accent-danger)}`}</style>
- </section>;
+
+import { useEffect, useState, type FormEvent } from 'react';
+import { apiFetch } from '@/lib/api';
+import ManagementRow from '@/components/management/ManagementRow';
+import styles from '@/components/management/management.module.css';
+
+type Account = { user_id: string; email: string; delivery_email: string; enabled: boolean };
+
+function QaAccountEditor({ account, onSave }: { account: Account; onSave: (account: Account) => Promise<void> }) {
+  const [deliveryEmail, setDeliveryEmail] = useState(account.delivery_email);
+  const [enabled, setEnabled] = useState(account.enabled);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
+  const changed = deliveryEmail !== account.delivery_email || enabled !== account.enabled;
+
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!changed || saving) return;
+    setError('');
+    setSaved(false);
+    setSaving(true);
+    try {
+      await onSave({ ...account, delivery_email: deliveryEmail, enabled });
+      setSaved(true);
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'Unable to save QA account.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <>
+      <form className={styles.editorForm} onSubmit={save}>
+        <label className={`${styles.field} ${styles.reason}`}>
+          Delivery email
+          <input type="email" required value={deliveryEmail} onChange={event => setDeliveryEmail(event.target.value)} />
+        </label>
+        <label className={styles.field}>
+          Access
+          <select value={enabled ? 'enabled' : 'disabled'} onChange={event => setEnabled(event.target.value === 'enabled')}>
+            <option value="enabled">Enabled</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </label>
+        <button className="button-primary" disabled={!changed || saving}>{saving ? 'Saving…' : 'Save changes'}</button>
+      </form>
+      {error && <p className={`${styles.feedback} ${styles.error}`} role="alert">{error}</p>}
+      {saved && !changed && <p className={styles.feedback} role="status">Changes saved.</p>}
+    </>
+  );
+}
+
+export default function QaAccounts() {
+  const [rows, setRows] = useState<Account[]>([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState('');
+  const [recipient, setRecipient] = useState('immanjunath@outlook.com');
+
+  async function load(signal?: AbortSignal) {
+    setLoading(true);
+    setError('');
+    try {
+      const accounts = await apiFetch<Account[]>('/admin/qa-accounts', { signal });
+      if (!signal?.aborted) setRows(accounts);
+    } catch (failure) {
+      if (!signal?.aborted) setError(failure instanceof Error ? failure.message : 'Unable to load QA accounts.');
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void apiFetch<Account[]>('/admin/qa-accounts', { signal: controller.signal })
+      .then(accounts => { if (!controller.signal.aborted) setRows(accounts); })
+      .catch(failure => {
+        if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : 'Unable to load QA accounts.');
+      })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, []);
+
+  async function update(account: Account) {
+    await apiFetch('/admin/qa-accounts', { method: 'PATCH', body: account });
+    setRows(current => current.map(row => row.user_id === account.user_id ? account : row));
+  }
+
+  async function add(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await apiFetch('/admin/qa-accounts', { method: 'POST', body: { email, delivery_email: recipient } });
+      setEmail('');
+      await load();
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'Unable to create QA account.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section aria-label="QA and developer accounts">
+      <p>Delivery email settings take effect when QA forwarding is connected. Disabling an account blocks new sign-ins.</p>
+      {error && <p role="alert" className={styles.error}>{error} <button className="button-secondary" type="button" onClick={() => void load()}>Retry</button></p>}
+      <details className={styles.audit}>
+        <summary>Add QA account</summary>
+        <form className={styles.editorForm} onSubmit={add}>
+          <label className={styles.field}>
+            QA email
+            <input type="email" required value={email} placeholder="learner.test@odu.local" onChange={event => setEmail(event.target.value)} />
+          </label>
+          <label className={styles.field}>
+            Delivery email
+            <input type="email" required value={recipient} onChange={event => setRecipient(event.target.value)} />
+          </label>
+          <button type="submit" className="button-primary" disabled={busy}>{busy ? 'Adding…' : 'Add account'}</button>
+        </form>
+      </details>
+      {loading ? <p role="status">Loading QA accounts…</p> : rows.length > 0 ? (
+        <div className={styles.tableFrame} tabIndex={0} role="region" aria-label="QA accounts table">
+          <table className={styles.table}>
+            <thead><tr><th scope="col">QA account</th><th scope="col">Delivery email</th><th scope="col">Access</th><th scope="col" className={styles.actionCell}>Actions</th></tr></thead>
+            <tbody>{rows.map(account => (
+              <ManagementRow key={account.user_id} name={account.email} cells={[
+                account.delivery_email,
+                <span key="status" className={styles.status} data-status={account.enabled ? 'active' : 'suspended'}>{account.enabled ? 'Enabled' : 'Disabled'}</span>,
+              ]} editor={<QaAccountEditor account={account} onSave={update} />} />
+            ))}</tbody>
+          </table>
+        </div>
+      ) : !error && <p>No QA accounts registered.</p>}
+    </section>
+  );
 }

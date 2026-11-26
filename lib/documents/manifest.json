@@ -109,7 +109,7 @@
     "title": "Recreate ODU for a new installation",
     "description": "The repository includes the application database definition, incremental upgrades, and a repeatable owner-bootstrap script. Article text stays in Git. Supabase Auth configuration a",
     "section": "technical",
-    "hash": "9bf22582de2be7d34712014840035a23f6c5ad68086e3afda9ee8e19ea40db71"
+    "hash": "64dd2323cb1b5fbd81b9ea72a71874512b0fac65c55602155d1e01a8eeac8316"
   },
   {
     "source_path": "docs/operations/release-checklist.md",
@@ -141,6 +141,6 @@
     "title": "Product Roadmap",
     "description": "This roadmap is the canonical planning document for ODU Learner Companion. It evolves the existing learning-tracker foundation into a collaborative learning companion for students,",
     "section": "technical",
-    "hash": "ec271406d331ac526071c22bb9d230b1660b21ea330bb766bd30a52c7d0e7669"
+    "hash": "2cc99af6163ffa816491ad11552fcde2e33e7546b644e580757662f0cbf3ab51"
   }
 ]

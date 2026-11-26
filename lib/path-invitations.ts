@@ -12,7 +12,7 @@ type Reservation =
 export const invitationHash = (token: string) => createHash('sha256').update(token).digest('hex');
 
 export function configuredInvitations() {
-  const sender = getEmailSender();
+  const sender = getEmailSender('invitations');
   const secret = process.env.PATH_INVITATION_SECRET?.trim();
   try {
     const base = new URL(process.env.NEXT_PUBLIC_BASE_URL ?? '');

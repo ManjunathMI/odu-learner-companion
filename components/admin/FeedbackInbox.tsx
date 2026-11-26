@@ -29,13 +29,6 @@ const typeLabels: Record<FeedbackRequestType, string> = {
   business_enquiry: 'Business enquiries',
 };
 
-const typeSubjectLabels: Record<FeedbackRequestType, string> = {
-  query: 'Query',
-  feedback: 'Feedback',
-  bug: 'Bug report',
-  business_enquiry: 'Business enquiry',
-};
-
 const statusLabels: Record<FeedbackStatus, string> = {
   open: 'Open',
   in_progress: 'In progress',
@@ -43,21 +36,14 @@ const statusLabels: Record<FeedbackStatus, string> = {
   closed: 'Closed',
 };
 
-function emailDraftUrl(request: FeedbackRequest, response: string) {
-  const parameters = new URLSearchParams({
-    subject: `ODU ${typeSubjectLabels[request.request_type]}`,
-    body: response,
-  });
-  return `mailto:${request.email}?${parameters.toString()}`;
-}
-
 export default function FeedbackInbox() {
   const [requests, setRequests] = useState<FeedbackRequest[]>([]);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [statuses, setStatuses] = useState<Record<string, FeedbackStatus>>({});
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState<{ id: string; sending: boolean } | null>(null);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -95,24 +81,27 @@ export default function FeedbackInbox() {
     return () => { active = false; };
   }, []);
 
-  const save = async (request: FeedbackRequest) => {
-    const status = statuses[request.id] ?? request.status;
+  const save = async (request: FeedbackRequest, sending = false) => {
+    if (busy) return;
+    const status = sending ? 'answered' : statuses[request.id] ?? request.status;
     const responseText = responses[request.id]?.trim();
     if (status === 'answered' && !responseText && !request.response_text) {
       setError('Write and send a reply before marking this request answered.');
       return;
     }
 
-    setBusy(request.id);
+    setBusy({ id: request.id, sending });
     setError('');
+    setNotice('');
     try {
       const updated = await apiFetch<Pick<FeedbackRequest, 'id' | 'status' | 'response_text' | 'responded_by' | 'responded_at' | 'updated_at'>>(
         `/admin/feedback-requests/${request.id}`,
-        { method: 'PATCH', body: { status, ...(responseText ? { responseText } : {}) } },
+        { method: 'PATCH', body: { status, ...(status === 'answered' && responseText ? { responseText } : {}), ...(sending ? { sendReply: true, version: request.updated_at } : {}) } },
       );
       setRequests((current) => current.map((item) => item.id === request.id ? { ...item, ...updated } : item));
       setResponses((current) => ({ ...current, [request.id]: updated.response_text ?? '' }));
       setStatuses((current) => ({ ...current, [request.id]: updated.status }));
+      if (sending) setNotice('Reply accepted for delivery and saved.');
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Unable to save the response');
     } finally {
@@ -131,7 +120,8 @@ export default function FeedbackInbox() {
           {loading ? 'Loading…' : 'Refresh'}
         </button>
       </div>
-      <p className="feedback-inbox-intro">Requests are grouped by type. Replies are sent manually from your email; use the email draft, send it, then record the response here.</p>
+      <p className="feedback-inbox-intro">Send reply emails the requester and records the response. Save status / response updates the request without sending email.</p>
+      {notice && <p role="status">{notice}</p>}
       {error && <p className="feedback-inbox-error" role="alert">{error}</p>}
       {loading ? <p className="feedback-inbox-muted">Loading requests…</p> : !requests.length ? <p className="feedback-inbox-muted">No feedback requests yet.</p> : (
         <div className="feedback-type-groups">
@@ -181,11 +171,13 @@ export default function FeedbackInbox() {
                             </select>
                           </label>
                           <div className="feedback-response-actions">
-                            <a className={`button-secondary email-draft ${response.trim() ? '' : 'disabled'}`} href={response.trim() ? emailDraftUrl(request, response.trim()) : undefined} aria-disabled={!response.trim()} onClick={(event) => { if (!response.trim()) event.preventDefault(); }}>
-                              Open email draft
-                            </a>
-                            <button type="button" className="button-primary" disabled={busy === request.id || Boolean(busy)} onClick={() => void save(request)}>
-                              {busy === request.id ? 'Saving…' : 'Save status / response'}
+                            <button type="button" className="button-primary"
+                              disabled={Boolean(busy) || request.status === 'closed' || !response.trim() || response.trim() === request.response_text}
+                              onClick={() => void save(request, true)}>
+                              {busy?.id === request.id && busy.sending ? 'Sending…' : 'Send reply'}
+                            </button>
+                            <button type="button" className="button-secondary" disabled={Boolean(busy)} onClick={() => void save(request)}>
+                              {busy?.id === request.id && !busy.sending ? 'Saving…' : 'Save status / response'}
                             </button>
                           </div>
                         </div>
@@ -226,7 +218,6 @@ export default function FeedbackInbox() {
         .feedback-request-actions { align-items:flex-end;margin-top:.75rem;flex-wrap:wrap; }
         .status-select-label { width:min(11rem,100%); }
         .feedback-response-actions { justify-content:flex-end;flex-wrap:wrap; }
-        .email-draft.disabled { opacity:.5;cursor:not-allowed; }
         .feedback-inbox-error { color:var(--accent-danger); }
         @media(max-width:640px) { .feedback-request-heading { align-items:flex-start; }.feedback-request-actions { align-items:stretch;flex-direction:column; }.status-select-label { width:100%; }.feedback-response-actions { width:100%; }.feedback-response-actions > * { flex:1; }.feedback-response-actions a { white-space:normal;text-align:center; } }
       `}</style>

@@ -1,9 +1,11 @@
 import 'server-only';
 
+import { createSmtpSender } from './smtp.js';
+
 type Email = { to: string; subject: string; text: string };
 type Delivery = { status: 'sent'; providerMessageId: string | null } | { status: 'failed' | 'unknown' };
 type EmailSender = {
-  provider: 'resend' | 'brevo';
+  provider: 'resend' | 'brevo' | 'smtp';
   send: (message: Email, deliveryKey: string) => Promise<Delivery>;
 };
 
@@ -40,13 +42,38 @@ function emailHtml(text: string) {
 }
 
 // Feature code supplies content and a stable delivery ID. Provider credentials and HTTP stay here.
-export function getEmailSender(): EmailSender | null {
-  const provider = process.env.NOTIFICATION_EMAIL_PROVIDER?.trim();
-  const email = process.env.NOTIFICATION_EMAIL_FROM?.trim();
-  const name = process.env.NOTIFICATION_EMAIL_FROM_NAME?.trim() || 'ODU Learner Companion';
-  const apiKey = process.env.NOTIFICATION_EMAIL_API_KEY?.trim()
+const purposeSettings = {
+  invitations: 'INVITATIONS',
+  feedback: 'FEEDBACK',
+  campaign: 'CAMPAIGN',
+} as const;
+
+export const isNotificationEmailAddress = (email: string) =>
+  email.length <= 254 && /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i.test(email);
+
+export function getEmailSender(purpose: keyof typeof purposeSettings): EmailSender | null {
+  const prefix = `NOTIFICATION_${purposeSettings[purpose]}_`;
+  const setting = (key: string) => process.env[`${prefix}${key}`]?.trim() || process.env[`NOTIFICATION_${key}`]?.trim();
+  const provider = process.env[`${prefix}EMAIL_PROVIDER`]?.trim()
+    || (purpose === 'invitations' ? process.env.NOTIFICATION_EMAIL_PROVIDER?.trim() : undefined);
+  const email = setting('EMAIL_FROM');
+  const name = setting('EMAIL_FROM_NAME') || 'ODU Learner Companion';
+  if (!email || !isNotificationEmailAddress(email) || /[\r\n<>]/.test(name)) return null;
+
+  if (provider === 'smtp') {
+    const host = setting('SMTP_HOST');
+    const port = Number(setting('SMTP_PORT') || '465');
+    const user = setting('SMTP_USER');
+    const password = process.env[`${prefix}SMTP_PASSWORD`] || process.env.NOTIFICATION_SMTP_PASSWORD;
+    if (!host || !user || !password || (port !== 465 && port !== 587)) return null;
+    const send = createSmtpSender({ host, port, user, password, email, name });
+    return { provider, send };
+  }
+
+  const apiKey = process.env[`${prefix}EMAIL_API_KEY`]?.trim()
+    || process.env.NOTIFICATION_EMAIL_API_KEY?.trim()
     || (provider === 'resend' ? process.env.RESEND_API_KEY?.trim() : undefined);
-  if (!email || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) || !apiKey || /[\r\n<>]/.test(name)) return null;
+  if (!apiKey) return null;
 
   if (provider === 'resend') {
     return {

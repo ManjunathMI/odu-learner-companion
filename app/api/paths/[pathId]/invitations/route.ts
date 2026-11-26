@@ -1,6 +1,7 @@
 import { getSession } from '@/lib/auth';
 import { badRequest, forbidden, unauthorized } from '@/lib/path-auth';
 import { configuredInvitations, deliverPathInvitation } from '@/lib/path-invitations';
+import { isNotificationEmailAddress } from '@/lib/notifications/email';
 import { isUuid } from '@/lib/return-destination';
 
 export async function POST(request: Request, { params }: { params: Promise<{ pathId: string }> }) {
@@ -13,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ pat
   const body = await request.json().catch(() => null);
   if (typeof body?.recipients !== 'string' || body.recipients.length > 1300) return badRequest('Enter up to five email addresses.');
   const recipients = [...new Set<string>(body.recipients.split(',').map((entry: string) => entry.trim().toLowerCase()))];
-  if (!recipients.length || recipients.length > 5 || recipients.some(email => email.length > 254 || !/^[^\s@<>,]+@[^\s@<>,]+\.[^\s@<>,]+$/.test(email))) {
+  if (!recipients.length || recipients.length > 5 || recipients.some(email => !isNotificationEmailAddress(email))) {
     return badRequest('Enter up to five valid, comma-separated email addresses.');
   }
 

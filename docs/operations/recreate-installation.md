@@ -48,11 +48,17 @@ Do not copy another project's owner UUID. Platform-admin membership alone grants
 
 Install the invitations migration before enabling email on an existing project. Then verify a sender domain with your provider and configure the Vercel server environment using the variables in `.env.example`:
 
-- `NOTIFICATION_EMAIL_PROVIDER` accepts `resend`, `brevo`, or `disabled`.
+- `NOTIFICATION_INVITATIONS_EMAIL_PROVIDER` accepts `smtp`, `resend`, `brevo`, or `disabled`. When unset, invitations use the existing `NOTIFICATION_EMAIL_PROVIDER` setting.
 - `NOTIFICATION_EMAIL_FROM` is the verified sender address. `NOTIFICATION_EMAIL_FROM_NAME` optionally sets the sender’s display name.
 - `NOTIFICATION_EMAIL_API_KEY` is a server-side API key. The Resend adapter also accepts `RESEND_API_KEY` supplied by the Vercel integration.
 - `PATH_INVITATION_SECRET` is a server-only random secret of at least 32 characters. Keep it stable across redeployments. Changing the secret leaves issued claim links usable until expiry, but prevents reminders for invitations created with the previous secret.
 - `NEXT_PUBLIC_BASE_URL` must point to the intended app origin. In production use the canonical HTTPS origin and keep it in the Supabase Auth redirect configuration.
+
+For Hostinger SMTP, set the invitation provider to `smtp`, set `NOTIFICATION_EMAIL_FROM` and `NOTIFICATION_SMTP_USER` to the authorized mailbox, and configure `NOTIFICATION_SMTP_HOST=smtp.hostinger.com`, `NOTIFICATION_SMTP_PORT=465`, and `NOTIFICATION_SMTP_PASSWORD` in Vercel. Port 465 uses implicit TLS, and port 587 requires STARTTLS. No API key is used by SMTP. Keep the mailbox password server-only.
+
+To send an alert for a request submitted by a signed-in user with a confirmed email, set `NOTIFICATION_FEEDBACK_EMAIL_PROVIDER` and `NOTIFICATION_FEEDBACK_TO`. All requests still go to the in-app **Platform Admin → Feedback** inbox. The alert contains the request ID. Delivery runs after the request is saved, and a mail failure does not discard it. Feedback stays email-disabled until explicitly configured. The same feedback provider sends replies from the owner-only Feedback inbox. **Send reply** uses the address on the request and records the reply as Answered after the provider accepts it. **Save status / response** records manually handled requests without sending. Check the provider before retrying an unconfirmed reply.
+
+Per-purpose provider and sender settings use the prefix `NOTIFICATION_INVITATIONS_`, `NOTIFICATION_FEEDBACK_`, or `NOTIFICATION_CAMPAIGN_`. For example, `NOTIFICATION_CAMPAIGN_EMAIL_FROM` and `NOTIFICATION_CAMPAIGN_EMAIL_API_KEY` let a future campaign feature use a different sending identity and provider. Campaign configuration alone sends no mail. Shared sender, SMTP, and API settings are used when a purpose has no override.
 
 The notification sender and Supabase Auth email configuration are independent. Verify with synthetic recipient accounts before enabling live invitations. Send, accept with the invited account, then request and approve membership. Test a wrong-account claim and use a previously sent fixture older than 24 hours to verify reminder behavior. Verify the results in My Invitations and Platform Admin. An unconfirmed provider outcome may have sent an email. Check provider activity before any manual recovery.
 

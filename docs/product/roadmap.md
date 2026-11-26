@@ -347,6 +347,10 @@ Evaluate and incrementally implement:
 
 The product should be social around learning, not a generic social-media clone.
 
+### Parked follow-up — invitation email delivery
+
+Tracked invitations, reminders, and referral reporting are in commit `60d3832`. The owner applied the invitation migration, and a read-only check confirmed that the connected Supabase project exposes the delivery table and status view. The app now supports Hostinger SMTP and per-purpose provider settings. Keep invitation email disabled until the sender is ready. Configure the Vercel credentials and stable invitation secret, then test email delivery, recipient sign-in and acceptance, join approval, reminders, and learner/owner reporting with synthetic recipients. The deployed revision and live email delivery have yet to be verified. See the [invitation email setup](../operations/recreate-installation.md#enable-invitation-email).
+
 ## Phase 3: AI Companion
 
 AI is a supporting learning capability, not the center of the product.

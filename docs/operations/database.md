@@ -22,9 +22,12 @@ The canonical schema creates:
 - `badge_awards`
 - `user_entitlements`
 - `quota_requests`
+- `document_catalog`
+- `feedback_requests`
+- `account_suspension_events`
 - RLS policies, helper functions, grants, and the creator-admin trigger
 
-For an existing database with data, do not rerun the full schema. Apply the additive statements for `user_entitlements`, `quota_requests`, the path-admin delete policy, and the `create_learning_path_with_entitlement` and `review_quota_request` functions. The application depends on those objects for account capacity, path deletion, and quota review.
+For an existing database with data, use only the missing, reviewed upgrades in the [installation guide](recreate-installation.md#tracked-upgrades). The full installer is for an empty Supabase project.
 
 ## Launch Data Safety Migration
 
@@ -36,7 +39,7 @@ The safety migration adds `learning_paths.plan_revision`, service-only `read_lea
 
 Curriculum saves keep IDs, validate titles/HTTP(S) resources, lock the path row, reject stale revisions, and require explicit removal confirmation. Any failure rolls back the entire curriculum save. Removing a lesson deliberately still cascades its progress/notes; retained lessons are preserved. Metadata and curriculum remain separate operations; the UI reports a partial success if curriculum saves but metadata fails.
 
-Deploy the application changes together with this migration. An old application build still contains the destructive replacement handler and must be retired. Do not restore broad browser write grants as an application rollback. Before subsequent production migrations, verify backup/restore readiness and rehearse against staging. The canonical fresh-install schema includes this migration at its end; existing databases apply only tracked additive migrations.
+Deploy the application changes together with this migration. An old application build still contains the destructive replacement handler and must be retired. Do not restore broad browser write grants as an application rollback. Before subsequent production migrations, verify backup/restore readiness and rehearse against staging. The canonical fresh-install schema includes this migration; existing databases apply only tracked additive migrations.
 
 Verification: the applied migration preserved all 3 paths and 4 progress records, including an identical progress-content hash. At inspection time there were 6 auth users and no notes. Local tests use separate in-memory PostgreSQL with synthetic identities and do not modify these users.
 
@@ -87,15 +90,9 @@ Only one pending request per user is allowed. Platform Admin approval uses `revi
 
 ## Existing Database Migration Checklist
 
-When the application code is deployed against an existing Supabase project, verify these objects have been applied before testing `/account`:
+Review the [tracked upgrades](recreate-installation.md#tracked-upgrades) before deploying the app. For account suspension, verify the audit table and the authenticated `current_account_is_active()` RPC, then check that an active account can reach My Journey and the configured platform owner can reach User Management.
 
-1. `user_entitlements` table, RLS policies, and authenticated select grant.
-2. `quota_requests` table, pending-request unique index, RLS policies, and authenticated grants.
-3. `learning_paths` delete policy and authenticated delete grant.
-4. `create_learning_path_with_entitlement` function and authenticated execute grant.
-5. `review_quota_request` function and authenticated execute grant.
-
-The application does not store `created_path_count`; deleting an owned path automatically restores capacity because usage is recalculated from `learning_paths`.
+The owner reports running `20261126100000_account_suspension.sql` in the connected Supabase project. SQL Editor execution does not update CLI migration history.
 
 ## Add Platform Admin
 

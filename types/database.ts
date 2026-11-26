@@ -6,6 +6,18 @@ export type Json = string | number | boolean | null | { [key: string]: Json } | 
 export interface Database {
   public: {
     Tables: {
+      path_invitation_deliveries: {
+        Row: { id: string; invitation_id: string; kind: 'initial' | 'reminder'; status: 'reserved' | 'sent' | 'failed' | 'unknown'; provider: string; provider_message_id: string | null; created_at: string; finished_at: string | null };
+        Insert: never;
+        Update: { status: 'sent' | 'failed' | 'unknown'; provider_message_id: string | null; finished_at: string };
+        Relationships: [];
+      };
+      account_suspension_events: {
+        Row: { id: number; user_id: string; actor_id: string; suspended: boolean; reason: string; created_at: string };
+        Insert: { user_id: string; actor_id: string; suspended: boolean; reason: string };
+        Update: never;
+        Relationships: [];
+      };
       document_catalog: {
         Row: {source_path:string; visibility:'public'|'platform_admin'; status:'draft'|'published'|'archived'; created_at:string; updated_at:string; updated_by:string|null};
         Insert: {source_path:string; visibility?:'public'|'platform_admin'; status?:'draft'|'published'|'archived'; updated_at?:string; updated_by?:string|null};
@@ -103,8 +115,27 @@ export interface Database {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      path_invitation_status: {
+        Row: {
+          id: string; path_id: string; path_title: string; sender_id: string; sender_email: string; recipient_email: string;
+          created_at: string; expires_at: string; accepted_at: string | null;
+          status: 'sent' | 'failed' | 'unconfirmed' | 'accepted' | 'join_pending' | 'joined' | 'join_declined' | 'expired';
+          last_status: 'reserved' | 'sent' | 'failed' | 'unknown' | null; last_attempt_at: string | null;
+          reminders: number; initial_sent: boolean; can_remind: boolean | null; joined_after_acceptance: boolean;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
+      reserve_path_invitation_delivery: {
+        Args: { p_sender: string; p_sender_email: string; p_path: string | null; p_invitation: string; p_recipient: string | null; p_token_hash: string; p_provider: string; p_reminder: boolean };
+        Returns: Json;
+      };
+      path_invitation_totals: { Args: { p_sender: string | null }; Returns: Json };
+      accept_path_invitation: { Args: { p_hash: string; p_user: string; p_email: string }; Returns: string | null };
+
+      current_account_is_active: { Args: Record<never, never>; Returns: boolean };
       read_learning_plan: { Args: { p_path_id: string }; Returns: Json };
       save_learning_plan: { Args: { p_path_id: string; p_actor: string; p_phases: Json; p_expected_revision: number | null; p_confirm_removals: boolean }; Returns: Json };
       get_role: { Args: { p_path_id: string }; Returns: 'admin' | 'moderator' | 'learner' | null };

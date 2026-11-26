@@ -36,6 +36,8 @@ for (const mode of ['fresh installation','upgrade from baseline']) test(`${mode}
     await db.exec(material);
     await db.exec(material);
     await db.exec(feedbackMigration);
+    await db.exec(await readFile(new URL('../supabase/migrations/20261126100000_account_suspension.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../supabase/migrations/20261127100000_path_invitations.sql', import.meta.url), 'utf8'));
   }
   const [admin, learner, other, moderator, outsider, platform] = Array.from({length:6}, (_, i) => `00000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`);
   for (const id of [admin,learner,other,moderator,outsider,platform]) await db.query('insert into auth.users values ($1)',[id]);
@@ -56,6 +58,28 @@ for (const mode of ['fresh installation','upgrade from baseline']) test(`${mode}
   await db.query('insert into progress(user_id,path_id,item_key) values ($1,$2,$3)',[learner,path,lesson]);
   await db.query("insert into notes(user_id,path_id,item_key,note_text) values ($1,$2,$3,'Private thought')",[learner,path,lesson]);
   const snapshot = () => db.query('select (select count(*)::int from progress) as progress, (select count(*)::int from notes) as notes');
+
+  await t.test('suspension blocks existing authenticated callers and restoration preserves records', async () => {
+    const record = suspended => db.query(
+      "insert into account_suspension_events(user_id,actor_id,suspended,reason) values ($1,$2,$3,'QA verification')",
+      [learner, platform, suspended],
+    );
+    await record(true);
+    await as('authenticated', learner, async () => {
+      assert.equal((await db.query('select current_account_is_active() as active')).rows[0].active, false);
+      assert.equal((await db.query('select * from notes')).rows.length, 0);
+      await assert.rejects(
+        db.query("select create_learning_path_with_entitlement('Suspended',null,null,$1)", [learner]),
+        /Account suspended/,
+      );
+      await assert.rejects(db.query('select * from account_suspension_events'), /permission denied/);
+    });
+    await record(false);
+    await as('authenticated', learner, async () => {
+      assert.equal((await db.query('select current_account_is_active() as active')).rows[0].active, true);
+      assert.equal((await db.query('select * from notes')).rows.length, 1);
+    });
+  });
 
   await t.test('editing and reordering preserve IDs, progress and notes', async () => {
     const phases=structuredClone(plan.phases);
@@ -164,6 +188,53 @@ for (const mode of ['fresh installation','upgrade from baseline']) test(`${mode}
     assert.equal((await db.query('select count(*)::int n from learning_paths where id=$1',[pathB])).rows[0].n,1);
     assert.equal((await db.query('select count(*)::int n from auth.users where id=$1',[learner])).rows[0].n,1);
     const after=await snapshot();assert.equal(after.rows[0].progress,untouched.rows[0].progress-1);assert.equal(after.rows[0].notes,untouched.rows[0].notes-1);
+  });
+
+  await t.test('tracked invitations enforce ownership, cooldown, email binding and membership attribution', async () => {
+    const target = (await db.query("insert into learning_paths(title,created_by) values('Invitation fixture',$1) returning id", [admin])).rows[0].id;
+    const invite = 'feed0000-0000-4000-8000-000000000001';
+    const hash = 'a'.repeat(64);
+    const recipient = 'learner@example.com';
+    const reserve = (reminder = false, actor = admin) => as('service_role', actor, async () => (
+      await db.query('select reserve_path_invitation_delivery($1,$2,$3,$4,$5,$6,$7,$8) as result',
+        [actor, 'sender@example.com', reminder ? null : target, invite, reminder ? null : recipient, hash, 'resend', reminder])
+    ).rows[0].result);
+    const accept = (user, email, token = hash) => as('service_role', user, async () => (
+      await db.query('select accept_path_invitation($1,$2,$3) as path_id', [token, user, email])
+    ).rows[0].path_id);
+    const status = async () => (await db.query('select status from path_invitation_status where id=$1', [invite])).rows[0].status;
+
+    assert.equal((await reserve()).status, 'unavailable');
+    await db.query("update learning_paths set visibility='public', wall_status='approved' where id=$1", [target]);
+    const initial = await reserve();
+    assert.equal(initial.status, 'reserved');
+    assert.equal((await reserve()).status, 'duplicate');
+    assert.equal((await reserve(true, moderator)).status, 'unavailable');
+    assert.equal(await status(), 'unconfirmed');
+    await db.query("update path_invitation_deliveries set status='sent' where id=$1", [initial.deliveryId]);
+    assert.equal(await status(), 'sent');
+    assert.equal((await reserve(true)).status, 'reminder_limited');
+    await db.query("update path_invitation_deliveries set created_at=now()-interval '25 hours' where id=$1", [initial.deliveryId]);
+    assert.equal((await reserve(true)).status, 'reserved');
+
+    await assert.rejects(as('authenticated', learner, () => db.query('select * from path_invitation_status')), { code: '42501' });
+    await assert.rejects(as('anon', '', () => db.query('select * from path_invitations')), { code: '42501' });
+    await assert.rejects(as('authenticated', learner, () => db.query('select accept_path_invitation($1,$2,$3)', [hash, learner, recipient])), { code: '42501' });
+    assert.equal(await accept(other, 'wrong@example.com'), null);
+    assert.equal(await accept(learner, recipient, 'b'.repeat(64)), null);
+    assert.equal(await accept(learner, recipient), target);
+    assert.equal(await accept(other, recipient), null);
+    assert.equal(await status(), 'accepted');
+
+    await db.query("insert into path_memberships(user_id,path_id,role,status) values($1,$2,'learner','pending')", [learner, target]);
+    assert.equal(await status(), 'join_pending');
+    await db.query("update path_memberships set status='approved' where user_id=$1 and path_id=$2", [learner, target]);
+    assert.equal(await status(), 'joined');
+    assert.deepEqual((await db.query('select path_invitation_totals($1) as totals', [admin])).rows[0].totals,
+      { sent: 1, reminders: 1, accepted: 1, joined: 1 });
+    assert.equal((await reserve(true)).status, 'unavailable');
+    await db.query('delete from learning_paths where id=$1', [target]);
+    assert.equal((await db.query('select id from path_invitation_deliveries where invitation_id=$1', [invite])).rows.length, 0);
   });
 
 });

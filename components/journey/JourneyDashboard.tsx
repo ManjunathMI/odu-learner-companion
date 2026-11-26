@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { apiFetch } from '@/lib/api';
 import MultilingualLoader from '@/components/MultilingualLoader';
 import LearningPathCard from '@/components/LearningPathCard';
+import CreatorQuota, { type CreatorQuotaData } from './CreatorQuota';
 import CreatePathForm from '@/components/CreatePathForm';
 
 interface PathRow {
@@ -34,12 +35,13 @@ interface JourneyPath extends PathRow {
   total: number;
 }
 
-export default function JourneyDashboard() {
+export default function JourneyDashboard({ quota }: { quota: CreatorQuotaData | null }) {
   const [paths, setPaths] = useState<JourneyPath[]>([]);
   const [pending, setPending] = useState<PathRow[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const atLimit = quota !== null && quota.usage >= quota.limit;
   const router = useRouter();
   const createDialogRef = useRef<HTMLDialogElement>(null);
   const createCloseRef = useRef<HTMLButtonElement>(null);
@@ -153,11 +155,13 @@ export default function JourneyDashboard() {
         </div>
         <div className="header-actions">
           <Link className="button-secondary" href="/explore">Find a Learning Path</Link>
-          <button type="button" className="button-primary" onClick={openCreate}>
+          <Link className="button-secondary" href="/journey/invitations">My Invitations</Link>
+          <button type="button" className="button-primary" onClick={openCreate} disabled={atLimit}>
             Create a Learning Path
           </button>
         </div>
       </header>
+      <CreatorQuota key={quota?.pendingLimit ?? 'no-pending-request'} quota={quota} />
 
       <dialog
         ref={createDialogRef}
@@ -253,7 +257,7 @@ export default function JourneyDashboard() {
           <p>Your next useful step begins when you join a path or create a Learning Path for your own community.</p>
           <div className="empty-journey-actions">
             <Link className="button-primary" href="/explore">Explore Learning Paths</Link>
-            <button type="button" className="button-secondary" onClick={openCreate}>Create a Learning Path</button>
+            <button type="button" className="button-secondary" onClick={openCreate} disabled={atLimit}>Create a Learning Path</button>
           </div>
         </section>
       )}

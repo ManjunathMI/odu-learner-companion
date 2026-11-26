@@ -47,7 +47,7 @@ app/
   paths/page.tsx                   Signed-in user's paths (compatibility route)
   paths/[pathId]/page.tsx          Learning Space / path board
   paths/[pathId]/settings/page.tsx Path settings and creator controls
-  paths/[pathId]/approvals/page.tsx Moderator/admin approvals
+  account/path-members/page.tsx   Moderator/admin membership workspace
   admin/page.tsx                   Platform admin workspace
   api/                             Server API route handlers
   robots.ts                        Robots metadata generator (/robots.txt)
@@ -162,6 +162,22 @@ Authorization expectations:
 - A Path Admin can manage their own path according to the current authorization model but cannot approve their own path for platform publication.
 - Platform Admin authority is separate from path membership and may operate across paths only for explicitly supported platform operations.
 - Client-side visibility is never an authorization boundary.
+
+## Path membership management
+
+My Path Members is the shared web workspace for membership review. Approved Path Admins can manage the roster, and approved Moderators see pending requests for paths they moderate. A platform administrator may open a specifically linked path through the platform override. The path picker loads approved management memberships and their path titles in one query. The workspace loads membership rows only for the selected path and resolves display names in one batch. The Platform Admin user directory also reuses the same role and approval controls. Its expandable rows load membership, created-path, and account audit details on demand. Existing mobile-compatible membership and approvals APIs keep their contracts and authorization checks.
+
+## Learning Path invitations
+
+The path share dialog sends email for public, approved paths through the Next.js API. The server-only notification sender separates email content from provider credentials and delivery. Supabase Auth continues to send sign-in email. The invitation database records one referral per sender, path, and recipient, with separate delivery attempts. Atomic reservations limit sends and reminders across concurrent requests. An unconfirmed provider outcome remains visible and is not retried automatically.
+
+Recipients claim a token with the matching confirmed account. The database stores only a hash of the token. A claim records attribution and leaves path access to the existing membership workflow. My Invitations scopes reads to the sender, while the platform-owner workspace provides cross-user reporting and links from User Management. A provider-accepted email is counted as sent. An attributed join requires an approved membership requested on or after acceptance. See [installation and email configuration](../operations/recreate-installation.md#enable-invitation-email).
+
+## Account suspension
+
+Platform owner moderation uses reversible account suspension. Each status change adds an append-only event with an actor and reason. The latest event determines access while retaining the Auth user, paths, memberships, notes, and progress. Authenticated API handlers and protected pages check the current state. Restrictive RLS policies and checks in directly callable write RPCs also enforce it for existing access tokens. Public discovery remains visible to visitors.
+
+Apply the account suspension migration before deploying the app changes. The account checks fail closed if the migration or database is unavailable. Permanent account deletion is a separate workflow and requires an approved retention and ownership policy.
 
 ## Authentication and Identity
 
@@ -286,7 +302,7 @@ The platform provides dynamic search engine discovery via Next.js App Router met
 
 Quota review uses the `review_quota_request` security-definer function. It verifies Platform Admin identity, locks the pending request, updates the entitlement on approval, and records reviewer/status timestamps in one transaction.
 
-The authenticated `/account` surface is an identity and capacity view, not an authorization boundary. All path deletion, creation, and quota-review permissions are enforced by server-side checks and database policies/functions.
+My Journey shows creator usage and submits quota requests through the existing quota API. The owner-only User Management action updates the current entitlement and records the updater and timestamp. The creation RPC enforces the saved limit and preserves existing paths when the limit is lowered.
 
 ## Path Creation and Publication
 

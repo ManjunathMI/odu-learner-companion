@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import LearningContent from '@/components/LearningContent';
+import PathShare from '@/components/PathShare';
 import { studyTime } from '@/lib/learning-material';
 import MultilingualLoader from '@/components/MultilingualLoader';
 
@@ -126,6 +127,9 @@ export default function PathBoard({ pathId }: { pathId: string }) {
         </div>
         <div className="header-actions">
           {!path.myRole && <button className="button-primary" disabled={joining || path.membershipStatus === 'pending' || path.membershipStatus === 'rejected'} onClick={join}>{joining ? 'Submitting…' : path.membershipStatus === 'pending' ? 'Request pending' : path.membershipStatus === 'rejected' ? 'Request declined' : 'Request to join'}</button>}
+          {((path.visibility === 'public' && path.wallStatus === 'approved') || (path.visibility === 'private' && path.myRole)) && (
+            <PathShare pathId={path.id} title={path.title} description={path.description} membersOnly={path.visibility === 'private'} />
+          )}
           {path.myRole && <button className="button-secondary" onClick={load}>Refresh</button>}
           {path.myRole === 'admin' && (
             <Link className="button-secondary" href={`/paths/${pathId}/settings`}>
